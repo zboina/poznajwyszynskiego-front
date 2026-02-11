@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}poznajwyszynskiego.pl{% endblock %}</title>
+    <link rel="icon" href="{{ asset('logo_PW_bez_obramowania.png') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Crimson+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Spectral:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Serif+Display:ital@0;1&family=Bitter:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700;800&family=Source+Sans+3:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700&family=Nunito:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Raleway:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Josefin+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Work+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Lato:ital,wght@0,300;0,400;0,700;1,400&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Rubik:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Fira+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Noto+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=PT+Sans:ital,wght@0,400;0,700;1,400&family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --font-heading: 'Cormorant Garamond', Georgia, serif;
+            --font-body: 'Inter', -apple-system, sans-serif;
+        }
+        body {
+            font-family: var(--font-body) !important;
+        }
+        h1, h2, h3, h4, h5, h6,
+        .display-1, .display-2, .display-3, .display-4, .display-5, .display-6 {
+            font-family: var(--font-heading) !important;
+        }
+
+        /* ── Font switcher panel (temporary) ── */
+        .font-switcher {
+            position: fixed; bottom: 1rem; right: 1rem; z-index: 9999;
+            background: #1a1a1a; color: #fff; border-radius: 14px;
+            box-shadow: 0 8px 32px rgba(0,0,0,.5);
+            padding: 0; font-size: .78rem;
+            font-family: -apple-system, sans-serif !important;
+            width: 340px; max-height: 85vh;
+            transition: all .25s;
+            display: flex; flex-direction: column;
+        }
+        .font-switcher.collapsed {
+            width: 44px; max-height: 44px; border-radius: 50%;
+            padding: 0; overflow: hidden;
+        }
+        .font-switcher.collapsed .fs-header,
+        .font-switcher.collapsed .fs-body,
+        .font-switcher.collapsed .fs-footer { display: none; }
+
+        .font-switcher .fs-toggle-float {
+            position: absolute; top: -999px;
+        }
+        .font-switcher.collapsed .fs-toggle-float {
+            position: static; width: 44px; height: 44px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; background: none; border: none;
+            color: #C9A227; font-weight: 800; font-size: 1rem;
+        }
+
+        .fs-header {
+            padding: .65rem 1rem; display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid rgba(255,255,255,.08); flex-shrink: 0;
+        }
+        .fs-header .fs-title { font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: rgba(255,255,255,.5); font-weight: 600; }
+        .fs-header .fs-close {
+            width: 24px; height: 24px; border-radius: 6px; border: none;
+            background: rgba(255,255,255,.08); color: #999; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; font-size: .85rem;
+            transition: all .15s;
+        }
+        .fs-header .fs-close:hover { background: rgba(255,255,255,.15); color: #fff; }
+
+        .fs-body {
+            overflow-y: auto; flex: 1; padding: .5rem;
+        }
+        .fs-body::-webkit-scrollbar { width: 4px; }
+        .fs-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 4px; }
+
+        .fs-section { margin-bottom: .5rem; }
+        .fs-section-title {
+            font-size: .6rem; text-transform: uppercase; letter-spacing: .08em;
+            color: rgba(201,162,39,.6); font-weight: 700; padding: .3rem .5rem .15rem;
+        }
+
+        .fs-btn {
+            display: flex; align-items: baseline; gap: .5rem;
+            width: 100%; text-align: left; padding: .45rem .6rem;
+            border: 1px solid transparent; border-radius: 8px;
+            background: transparent; color: #bbb; cursor: pointer;
+            transition: all .15s; margin: 1px 0;
+        }
+        .fs-btn:hover { background: rgba(255,255,255,.06); color: #fff; border-color: rgba(255,255,255,.08); }
+        .fs-btn.active { background: rgba(201,162,39,.12); border-color: rgba(201,162,39,.35); color: #C9A227; }
+
+        .fs-btn .fs-font-name {
+            font-size: .88rem; font-weight: 600; line-height: 1.2;
+        }
+        .fs-btn .fs-font-sample {
+            font-size: .68rem; color: rgba(255,255,255,.3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .fs-btn.active .fs-font-sample { color: rgba(201,162,39,.5); }
+
+        .fs-footer {
+            padding: .5rem .75rem; border-top: 1px solid rgba(255,255,255,.08);
+            font-size: .62rem; color: rgba(255,255,255,.25); text-align: center; flex-shrink: 0;
+        }
+
+        @media (max-width: 575.98px) {
+            .font-switcher { width: calc(100vw - 2rem); right: 1rem; bottom: .75rem; max-height: 70vh; }
+        }
+    </style>
+    {% block stylesheets %}{% endblock %}
+    {% block javascripts %}
+        {% block importmap %}{{ importmap('app') }}{% endblock %}
+    {% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}"{% if app.user and not is_granted('ROLE_VIP') %} data-controller="protection"{% endif %}>
+    {% block body %}{% endblock %}
+    <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js" defer></script>
+
+    {# ── Font switcher (temporary testing panel) ── #}
+    <div class="font-switcher collapsed" id="fontSwitcher">
+        <button class="fs-toggle-float" onclick="toggleFontPanel()" title="Font switcher">Aa</button>
+
+        <div class="fs-header">
+            <span class="fs-title">Wybierz font</span>
+            <button class="fs-close" onclick="toggleFontPanel()" title="Zwiń">&times;</button>
+        </div>
+
+        <div class="fs-body" id="fsFontList">
+            <div class="fs-section">
+                <div class="fs-section-title">Szeryfowe (Serif)</div>
+            </div>
+            <div class="fs-section">
+                <div class="fs-section-title">Bezszeryfowe (Sans-serif)</div>
+            </div>
+            <div class="fs-section">
+                <div class="fs-section-title">Popularne (Top 10)</div>
+            </div>
+        </div>
+
+        <div class="fs-footer">Kliknij font, aby zobaczyć efekt na żywo &bull; Wybór zapisuje się automatycznie</div>
+    </div>
+
+    <script>
+    (function() {
+        var allFonts = [
+            { id: 'cormorant',    name: 'Cormorant Garamond',  type: 'serif',  css: "'Cormorant Garamond', Georgia, serif",                desc: 'Elegancki, renesansowy' },
+            { id: 'playfair',     name: 'Playfair Display',    type: 'serif',  css: "'Playfair Display', Georgia, serif",                  desc: 'Luksusowy, wysoki kontrast' },
+            { id: 'lora',         name: 'Lora',                type: 'serif',  css: "'Lora', Georgia, serif",                              desc: 'Zbalansowany, czytelny' },
+            { id: 'eb-garamond',  name: 'EB Garamond',         type: 'serif',  css: "'EB Garamond', Georgia, serif",                       desc: 'Klasyczny Garamond' },
+            { id: 'crimson',      name: 'Crimson Pro',         type: 'serif',  css: "'Crimson Pro', Georgia, serif",                       desc: 'Piękny, książkowy' },
+            { id: 'spectral',     name: 'Spectral',            type: 'serif',  css: "'Spectral', Georgia, serif",                          desc: 'Zaprojektowany do czytania' },
+            { id: 'baskerville',  name: 'Libre Baskerville',   type: 'serif',  css: "'Libre Baskerville', Georgia, serif",                 desc: 'Klasyk typografii' },
+            { id: 'dm-serif',     name: 'DM Serif Display',    type: 'serif',  css: "'DM Serif Display', Georgia, serif",                  desc: 'Nowoczesny, wyrazisty' },
+            { id: 'bitter',       name: 'Bitter',              type: 'serif',  css: "'Bitter', Georgia, serif",                            desc: 'Slab serif, solidny' },
+            { id: 'merriweather', name: 'Merriweather',        type: 'serif',  css: "'Merriweather', Georgia, serif",                      desc: 'Zaprojektowany na ekrany' },
+            { id: 'inter',        name: 'Inter',               type: 'sans',   css: "'Inter', -apple-system, sans-serif",                  desc: 'Standard UI, uniwersalny' },
+            { id: 'source-sans',  name: 'Source Sans 3',       type: 'sans',   css: "'Source Sans 3', -apple-system, sans-serif",          desc: 'Profesjonalny, Adobe' },
+            { id: 'dm-sans',      name: 'DM Sans',             type: 'sans',   css: "'DM Sans', -apple-system, sans-serif",                desc: 'Geometryczny, czysty' },
+            { id: 'jakarta',      name: 'Plus Jakarta Sans',   type: 'sans',   css: "'Plus Jakarta Sans', -apple-system, sans-serif",      desc: 'Nowoczesny, przyjazny' },
+            { id: 'outfit',       name: 'Outfit',              type: 'sans',   css: "'Outfit', -apple-system, sans-serif",                 desc: 'Geometryczny, modny' },
+            { id: 'nunito',       name: 'Nunito',              type: 'sans',   css: "'Nunito', -apple-system, sans-serif",                 desc: 'Zaokrąglony, miękki' },
+            { id: 'raleway',      name: 'Raleway',             type: 'sans',   css: "'Raleway', -apple-system, sans-serif",                desc: 'Elegancki cienki sans' },
+            { id: 'josefin',      name: 'Josefin Sans',        type: 'sans',   css: "'Josefin Sans', -apple-system, sans-serif",           desc: 'Geometryczny, art deco' },
+            { id: 'montserrat',   name: 'Montserrat',          type: 'sans',   css: "'Montserrat', -apple-system, sans-serif",             desc: 'Popularny, geometryczny' },
+            { id: 'work-sans',    name: 'Work Sans',           type: 'sans',   css: "'Work Sans', -apple-system, sans-serif",              desc: 'Optymalizowany na ekrany' },
+            { id: 'lato',         name: 'Lato',                type: 'popular', css: "'Lato', -apple-system, sans-serif",                   desc: 'Top 1 Google Fonts, lekki' },
+            { id: 'ubuntu',       name: 'Ubuntu',              type: 'popular', css: "'Ubuntu', -apple-system, sans-serif",                 desc: 'Linux, przyjazny, humanistyczny' },
+            { id: 'open-sans',    name: 'Open Sans',           type: 'popular', css: "'Open Sans', -apple-system, sans-serif",              desc: 'Google, neutralny, wszechstronny' },
+            { id: 'roboto',       name: 'Roboto',              type: 'popular', css: "'Roboto', -apple-system, sans-serif",                 desc: 'Android/Material Design' },
+            { id: 'poppins',      name: 'Poppins',             type: 'popular', css: "'Poppins', -apple-system, sans-serif",                desc: 'Geometryczny, nowoczesny hit' },
+            { id: 'rubik',        name: 'Rubik',               type: 'popular', css: "'Rubik', -apple-system, sans-serif",                  desc: 'Zaokrąglony, solidny' },
+            { id: 'fira-sans',    name: 'Fira Sans',           type: 'popular', css: "'Fira Sans', -apple-system, sans-serif",              desc: 'Mozilla, humanistyczny' },
+            { id: 'noto-sans',    name: 'Noto Sans',           type: 'popular', css: "'Noto Sans', -apple-system, sans-serif",              desc: 'Google, uniwersalny, wielojęzyczny' },
+            { id: 'pt-sans',      name: 'PT Sans',             type: 'popular', css: "'PT Sans', -apple-system, sans-serif",                desc: 'ParaType, dobry dla polskiego' },
+            { id: 'quicksand',    name: 'Quicksand',           type: 'popular', css: "'Quicksand', -apple-system, sans-serif",              desc: 'Zaokrąglony, zabawny, lekki' }
+        ];
+
+        // Build buttons
+        var list = document.getElementById('fsFontList');
+        var sections = list.querySelectorAll('.fs-section');
+        var serifSection = sections[0];
+        var sansSection = sections[1];
+        var popularSection = sections[2];
+
+        allFonts.forEach(function(f) {
+            var btn = document.createElement('button');
+            btn.className = 'fs-btn';
+            btn.setAttribute('data-font-id', f.id);
+            btn.onclick = function() { pickFont(f.id); };
+            btn.innerHTML =
+                '<span class="fs-font-name" style="font-family:' + f.css + ';">' + f.name + '</span>' +
+                '<span class="fs-font-sample">' + f.desc + '</span>';
+            if (f.type === 'serif') {
+                serifSection.appendChild(btn);
+            } else if (f.type === 'popular') {
+                popularSection.appendChild(btn);
+            } else {
+                sansSection.appendChild(btn);
+            }
+        });
+
+        // Font logic
+        var saved = localStorage.getItem('pw_font_v2') || 'cormorant';
+        applyFont(saved);
+
+        window.pickFont = function(id) {
+            localStorage.setItem('pw_font_v2', id);
+            applyFont(id);
+        };
+        window.toggleFontPanel = function() {
+            document.getElementById('fontSwitcher').classList.toggle('collapsed');
+        };
+
+        function applyFont(id) {
+            var f = allFonts.find(function(x) { return x.id === id; }) || allFonts[0];
+            document.documentElement.style.setProperty('--font-heading', f.css);
+            document.documentElement.style.setProperty('--font-body', f.css);
+            document.querySelectorAll('.fs-btn').forEach(function(btn) {
+                btn.classList.toggle('active', btn.getAttribute('data-font-id') === id);
+            });
+        }
+    })();
+    </script>
+</body>
+</html>

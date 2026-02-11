@@ -1,0 +1,284 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dzieła Zebrane Kardynała Stefana Wyszyńskiego{% endblock %}
+{% block body_class %}d-flex flex-column{% endblock %}
+
+{% block stylesheets %}
+<style>
+    :root { --tblr-primary: #722F37; --tblr-primary-rgb: 114,47,55; }
+    .text-gold { color: #C9A227; }
+
+    /* ── Full-screen layout ── */
+    .login-page {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #722F37 0%, #5C2630 40%, #2E1A2E 70%, #1A365D 100%);
+        position: relative;
+        overflow-x: hidden;
+    }
+    .login-page::before {
+        content: '';
+        position: absolute; top: 0; left: 0; right: 0; height: 100%;
+        background: radial-gradient(ellipse at 20% 50%, rgba(201,162,39,.08) 0%, transparent 60%),
+                    radial-gradient(ellipse at 80% 20%, rgba(26,54,93,.15) 0%, transparent 50%);
+        pointer-events: none;
+    }
+
+    /* ── Stats grid ── */
+    .stat-card {
+        text-align: center;
+        padding: 1.25rem .75rem;
+        background: rgba(255,255,255,.06);
+        border: 1px solid rgba(255,255,255,.08);
+        border-radius: 12px;
+        backdrop-filter: blur(8px);
+        transition: transform .2s, background .2s;
+    }
+    .stat-card:hover { transform: translateY(-2px); background: rgba(255,255,255,.1); }
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #C9A227;
+        line-height: 1.2;
+        font-family: var(--font-heading) !important;
+    }
+    .stat-value small { font-size: .55em; font-weight: 600; opacity: .8; }
+    .stat-label {
+        font-size: .75rem;
+        opacity: .6;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        margin-top: .25rem;
+    }
+
+    /* ── Login card ── */
+    .login-card {
+        background: rgba(255,255,255,.07);
+        backdrop-filter: blur(24px);
+        border: 1px solid rgba(255,255,255,.12);
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(0,0,0,.2);
+    }
+    .login-card .form-control {
+        background: rgba(255,255,255,.1);
+        border-color: rgba(255,255,255,.18);
+        color: #fff;
+        border-radius: 8px;
+    }
+    .login-card .form-control::placeholder { color: rgba(255,255,255,.35); }
+    .login-card .form-control:focus {
+        background: rgba(255,255,255,.15);
+        border-color: #C9A227;
+        color: #fff;
+        box-shadow: 0 0 0 .25rem rgba(201,162,39,.2);
+    }
+    .login-card .form-label { color: rgba(255,255,255,.6); font-size: .82rem; }
+
+    /* ── Button ── */
+    .btn-gold {
+        background: linear-gradient(135deg, #C9A227 0%, #B8922A 100%);
+        color: #1a1a1a;
+        font-weight: 700;
+        border: none;
+        letter-spacing: .03em;
+        border-radius: 8px;
+        transition: all .2s;
+    }
+    .btn-gold:hover {
+        background: linear-gradient(135deg, #d4af37 0%, #C9A227 100%);
+        color: #1a1a1a;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(201,162,39,.35);
+    }
+
+    /* ── Quote ── */
+    .quote-block {
+        font-style: italic;
+        font-size: .95rem;
+        line-height: 1.8;
+        opacity: .8;
+        border-left: 3px solid rgba(201,162,39,.4);
+        padding-left: 1.25rem;
+    }
+
+    /* ── Feature list ── */
+    .feature-icon {
+        width: 40px; height: 40px;
+        display: flex; align-items: center; justify-content: center;
+        border-radius: 10px;
+        background: rgba(201,162,39,.12);
+        flex-shrink: 0;
+    }
+    .feature-row {
+        transition: transform .15s;
+    }
+    .feature-row:hover { transform: translateX(4px); }
+
+    /* ── Responsive ── */
+    @media (max-width: 991.98px) {
+        .login-page { padding-top: 1rem; padding-bottom: 2rem; }
+        .login-row { min-height: auto !important; }
+        .login-info { text-align: center; order: 2; }
+        .login-form-col { order: 1; }
+        .login-info .quote-block { border-left: none; padding-left: 0; border-top: 3px solid rgba(201,162,39,.4); padding-top: 1rem; }
+        .login-info .features-list { display: none; }
+        .stat-value { font-size: 1.25rem; }
+        .login-info .mb-4:first-child { margin-bottom: 1.5rem !important; }
+        .login-info h1 { font-size: 1.75rem; }
+        .login-info h2 { font-size: 1rem; }
+        .login-info img { width: 56px; height: 56px; }
+    }
+    @media (max-width: 767.98px) {
+        .login-page > .container-xl { padding-left: 1.5rem; padding-right: 1.5rem; }
+    }
+    @media (max-width: 575.98px) {
+        .login-page > .container-xl { padding-left: 1.25rem; padding-right: 1.25rem; }
+        .stat-card { padding: .75rem .5rem; }
+        .stat-value { font-size: 1.1rem; }
+        .stat-label { font-size: .65rem; }
+        .login-card { padding: 1.5rem !important; }
+        .login-info .quote-block { display: none; }
+        .login-info .stat-row { max-width: 100% !important; }
+    }
+    @media (max-width: 399.98px) {
+        .login-page > .container-xl { padding-left: 1.15rem; padding-right: 1.15rem; }
+        .login-card { padding: 1.25rem !important; }
+        .login-card .form-control-lg { font-size: .9rem; padding: .5rem .75rem; }
+        .login-card h3 { font-size: 1.1rem; }
+        .login-card .btn-lg { padding: .6rem 1rem; font-size: .9rem; }
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="login-page">
+    <div class="container-xl py-4 py-lg-5 position-relative" style="z-index:1;">
+        <div class="row g-4 g-lg-5 align-items-center justify-content-center login-row" style="min-height: calc(100vh - 4rem);">
+
+            {# ===== LEFT: Project info ===== #}
+            <div class="col-lg-7 text-white login-info">
+
+                {# Logo + title #}
+                <div class="mb-4">
+                    <img src="{{ asset('logo_PW_bez_obramowania.png') }}" alt="Logo" width="72" height="72"
+                         class="rounded-circle mb-3"
+                         style="border: 3px solid rgba(201,162,39,.5); box-shadow: 0 4px 24px rgba(0,0,0,.3);">
+                    <h1 class="display-5 fw-bold mb-1">Dzieła Zebrane</h1>
+                    <h2 class="h4 fw-normal" style="opacity:.8;">Kardynała Stefana Wyszyńskiego</h2>
+                </div>
+
+                {# Stats: tomy → teksty → słowa → znaki (od najmniejszej) #}
+                <div class="row g-2 g-md-3 mb-4" style="max-width: 540px;">
+                    <div class="col-6 col-sm-3">
+                        <div class="stat-card">
+                            <div class="stat-value">{{ totalVolumes }}</div>
+                            <div class="stat-label">tomów</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-sm-3">
+                        <div class="stat-card">
+                            <div class="stat-value">{{ totalDocs|number_format(0, ',', ' ') }}</div>
+                            <div class="stat-label">tekstów</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-sm-3">
+                        <div class="stat-card">
+                            <div class="stat-value">{{ (totalWords / 1000000)|number_format(1, ',', ' ') }}<small>mln</small></div>
+                            <div class="stat-label">słów</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-sm-3">
+                        <div class="stat-card">
+                            <div class="stat-value">{{ (totalChars / 1000000)|number_format(0, ',', ' ') }}<small>mln</small></div>
+                            <div class="stat-label">znaków</div>
+                        </div>
+                    </div>
+                </div>
+
+                {# Quote #}
+                <p class="quote-block mb-4" style="max-width: 480px;">
+                    &bdquo;Wszystko postawiłem na Maryję. I jeszcze nigdy na tym nie straciłem
+                    i stracić nie mogę&rdquo;
+                    <br><span class="small" style="opacity:.6;">&mdash; Stefan Kardynał Wyszyński</span>
+                </p>
+
+                {# Features #}
+                <div class="d-flex flex-column gap-3 features-list" style="max-width: 420px;">
+                    <div class="d-flex align-items-center gap-3 feature-row">
+                        <div class="feature-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="text-gold" width="20" height="20" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><circle cx="10" cy="10" r="7"/><line x1="21" y1="21" x2="15" y2="15"/></svg>
+                        </div>
+                        <div>
+                            <div class="fw-semibold" style="font-size:.92rem;">Wyszukiwanie pełnotekstowe</div>
+                            <div class="small" style="opacity:.5;">Przeszukuj kazania, listy i przemówienia</div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-3 feature-row">
+                        <div class="feature-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="text-gold" width="20" height="20" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M5 12v-7a2 2 0 0 1 2 -2h7l5 5v4"/><path d="M5 18h1.5a1.5 1.5 0 0 0 0 -3h-1.5v6"/><path d="M17 18h2"/><path d="M20 15h-3v6"/><path d="M11 15v6h1a2 2 0 0 0 2 -2v-2a2 2 0 0 0 -2 -2h-1z"/></svg>
+                        </div>
+                        <div>
+                            <div class="fw-semibold" style="font-size:.92rem;">Eksport do PDF</div>
+                            <div class="small" style="opacity:.5;">Zapisuj dokumenty z przypisami</div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-3 feature-row">
+                        <div class="feature-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="text-gold" width="20" height="20" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0"/><path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0"/><line x1="3" y1="6" x2="3" y2="19"/><line x1="12" y1="6" x2="12" y2="19"/><line x1="21" y1="6" x2="21" y2="19"/></svg>
+                        </div>
+                        <div>
+                            <div class="fw-semibold" style="font-size:.92rem;">{{ totalVolumes }} tomów Dzieł Zebranych</div>
+                            <div class="small" style="opacity:.5;">Filtrowanie po tomach, datach i typach</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# ===== RIGHT: Login form ===== #}
+            <div class="col-lg-5 col-md-8 login-form-col">
+                <div class="login-card p-4 p-lg-5">
+                    <h3 class="text-white fw-bold mb-1 text-center">Zaloguj się</h3>
+                    <p class="text-center mb-4" style="color:rgba(255,255,255,.45); font-size:.88rem;">Dostęp do pełnej bazy tekstów</p>
+
+                    {% if error %}
+                        <div class="alert alert-danger py-2">
+                            {{ error.messageKey|trans(error.messageData, 'security') }}
+                        </div>
+                    {% endif %}
+
+                    <form method="post">
+                        <div class="mb-3">
+                            <label class="form-label" for="inputEmail">Adres e-mail</label>
+                            <input type="email" name="_username" id="inputEmail"
+                                   class="form-control form-control-lg"
+                                   value="{{ last_username }}"
+                                   placeholder="email@example.com"
+                                   autocomplete="email"
+                                   autofocus required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label" for="inputPassword">Hasło</label>
+                            <input type="password" name="_password" id="inputPassword"
+                                   class="form-control form-control-lg"
+                                   placeholder="Hasło"
+                                   autocomplete="current-password"
+                                   required>
+                        </div>
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+                        <button type="submit" class="btn btn-gold btn-lg w-100">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon me-1" width="20" height="20" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M14 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2"/><path d="M20 12h-13l3 -3m0 6l-3 -3"/></svg>
+                            Zaloguj się
+                        </button>
+                    </form>
+                </div>
+
+                <div class="text-center mt-4">
+                    <span style="color:rgba(255,255,255,.35); font-size:.78rem;">
+                        Dzieła Zebrane &mdash; <a href="https://poznajwyszynskiego.pl" class="text-gold text-decoration-none">poznajwyszynskiego.pl</a>
+                    </span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

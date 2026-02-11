@@ -1,0 +1,191 @@
+<header>
+    <h1>Propozycje identyfikacji wizualnej</h1>
+    <p class="subtitle">Projekt: Inteligentna wyszukiwarka tekstów Prymasa Wyszyńskiego</p>
+    <span class="domain">poznajwyszynskiego.pl</span>
+</header>
+
+<nav>
+    <ul>
+        <li>
+            <a href="#logo-glowne">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+                <span class="nav-text">Logo główne</span>
+            </a>
+        </li>
+        <li>
+            <a href="#elementy">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                    <polyline points="2 17 12 22 22 17"></polyline>
+                    <polyline points="2 12 12 17 22 12"></polyline>
+                </svg>
+                <span class="nav-text">Elementy</span>
+            </a>
+        </li>
+        <li>
+            <a href="#wideo">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+                <span class="nav-text">Wideo</span>
+            </a>
+        </li>
+        <li>
+            <a href="#kolory">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="13.5" cy="6.5" r="2.5"></circle>
+                    <circle cx="17.5" cy="10.5" r="2.5"></circle>
+                    <circle cx="8.5" cy="7.5" r="2.5"></circle>
+                    <circle cx="6.5" cy="12.5" r="2.5"></circle>
+                    <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.555C21.965 6.012 17.461 2 12 2z"></path>
+                </svg>
+                <span class="nav-text">Kolory</span>
+            </a>
+        </li>
+    </ul>
+</nav>
+
+<main>
+
+    <section id="logo-glowne">
+        <div class="section-header">
+            <h2>Propozycje logo</h2>
+            <p>Dwa warianty głównego logotypu – z portretem Prymasa oraz w wersji symbolicznej z mitrą i księgą</p>
+        </div>
+        <div class="logo-grid">
+            <div class="logo-card">
+                <div class="logo-preview">
+                    <img src="{{ asset('logo_PW_pl.png') }}" alt="Logo z portretem Prymasa Wyszyńskiego">
+                </div>
+                <div class="logo-info">
+                    <h3>Wariant A – Z portretem Prymasa</h3>
+                    <p>Stylizowany portret Kardynała Stefana Wyszyńskiego w charakterystycznej pozie zamyślenia. Podkreśla osobisty, ludzki wymiar projektu – bezpośrednie „poznawanie" postaci Prymasa.</p>
+                    <span class="logo-tag recommended">Rekomendowany</span>
+                </div>
+            </div>
+            <div class="logo-card">
+                <div class="logo-preview">
+                    <img src="{{ asset('logo_PW_2_pl.png') }}" alt="Logo z mitrą i księgą">
+                </div>
+                <div class="logo-info">
+                    <h3>Wariant B – Symboliczny</h3>
+                    <p>Alternatywna wersja z symbolami: mitra biskupia (godność prymasowska) oraz otwarta księga (teksty, nauczanie). Bardziej uniwersalny i łatwiejszy do skalowania na małe formaty.</p>
+                    <span class="logo-tag">Wersja alternatywna</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="elementy">
+        <div class="section-header">
+            <h2>Elementy graficzne</h2>
+            <p>Samodzielne ikony do wykorzystania jako favicon, avatar, znak wodny</p>
+        </div>
+        <div class="icons-grid">
+            <div class="icon-card">
+                <img src="{{ asset('logo_PW_bez_obramowania.png') }}" alt="Portret Prymasa - ikona">
+                <h4>Portret – wersja monochromatyczna</h4>
+                <p>Do użycia jako favicon, avatar w social media, znak wodny na dokumentach</p>
+            </div>
+            <div class="icon-card">
+                <img src="{{ asset('logo2_PW.png') }}" alt="Mitra z księgą - ikona">
+                <h4>Symbol mitry z księgą</h4>
+                <p>Uproszczona ikona do zastosowań, gdzie portret byłby nieczytelny (małe rozmiary)</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="wideo">
+        <div class="section-header">
+            <h2>Materiał promocyjny</h2>
+            <p>Animacja / spot wideo do wykorzystania w kampanii promocyjnej projektu</p>
+        </div>
+        <div class="video-container">
+            <div class="video-wrapper">
+                <video controls poster="{{ asset('logo_PW_bez_obramowania.png') }}">
+                    <source src="{{ asset('wyszynski.mp4') }}" type="video/mp4">
+                    <div class="video-placeholder">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        </svg>
+                        <p>wyszynski.mp4</p>
+                    </div>
+                </video>
+            </div>
+            <div class="video-info">
+                <h3>Spot promocyjny</h3>
+                <p>Materiał wideo do wykorzystania na stronie głównej, w social media oraz podczas prezentacji projektu.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="kolory">
+        <div class="section-header">
+            <h2>Paleta kolorów</h2>
+            <p>Spójna kolorystyka nawiązująca do szat liturgicznych i godności prymasowskiej</p>
+        </div>
+        <div class="palette">
+            <div class="color-swatch">
+                <div class="swatch" style="background: #722F37;"></div>
+                <div class="name">Burgund</div>
+                <div class="hex">#722F37</div>
+            </div>
+            <div class="color-swatch">
+                <div class="swatch" style="background: #4a7eb8;"></div>
+                <div class="name">Błękit</div>
+                <div class="hex">#4A7EB8</div>
+            </div>
+            <div class="color-swatch">
+                <div class="swatch" style="background: #1a365d;"></div>
+                <div class="name">Granat</div>
+                <div class="hex">#1A365D</div>
+            </div>
+            <div class="color-swatch">
+                <div class="swatch" style="background: #c9a227;"></div>
+                <div class="name">Złoto</div>
+                <div class="hex">#C9A227</div>
+            </div>
+            <div class="color-swatch">
+                <div class="swatch" style="background: #faf8f5;"></div>
+                <div class="name">Kość słoniowa</div>
+                <div class="hex">#FAF8F5</div>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<footer>
+    <p>Propozycje identyfikacji wizualnej dla projektu <strong>poznajwyszynskiego.pl</strong></p>
+    <p class="date">Przygotował: Michał Zboina MIKOM grudzień 2025</p>
+</footer>
+
+<script>
+    document.querySelectorAll('nav a').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) { target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+        });
+    });
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.logo-card, .icon-card, .video-container').forEach(el => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(30px)';
+        el.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out';
+        observer.observe(el);
+    });
+</script>

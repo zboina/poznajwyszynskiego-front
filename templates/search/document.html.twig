@@ -1,0 +1,148 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ doc.title ?: 'Dokument' }} - Dzieła Zebrane{% endblock %}
+{% block body_class %}border-top-wide border-primary{% endblock %}
+
+{% block stylesheets %}
+<style>
+    :root {
+        --tblr-primary: #722F37;
+        --tblr-primary-rgb: 114,47,55;
+    }
+    .bg-brand {
+        background: linear-gradient(135deg, #722F37 0%, #5C2630 100%);
+    }
+    .text-gold { color: #C9A227; }
+    .bg-navy { background-color: #1A365D; }
+    .doc-body { font-size: 1rem; line-height: 1.9; }
+    .doc-body p { margin-bottom: 1em; }
+    .doc-body h2, .doc-body h3 { color: #722F37; margin-top: 1.5em; margin-bottom: .5em; }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="page">
+
+    {# ===== HEADER ===== #}
+    <div class="bg-brand text-white">
+        <div class="container-xl py-4">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <a href="{{ path('app_search') }}" class="text-white text-decoration-none d-inline-flex align-items-center gap-1 small" style="opacity:.7;">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-sm" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><polyline points="15 6 9 12 15 18"/></svg>
+                    Powrót do wyszukiwarki
+                </a>
+                <div class="d-flex gap-2 align-items-center">
+                    {% if accessLevel == 'vip' %}
+                        <a href="{{ path('app_document_pdf', {id: doc.id}) }}" class="btn btn-sm btn-warning" target="_blank">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-sm" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M5 12v-7a2 2 0 0 1 2 -2h7l5 5v4"/><path d="M5 18h1.5a1.5 1.5 0 0 0 0 -3h-1.5v6"/><path d="M17 18h2"/><path d="M20 15h-3v6"/><path d="M11 15v6h1a2 2 0 0 0 2 -2v-2a2 2 0 0 0 -2 -2h-1z"/></svg>
+                            Eksport PDF
+                        </a>
+                    {% endif %}
+                    {% if accessLevel == 'user' and viewsRemaining is not null %}
+                        <span class="badge bg-white text-dark">
+                            Pozostało podglądów: <strong>{{ viewsRemaining }}</strong>/5
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+            <h1 class="h2 fw-bold mb-1">{{ doc.title ?: '(bez tytułu)' }}</h1>
+            {% if doc.subtitle %}
+                <p class="mb-2" style="opacity:.8;">{{ doc.subtitle }}</p>
+            {% endif %}
+            <div class="d-flex flex-wrap gap-3 small" style="opacity:.75;">
+                {% if doc.event_date %}
+                    <span class="d-inline-flex align-items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-sm" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><rect x="4" y="5" width="16" height="16" rx="2"/><line x1="16" y1="3" x2="16" y2="7"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="4" y1="11" x2="20" y2="11"/></svg>
+                        <strong class="text-white">{{ doc.event_date|date('d.m.Y') }}</strong>
+                    </span>
+                {% endif %}
+                {% if doc.location %}
+                    <span class="d-inline-flex align-items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-sm" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18.364 4.636a9 9 0 0 1 .203 12.519l-.203 .21l-4.243 4.242a3 3 0 0 1 -4.097 .135l-.144 -.135l-4.244 -4.243a9 9 0 0 1 12.728 -12.728z"/><circle cx="12" cy="11" r="3"/></svg>
+                        <strong class="text-white">{{ doc.location }}</strong>
+                    </span>
+                {% endif %}
+                {% if doc.document_type %}
+                    <span class="d-inline-flex align-items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-sm" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"/></svg>
+                        <strong class="text-white">{{ doc.document_type }}</strong>
+                    </span>
+                {% endif %}
+                {% if doc.volume_number %}
+                    <span class="d-inline-flex align-items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-sm" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0"/><path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0"/><line x1="3" y1="6" x2="3" y2="19"/><line x1="12" y1="6" x2="12" y2="19"/><line x1="21" y1="6" x2="21" y2="19"/></svg>
+                        <strong class="text-white">Tom {{ doc.volume_number }}{% if doc.volume_title %}: {{ doc.volume_title }}{% endif %}</strong>
+                    </span>
+                {% endif %}
+                {% if doc.addressee %}
+                    <span class="d-inline-flex align-items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-sm" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><circle cx="12" cy="7" r="4"/><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"/></svg>
+                        <strong class="text-white">{{ doc.addressee }}</strong>
+                    </span>
+                {% endif %}
+                {% if doc.words_count %}
+                    <span>{{ doc.words_count|number_format(0, ',', ' ') }} słów</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {# ===== TAGS ===== #}
+    {% if tags|length > 0 %}
+    <div class="container-xl py-2">
+        {% for tag in tags %}
+            <span class="badge bg-secondary-lt me-1">{{ tag.name }}</span>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {# ===== CONTENT ===== #}
+    <div class="page-body">
+        <div class="container-xl">
+            {% if accessLevel == 'guest' %}
+                {# === GUEST: access gate === #}
+                <div class="card">
+                    <div class="card-body">
+                        <div class="empty py-5">
+                            <div class="empty-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-lg text-muted" width="40" height="40" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><rect x="5" y="11" width="14" height="10" rx="2"/><circle cx="12" cy="16" r="1"/><path d="M8 11v-4a4 4 0 0 1 8 0v4"/></svg>
+                            </div>
+                            <p class="empty-title h3">Treść dostępna po zalogowaniu</p>
+                            <p class="empty-subtitle text-secondary">
+                                Zaloguj się, aby zobaczyć pełną treść tego dokumentu.<br>
+                                Metadane i wyniki wyszukiwania są dostępne dla wszystkich.
+                            </p>
+                            <div class="empty-action">
+                                <a href="{{ path('app_login') }}" class="btn" style="background:#722F37;color:#fff;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="20" height="20" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M14 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2"/><path d="M20 12h-13l3 -3m0 6l-3 -3"/></svg>
+                                    Zaloguj się
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                {# === LOGGED IN: load content via AJAX === #}
+                <div class="card">
+                    <div class="card-body doc-body"
+                         data-controller="dynamic-content"
+                         data-dynamic-content-url-value="{{ path('app_document_content', {id: doc.id}) }}">
+                        <div class="text-center py-5 text-muted">
+                            <div class="spinner-border mb-3" role="status" style="color:#722F37;"></div>
+                            <p>Ładowanie treści dokumentu...</p>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {# ===== FOOTER ===== #}
+    <footer class="footer footer-transparent bg-navy text-white py-3 mt-auto">
+        <div class="container-xl text-center">
+            <span class="small" style="opacity:.7;">Dzieła Zebrane Kardynała Stefana Wyszyńskiego &mdash; <a href="https://poznajwyszynskiego.pl" class="text-gold text-decoration-none">poznajwyszynskiego.pl</a></span>
+        </div>
+    </footer>
+
+</div>
+{% endblock %}

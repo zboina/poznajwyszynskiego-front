@@ -1,0 +1,47 @@
+security:
+    password_hashers:
+        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
+
+    providers:
+        app_user_provider:
+            entity:
+                class: App\Entity\User
+                property: email
+
+    role_hierarchy:
+        ROLE_VIP: ROLE_DONATOR
+        ROLE_DONATOR: ROLE_USER
+        ROLE_SUPER_ADMIN: [ROLE_VIP, ROLE_ADMIN]
+        ROLE_REDAKTOR: ROLE_VIP
+        ROLE_EDYTOR: ROLE_VIP
+
+    firewalls:
+        dev:
+            pattern: ^/(_profiler|_wdt|assets|build)/
+            security: false
+        main:
+            lazy: true
+            provider: app_user_provider
+            form_login:
+                login_path: app_login
+                check_path: app_login
+                default_target_path: app_search
+                enable_csrf: true
+            logout:
+                path: app_logout
+                target: app_login
+
+    access_control:
+        - { path: ^/logowanie, roles: PUBLIC_ACCESS }
+        - { path: ^/wyloguj, roles: PUBLIC_ACCESS }
+        - { path: ^/$, roles: PUBLIC_ACCESS }
+        - { path: ^/, roles: ROLE_USER }
+
+when@test:
+    security:
+        password_hashers:
+            Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
+                algorithm: auto
+                cost: 4
+                time_cost: 3
+                memory_cost: 10

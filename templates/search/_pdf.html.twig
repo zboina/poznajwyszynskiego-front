@@ -1,0 +1,86 @@
+<style>
+    body {
+        font-family: 'dejavuserif', serif;
+        font-size: 11pt;
+        line-height: 1.7;
+        color: #1a1a1a;
+    }
+    .header {
+        border-bottom: 2px solid #722F37;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+    .header h1 {
+        font-size: 16pt;
+        color: #722F37;
+        margin: 0 0 4px 0;
+    }
+    .header .subtitle {
+        font-size: 12pt;
+        color: #555;
+        margin: 0 0 8px 0;
+    }
+    .meta {
+        font-size: 9pt;
+        color: #666;
+    }
+    .meta span {
+        margin-right: 15px;
+    }
+    .meta strong { color: #333; }
+    .content h2, .content h3 {
+        color: #722F37;
+        margin-top: 1.2em;
+    }
+    .content p {
+        margin-bottom: 0.7em;
+        text-align: justify;
+        text-indent: 1.5em;
+    }
+    .content p:first-child {
+        text-indent: 0;
+    }
+    .footnotes { margin-top: 25px; padding-top: 15px; border-top: 1px solid #999; font-size: 8.5pt; color: #444; }
+    .footnotes ol { padding-left: 18px; }
+    .footnotes li { margin-bottom: 5px; line-height: 1.5; }
+    .footnote-ref { font-size: 8pt; vertical-align: super; line-height: 0; }
+    .footnote-ref a { color: #722F37; text-decoration: none; font-weight: bold; background-color: #f5eced; padding: 0 2px; border-radius: 2px; }
+    .footnote-back { display: none; }
+    .doc-footer {
+        margin-top: 30px;
+        padding-top: 10px;
+        border-top: 1px solid #ccc;
+        font-size: 8pt;
+        color: #999;
+        text-align: center;
+    }
+</style>
+
+<div class="header">
+    <h1>{{ doc.title ?: '(bez tytułu)' }}</h1>
+    {% if doc.subtitle %}
+        <p class="subtitle">{{ doc.subtitle }}</p>
+    {% endif %}
+    <div class="meta">
+        {% if doc.event_date %}
+            <span><strong>Data:</strong> {{ doc.event_date|date('d.m.Y') }}</span>
+        {% endif %}
+        {% if doc.location %}
+            <span><strong>Miejsce:</strong> {{ doc.location }}</span>
+        {% endif %}
+        {% if doc.document_type %}
+            <span><strong>Typ:</strong> {{ doc.document_type }}</span>
+        {% endif %}
+        {% if doc.volume_number %}
+            <span><strong>Tom {{ doc.volume_number }}{% if doc.volume_title %}: {{ doc.volume_title }}{% endif %}</strong></span>
+        {% endif %}
+    </div>
+</div>
+
+<div class="content">
+    {{ doc.content|raw }}
+</div>
+
+<div class="doc-footer">
+    Dzieła Zebrane Kardynała Stefana Wyszyńskiego &mdash; poznajwyszynskiego.pl
+</div>

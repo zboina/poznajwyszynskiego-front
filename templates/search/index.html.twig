@@ -1,0 +1,466 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Wyszukiwarka — Dzieła Zebrane Kardynała Wyszyńskiego{% endblock %}
+{% block body_class %}d-flex flex-column{% endblock %}
+
+{% block stylesheets %}
+<style>
+    :root {
+        --brand: #722F37;
+        --brand-dark: #5C2630;
+        --brand-navy: #1A365D;
+        --brand-gold: #C9A227;
+        --brand-cream: #FAF8F5;
+        --tblr-primary: #722F37;
+        --tblr-primary-rgb: 114,47,55;
+    }
+    body { background: var(--brand-cream); }
+
+    /* ═══════ NAVBAR ═══════ */
+    .app-navbar {
+        background: var(--brand);
+        box-shadow: 0 2px 8px rgba(0,0,0,.15);
+        position: relative;
+        z-index: 200;
+    }
+    .brand-mark {
+        display: flex; align-items: center; gap: .5rem;
+        text-decoration: none; color: #fff;
+    }
+    .brand-mark img { border: 2px solid rgba(201,162,39,.45); }
+    .brand-mark span { font-weight: 700; font-size: .9rem; letter-spacing: .01em; }
+    .user-pill {
+        display: inline-flex; align-items: center; gap: .35rem;
+        background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.15);
+        border-radius: 20px; padding: .25rem .65rem .25rem .45rem;
+        color: #fff; font-size: .78rem; white-space: nowrap;
+    }
+    .user-pill .role-badge {
+        font-size: .6rem; padding: .1rem .4rem; border-radius: 10px; font-weight: 700;
+        text-transform: uppercase; letter-spacing: .04em;
+    }
+    .views-pill {
+        display: inline-flex; align-items: center; gap: .3rem;
+        background: rgba(201,162,39,.2); border: 1px solid rgba(201,162,39,.3);
+        border-radius: 20px; padding: .2rem .6rem;
+        color: #C9A227; font-size: .75rem; font-weight: 600;
+    }
+
+    /* ═══════ HERO ═══════ */
+    .search-hero {
+        background: linear-gradient(160deg, #722F37 0%, #5C2630 35%, #3D1F38 65%, #1A365D 100%);
+        position: relative; overflow: hidden;
+        padding: 2.5rem 0 2rem;
+    }
+    .search-hero::before {
+        content: ''; position: absolute; inset: 0;
+        background:
+            radial-gradient(circle at 15% 85%, rgba(201,162,39,.07) 0%, transparent 50%),
+            radial-gradient(circle at 85% 15%, rgba(26,54,93,.12) 0%, transparent 40%);
+        pointer-events: none;
+    }
+    .hero-title { font-size: 1.6rem; font-weight: 800; letter-spacing: -.01em; font-family: var(--font-heading) !important; }
+    .hero-subtitle { font-size: .92rem; opacity: .7; font-family: var(--font-heading) !important; }
+
+    /* ── Stats row ── */
+    .stats-row {
+        display: flex; gap: .5rem; justify-content: center; flex-wrap: wrap;
+    }
+    .stat-badge {
+        display: inline-flex; align-items: center; gap: .35rem;
+        background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.1);
+        border-radius: 8px; padding: .35rem .7rem;
+        font-size: .8rem; color: rgba(255,255,255,.65);
+        backdrop-filter: blur(6px);
+    }
+    .stat-badge strong { color: #C9A227; font-weight: 800; }
+    .stat-badge svg { opacity: .5; }
+
+    /* ── Search bar ── */
+    .search-bar {
+        max-width: 680px; margin: 0 auto; position: relative;
+    }
+    .search-bar input {
+        width: 100%; padding: .85rem 1rem .85rem 3.2rem;
+        font-size: 1.05rem; color: #fff;
+        background: rgba(255,255,255,.1);
+        border: 2px solid rgba(255,255,255,.18);
+        border-radius: 14px;
+        backdrop-filter: blur(12px);
+        outline: none;
+        transition: all .2s;
+    }
+    .search-bar input::placeholder { color: rgba(255,255,255,.35); }
+    .search-bar input:focus {
+        border-color: var(--brand-gold);
+        background: rgba(255,255,255,.14);
+        box-shadow: 0 0 0 4px rgba(201,162,39,.12), 0 8px 24px rgba(0,0,0,.15);
+    }
+    .search-bar .bar-icon {
+        position: absolute; left: 1.1rem; top: 50%; transform: translateY(-50%);
+        color: rgba(255,255,255,.4); pointer-events: none;
+    }
+    .search-hint {
+        font-size: .72rem; opacity: .4; margin-top: .5rem;
+    }
+
+    /* ═══════ FILTERS ═══════ */
+    .filter-strip {
+        background: #fff;
+        border-bottom: 1px solid #eee;
+        box-shadow: 0 1px 4px rgba(0,0,0,.03);
+    }
+    .filter-strip label {
+        font-size: .65rem; text-transform: uppercase; letter-spacing: .06em;
+        color: #999; font-weight: 700; margin-bottom: .2rem;
+    }
+    .filter-strip .form-select,
+    .filter-strip .form-control {
+        font-size: .82rem; border-radius: 8px; border-color: #e8e4de;
+        background-color: #fafaf8;
+    }
+    .filter-strip .form-select:focus,
+    .filter-strip .form-control:focus {
+        border-color: var(--brand); box-shadow: 0 0 0 3px rgba(114,47,55,.08);
+    }
+    .btn-reset {
+        font-size: .78rem; color: #999; border: 1px solid #e0dbd5;
+        border-radius: 8px; padding: .3rem .6rem; background: #fff;
+        transition: all .15s; display: inline-flex; align-items: center; gap: .3rem;
+    }
+    .btn-reset:hover { color: var(--brand); border-color: var(--brand); }
+
+    /* ── Tags ── */
+    .tag-chip {
+        cursor: pointer; user-select: none;
+        display: inline-block; font-size: .75rem;
+        padding: .2rem .6rem; border-radius: 20px;
+        border: 1px solid #ddd; color: #777; background: #fff;
+        transition: all .15s;
+    }
+    .tag-chip:hover { border-color: var(--brand); color: var(--brand); background: rgba(114,47,55,.03); }
+    .tag-chip.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+
+    /* ═══════ RESULTS ═══════ */
+    .results-area { min-height: 300px; }
+
+    .result-card {
+        background: #fff; border-radius: 10px;
+        border: 1px solid #eee; border-left: 4px solid transparent;
+        cursor: pointer; transition: all .2s;
+        padding: 1rem 1.25rem;
+    }
+    .result-card:hover {
+        border-left-color: var(--brand);
+        box-shadow: 0 4px 16px rgba(114,47,55,.08);
+        transform: translateX(2px);
+    }
+    .result-card .rc-title {
+        font-size: .95rem; font-weight: 600; color: #2D2D2D;
+        margin: 0 0 .15rem; line-height: 1.35;
+        font-family: var(--font-heading) !important;
+    }
+    .result-card:hover .rc-title { color: var(--brand); }
+    .result-card .rc-subtitle {
+        font-size: .82rem; color: #888; margin: 0 0 .4rem;
+    }
+    .result-card .rc-meta {
+        display: flex; flex-wrap: wrap; gap: .15rem .5rem;
+        font-size: .72rem; color: #aaa;
+    }
+    .result-card .rc-meta span { display: inline-flex; align-items: center; gap: .25rem; }
+    .result-card .rc-snippet {
+        font-size: .78rem; color: #999; margin: .5rem 0 0;
+        line-height: 1.5; display: -webkit-box;
+        -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .result-card .rc-arrow {
+        color: #ddd; flex-shrink: 0; transition: color .15s, transform .15s;
+    }
+    .result-card:hover .rc-arrow { color: var(--brand); transform: translateX(3px); }
+
+    .results-summary {
+        font-size: .82rem; color: #999; margin-bottom: .75rem;
+        display: flex; align-items: center; justify-content: space-between;
+    }
+    .results-summary strong { color: #555; }
+
+    /* ── Colors / utility ── */
+    .text-gold { color: #C9A227; }
+    .bg-navy { background: var(--brand-navy); }
+    .spinner-border { color: var(--brand); }
+
+    /* ═══════ SEARCH HIGHLIGHT ═══════ */
+    .search-hl {
+        background: linear-gradient(135deg, rgba(201,162,39,.25) 0%, rgba(201,162,39,.35) 100%);
+        color: inherit;
+        padding: .05em .2em;
+        border-radius: 3px;
+        border-bottom: 2px solid rgba(201,162,39,.6);
+        font-style: inherit;
+    }
+    .result-card .search-hl {
+        background: rgba(201,162,39,.18);
+        border-bottom-width: 1px;
+        padding: .02em .15em;
+    }
+
+    /* ═══════ DOCUMENT BODY ═══════ */
+    .doc-body { font-size: 1.05rem; line-height: 1.9; color: #2D2D2D; font-family: var(--font-body) !important; }
+    .doc-body p { margin-bottom: 1em; text-indent: 1.5em; }
+    .doc-body p:first-child { text-indent: 0; }
+    .doc-body h2, .doc-body h3 { color: var(--brand); margin-top: 1.5em; margin-bottom: .5em; text-indent: 0; }
+
+    /* ── Footnotes ── */
+    .footnotes { margin-top: 2.5em; padding-top: 1.5em; font-size: .88rem; color: #555; border-top: 1px solid #ddd; }
+    .footnotes ol { padding-left: 1.5em; }
+    .footnotes li { margin-bottom: .6em; line-height: 1.6; }
+    .footnotes li:target { background: #fef9e7; border-radius: 4px; padding: 2px 4px; }
+    .footnote-ref { position: relative; }
+    .footnote-ref a {
+        display: inline-flex; align-items: center; justify-content: center;
+        min-width: 1.3em; height: 1.3em; padding: 0 .25em;
+        font-size: .7em; font-weight: 700; line-height: 1;
+        color: var(--brand); background: rgba(114,47,55,.08); border-radius: 3px;
+        text-decoration: none; vertical-align: super;
+        transition: background .15s, color .15s;
+    }
+    .footnote-ref a:hover { background: var(--brand); color: #fff; }
+    .footnote-ref a[data-tooltip] { cursor: help; }
+    .footnote-ref a[data-tooltip]::after {
+        content: attr(data-tooltip);
+        position: absolute; bottom: 130%; left: 50%; transform: translateX(-50%);
+        width: max-content; max-width: 350px;
+        padding: .5em .75em; border-radius: 6px;
+        background: #2D2D2D; color: #f5f5f5;
+        font-size: 11.5px; font-weight: 400; line-height: 1.5;
+        white-space: normal; text-align: left;
+        box-shadow: 0 4px 16px rgba(0,0,0,.2);
+        opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 1000;
+    }
+    .footnote-ref a[data-tooltip]:hover::after { opacity: 1; }
+    .footnote-back { color: #999; text-decoration: none; font-size: .85em; margin-left: .3em; }
+    .footnote-back:hover { color: var(--brand); }
+
+    /* ═══════ DOCUMENT VIEWER ═══════ */
+    #document-viewer { display: none; }
+    #document-viewer.active { display: block; animation: slideUp .3s ease; }
+    #search-area.hidden { display: none; }
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(12px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ═══════ PAGINATION ═══════ */
+    .pagination .page-link { border-radius: 8px; margin: 0 2px; font-size: .85rem; }
+    .pagination .page-item.active .page-link { background: var(--brand); border-color: var(--brand); }
+
+    /* ═══════ RESPONSIVE ═══════ */
+    @media (max-width: 991.98px) {
+        .search-hero { padding: 2rem 0 1.5rem; }
+        .hero-title { font-size: 1.4rem; }
+    }
+    @media (max-width: 767.98px) {
+        .search-hero { padding: 1.5rem 0 1.25rem; }
+        .hero-title { font-size: 1.2rem; }
+        .hero-subtitle { font-size: .82rem; }
+        .stats-row { gap: .35rem; }
+        .stat-badge { font-size: .7rem; padding: .25rem .5rem; }
+        .search-bar input { font-size: .95rem; padding: .75rem 1rem .75rem 2.8rem; }
+        .filter-strip .filter-grid { flex-direction: column; }
+        .filter-strip .filter-grid > div { width: 100%; }
+        .brand-mark span { display: none; }
+        .result-card { padding: .75rem 1rem; }
+        .result-card .rc-title { font-size: .88rem; }
+    }
+    @media (max-width: 575.98px) {
+        .stat-badge { font-size: .65rem; padding: .2rem .4rem; gap: .2rem; }
+        .stat-badge svg { display: none; }
+        .user-pill { font-size: .7rem; }
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="page"
+     data-controller="search"
+     data-search-url-value="{{ path('app_search_results') }}"
+     data-search-preview-url-value="{{ path('app_document_preview', {id: 0}) }}">
+
+    {# ═══════ SEARCH AREA ═══════ #}
+    <div id="search-area">
+
+        {# ── Navbar ── #}
+        <nav class="app-navbar">
+            <div class="container-xl d-flex align-items-center justify-content-between py-2">
+                <div class="brand-mark">
+                    <img src="{{ asset('logo_PW_bez_obramowania.png') }}" alt="" width="30" height="30" class="rounded-circle">
+                    <span>Dzieła Zebrane</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    {% if app.user %}
+                        <div class="user-pill">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" style="opacity:.6;"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><circle cx="12" cy="7" r="4"/><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"/></svg>
+                            {{ app.user.name ?? app.user.email }}
+                            {% if is_granted('ROLE_VIP') %}
+                                <span class="role-badge" style="background:#C9A227; color:#1a1a1a;">VIP</span>
+                            {% elseif is_granted('ROLE_DONATOR') %}
+                                <span class="role-badge" style="background:#2fb344; color:#fff;">Donator</span>
+                            {% else %}
+                                <span class="role-badge" style="background:rgba(255,255,255,.2); color:#fff;">User</span>
+                            {% endif %}
+                        </div>
+                        {% if accessLevel == 'user' and viewsRemaining is not null %}
+                            <div class="views-pill">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"/><path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6"/></svg>
+                                {{ viewsRemaining }}/5
+                            </div>
+                        {% endif %}
+                        <a href="{{ path('app_logout') }}" class="btn btn-sm btn-ghost-light py-1 px-2" style="font-size: .78rem; opacity:.7;">Wyloguj</a>
+                    {% else %}
+                        <a href="{{ path('app_login') }}" class="btn btn-sm btn-ghost-light py-1 px-2">Zaloguj się</a>
+                    {% endif %}
+                </div>
+            </div>
+        </nav>
+
+        {# ── Hero ── #}
+        <div class="search-hero text-white" data-search-target="hero">
+            <div class="container-xl position-relative" style="z-index:1;">
+                <div class="text-center">
+
+                    <h1 class="hero-title mb-1">Dzieła Zebrane Kardynała Stefana Wyszyńskiego</h1>
+                    <p class="hero-subtitle mb-3">Cyfrowa biblioteka pism Prymasa Tysiąclecia</p>
+
+                    {# Stats: tomy → teksty → słowa → znaki #}
+                    <div class="stats-row mb-3">
+                        <div class="stat-badge">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0"/><path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0"/><line x1="3" y1="6" x2="3" y2="19"/><line x1="12" y1="6" x2="12" y2="19"/><line x1="21" y1="6" x2="21" y2="19"/></svg>
+                            <strong>{{ volumes|length }}</strong> tomów
+                        </div>
+                        <div class="stat-badge">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"/></svg>
+                            <strong>{{ totalCount|number_format(0, ',', ' ') }}</strong> tekstów
+                        </div>
+                        <div class="stat-badge">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12h1m8 -9v1m8 8h1m-15.4 -6.4l.7 .7m12.1 -.7l-.7 .7"/><path d="M9 16a5 5 0 1 1 6 0a3.5 3.5 0 0 0 -1 3a2 2 0 0 1 -4 0a3.5 3.5 0 0 0 -1 -3"/><line x1="9.7" y1="17" x2="14.3" y2="17"/></svg>
+                            <strong>{{ (totalWords / 1000000)|number_format(1, ',', ' ') }}</strong> mln słów
+                        </div>
+                        <div class="stat-badge">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><line x1="4" y1="20" x2="7" y2="20"/><line x1="14" y1="20" x2="21" y2="20"/><line x1="6.9" y1="15" x2="13.8" y2="15"/><line x1="10.2" y1="10" x2="16" y2="10"/><polyline points="5 20 11 4 13 4 19 20"/></svg>
+                            <strong>{{ (totalChars / 1000000)|number_format(0, ',', ' ') }}</strong> mln znaków
+                        </div>
+                    </div>
+
+                    {# Search #}
+                    <div class="search-bar">
+                        <svg class="bar-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><circle cx="10" cy="10" r="7"/><line x1="21" y1="21" x2="15" y2="15"/></svg>
+                        <input type="search"
+                               data-search-target="input"
+                               data-action="input->search#onInput"
+                               placeholder="Szukaj w kazaniach, listach, przemówieniach..."
+                               autocomplete="off"
+                               autofocus>
+                    </div>
+                    <p class="search-hint">Wpisz frazę i naciśnij Enter &mdash; pełnotekstowe przeszukiwanie w języku polskim</p>
+
+                </div>
+            </div>
+        </div>
+
+        {# ── Filters ── #}
+        <div class="filter-strip sticky-top" style="z-index: 100;" data-search-target="filters">
+            <div class="container-xl py-2">
+                <div class="d-flex gap-2 align-items-end flex-wrap filter-grid">
+                    <div>
+                        <label>Tom</label>
+                        <select class="form-select form-select-sm" data-search-target="volume" data-action="change->search#onFilterChange">
+                            <option value="">Wszystkie tomy</option>
+                            {% for vol in volumes %}
+                                <option value="{{ vol.id }}">Tom {{ vol.number }}{% if vol.year_from %} ({{ vol.year_from }}–{{ vol.year_to }}){% endif %}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label>Typ</label>
+                        <select class="form-select form-select-sm" data-search-target="type" data-action="change->search#onFilterChange">
+                            <option value="">Wszystkie typy</option>
+                            {% for dtype in documentTypes %}
+                                <option value="{{ dtype }}">{{ dtype }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label>Od</label>
+                        <input type="date" class="form-control form-control-sm" data-search-target="dateFrom" data-action="change->search#onFilterChange">
+                    </div>
+                    <div>
+                        <label>Do</label>
+                        <input type="date" class="form-control form-control-sm" data-search-target="dateTo" data-action="change->search#onFilterChange">
+                    </div>
+                    <div>
+                        <button class="btn-reset" data-action="click->search#resetFilters">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4"/><path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4"/></svg>
+                            Wyczyść
+                        </button>
+                    </div>
+                </div>
+                {% if tags|length > 0 %}
+                <div class="mt-2 d-flex flex-wrap gap-1" data-search-target="tagsContainer">
+                    {% for tag in tags %}
+                        <span class="tag-chip"
+                              data-tag-id="{{ tag.id }}"
+                              data-action="click->search#onTagClick">{{ tag.name }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {# ── Results ── #}
+        <div style="background: var(--brand-cream);">
+            <div class="container-xl py-3">
+                <div class="results-area" data-search-target="results">
+                    <div class="text-center py-5">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 24 24" stroke-width="1" stroke="#ccc" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><circle cx="10" cy="10" r="7"/><line x1="21" y1="21" x2="15" y2="15"/></svg>
+                        <p class="mt-3 mb-1" style="font-size:1.1rem; font-weight:600; color:#888;">Wpisz frazę, aby wyszukać</p>
+                        <p style="font-size:.85rem; color:#bbb;">{{ totalCount|number_format(0, ',', ' ') }} tekstów Prymasa Wyszyńskiego czeka na Ciebie</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>{# /search-area #}
+
+    {# ═══════ DOCUMENT VIEWER ═══════ #}
+    <div id="document-viewer" data-search-target="documentViewer">
+        <nav class="app-navbar">
+            <div class="container-xl d-flex align-items-center justify-content-between py-2">
+                <div class="brand-mark">
+                    <img src="{{ asset('logo_PW_bez_obramowania.png') }}" alt="" width="30" height="30" class="rounded-circle">
+                    <span>Dzieła Zebrane</span>
+                </div>
+                <button class="btn btn-sm btn-ghost-light d-inline-flex align-items-center gap-1 py-1"
+                        data-action="click->search#closeDocument" style="font-size:.82rem;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><polyline points="15 6 9 12 15 18"/></svg>
+                    Powrót do wyników
+                </button>
+            </div>
+        </nav>
+        <div style="background: var(--brand-cream);">
+            <div class="container-xl py-3 py-md-4">
+                <div class="card" style="border-radius:12px; border:none; box-shadow: 0 2px 16px rgba(0,0,0,.06);" data-search-target="documentContent">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ── Footer ── #}
+    <footer class="bg-navy text-white py-3 mt-auto">
+        <div class="container-xl text-center">
+            <span style="font-size:.75rem; opacity:.5;">Dzieła Zebrane Kardynała Stefana Wyszyńskiego &mdash; <a href="https://poznajwyszynskiego.pl" class="text-gold text-decoration-none">poznajwyszynskiego.pl</a></span>
+        </div>
+    </footer>
+
+</div>
+{% endblock %}
