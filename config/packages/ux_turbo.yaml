@@ -1,4 +1,5 @@
-# Enable stateless CSRF protection for forms and logins/logouts
+# Stateless CSRF protection (Turbo)
+# check_header disabled — login form uses hidden field, not header
 framework:
     csrf_protection:
-        check_header: true
+        check_header: false

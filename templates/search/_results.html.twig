@@ -16,7 +16,8 @@
         <div class="result-card"
              role="button"
              data-action="click->search#openDocument"
-             data-doc-id="{{ row.id }}">
+             data-doc-id="{{ row.id }}"
+             data-doc-slug="{{ row.slug ?? '' }}">
             <div class="d-flex align-items-start">
                 <div class="flex-fill" style="min-width:0;">
                     <h4 class="rc-title">{{ row.title ?: '(bez tytułu)' }}</h4>

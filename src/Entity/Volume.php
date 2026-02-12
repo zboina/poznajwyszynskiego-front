@@ -27,6 +27,9 @@ class Volume
     #[ORM\Column(name: 'year_to', nullable: true)]
     private ?int $yearTo = null;
 
+    #[ORM\Column(length: 50, nullable: true)]
+    private ?string $status = null;
+
     #[ORM\OneToMany(targetEntity: Document::class, mappedBy: 'volume')]
     private Collection $documents;
 
@@ -58,6 +61,22 @@ class Volume
     public function getYearTo(): ?int
     {
         return $this->yearTo;
+    }
+
+    public function getStatus(): ?string
+    {
+        return $this->status;
+    }
+
+    public function setStatus(?string $status): self
+    {
+        $this->status = $status;
+        return $this;
+    }
+
+    public function isPublished(): bool
+    {
+        return $this->status === 'opublikowany';
     }
 
     public function getDocuments(): Collection

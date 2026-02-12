@@ -26,6 +26,10 @@ doctrine:
                 alias: App
         controller_resolver:
             auto_mapping: false
+        filters:
+            published_volume:
+                class: App\Filter\PublishedVolumeFilter
+                enabled: true
 
 when@test:
     doctrine:

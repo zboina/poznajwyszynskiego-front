@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Repository\DocumentRepository;
+use App\Service\EmbeddingService;
 use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -15,14 +16,40 @@ class SearchController extends AbstractController
     public function __construct(
         private DocumentRepository $documentRepository,
         private Connection $connection,
+        private EmbeddingService $embeddingService,
     ) {}
 
     #[Route('/szukaj', name: 'app_search')]
-    public function index(): Response
+    #[Route('/tekst/{id}-{slug}', name: 'app_search_doc', requirements: ['id' => '\d+', 'slug' => '[a-z0-9-]+'])]
+    #[Route('/tekst/{id}', name: 'app_search_doc_short', requirements: ['id' => '\d+'])]
+    public function index(?int $id = null, ?string $slug = null): Response
     {
-        $volumes = $this->connection->executeQuery(
-            'SELECT id, number, title, year_from, year_to FROM volumes ORDER BY number'
-        )->fetchAllAssociative();
+        $pj = $this->documentRepository->publishedJoin();
+
+        // If we have an id but no/wrong slug, redirect to canonical URL
+        if ($id) {
+            $docSlug = $this->connection->executeQuery(
+                "SELECT d.slug FROM documents d {$pj} WHERE d.id = :id",
+                ['id' => $id]
+            )->fetchOne();
+
+            if ($docSlug === false) {
+                throw $this->createNotFoundException();
+            }
+
+            if ($slug !== $docSlug) {
+                return $this->redirectToRoute('app_search_doc', [
+                    'id' => $id,
+                    'slug' => $docSlug ?: 'dokument',
+                ], 301);
+            }
+        }
+
+        $isAdmin = $this->isGranted('ROLE_ADMIN');
+        $volumesSql = $isAdmin
+            ? 'SELECT id, number, title, year_from, year_to FROM volumes ORDER BY number'
+            : "SELECT id, number, title, year_from, year_to FROM volumes WHERE status = 'opublikowany' ORDER BY number";
+        $volumes = $this->connection->executeQuery($volumesSql)->fetchAllAssociative();
 
         $tags = $this->connection->executeQuery(
             'SELECT id, name, slug, color FROM tags ORDER BY name'
@@ -51,6 +78,7 @@ class SearchController extends AbstractController
             'totalChars' => $totalChars,
             'accessLevel' => $accessLevel,
             'viewsRemaining' => $viewsRemaining,
+            'openDocId' => $id,
         ]);
     }
 
@@ -76,16 +104,37 @@ class SearchController extends AbstractController
         $limit = $canPaginate ? 20 : 10;
         $page = $canPaginate ? max(1, $request->query->getInt('page', 1)) : 1;
 
-        $data = $this->documentRepository->search(
-            query: $query,
-            volumeId: $volumeId,
-            documentType: $documentType,
-            tagId: $tagId,
-            dateFrom: $dateFrom,
-            dateTo: $dateTo,
-            page: $page,
-            limit: $limit,
-        );
+        // Detect if query looks like a natural language question
+        $useSemanticSearch = $query && $this->isSemanticQuery($query);
+
+        if ($useSemanticSearch) {
+            $embedding = $this->embeddingService->getEmbedding($query);
+        }
+
+        if ($useSemanticSearch && !empty($embedding)) {
+            $data = $this->documentRepository->hybridSearch(
+                query: $query,
+                queryEmbedding: $embedding,
+                volumeId: $volumeId,
+                documentType: $documentType,
+                tagId: $tagId,
+                dateFrom: $dateFrom,
+                dateTo: $dateTo,
+                page: $page,
+                limit: $limit,
+            );
+        } else {
+            $data = $this->documentRepository->search(
+                query: $query,
+                volumeId: $volumeId,
+                documentType: $documentType,
+                tagId: $tagId,
+                dateFrom: $dateFrom,
+                dateTo: $dateTo,
+                page: $page,
+                limit: $limit,
+            );
+        }
 
         $pages = $canPaginate ? max(1, (int) ceil($data['total'] / $limit)) : 1;
 
@@ -121,11 +170,11 @@ class SearchController extends AbstractController
     #[Route('/dokument/{id}', name: 'app_document', requirements: ['id' => '\d+'])]
     public function document(int $id): Response
     {
+        $pj = $this->documentRepository->publishedJoin();
         $doc = $this->connection->executeQuery(
-            'SELECT d.*, v.number AS volume_number, v.title AS volume_title
-             FROM documents d
-             LEFT JOIN volumes v ON v.id = d.volume_id
-             WHERE d.id = :id',
+            "SELECT d.*, v.number AS volume_number, v.title AS volume_title
+             FROM documents d {$pj}
+             WHERE d.id = :id",
             ['id' => $id]
         )->fetchAssociative();
 
@@ -196,8 +245,9 @@ class SearchController extends AbstractController
             }
         }
 
+        $pj = $this->documentRepository->publishedJoin();
         $content = $this->connection->executeQuery(
-            'SELECT content FROM documents WHERE id = :id',
+            "SELECT d.content FROM documents d {$pj} WHERE d.id = :id",
             ['id' => $id]
         )->fetchOne();
 
@@ -223,11 +273,11 @@ class SearchController extends AbstractController
             return $this->redirectToRoute('app_search');
         }
 
+        $pj = $this->documentRepository->publishedJoin();
         $doc = $this->connection->executeQuery(
-            'SELECT d.*, v.number AS volume_number, v.title AS volume_title
-             FROM documents d
-             LEFT JOIN volumes v ON v.id = d.volume_id
-             WHERE d.id = :id',
+            "SELECT d.*, v.number AS volume_number, v.title AS volume_title
+             FROM documents d {$pj}
+             WHERE d.id = :id",
             ['id' => $id]
         )->fetchAssociative();
 
@@ -309,12 +359,12 @@ class SearchController extends AbstractController
     {
         $this->denyAccessUnlessGranted('ROLE_VIP');
 
+        $pj = $this->documentRepository->publishedJoin();
         $doc = $this->connection->executeQuery(
-            'SELECT d.title, d.subtitle, d.content, d.event_date, d.location, d.document_type,
+            "SELECT d.title, d.subtitle, d.content, d.event_date, d.location, d.document_type,
                     v.number AS volume_number, v.title AS volume_title
-             FROM documents d
-             LEFT JOIN volumes v ON v.id = d.volume_id
-             WHERE d.id = :id',
+             FROM documents d {$pj}
+             WHERE d.id = :id",
             ['id' => $id]
         )->fetchAssociative();
 
@@ -411,6 +461,47 @@ class SearchController extends AbstractController
             'SELECT number, content FROM footnotes WHERE document_id = :id ORDER BY number',
             ['id' => $documentId]
         )->fetchAllAssociative();
+    }
+
+    /**
+     * Detect if query looks like a natural language question (vs keyword search).
+     */
+    private function isSemanticQuery(string $query): bool
+    {
+        $q = mb_strtolower(trim($query));
+
+        // Quoted phrases → use keyword search
+        if (str_contains($q, '"') || str_contains($q, "\u{201e}") || str_contains($q, "\u{201d}")) {
+            return false;
+        }
+
+        // Very short queries (1-2 words) → keyword search
+        $words = preg_split('/\s+/', $q);
+        if (count($words) <= 2) {
+            return false;
+        }
+
+        // Polish question words and natural language patterns
+        $patterns = [
+            '/^(co|jak|gdzie|kiedy|dlaczego|czemu|czy|kto|jaki|jaka|jakie|jakim|ile|o czym)\b/',
+            '/\b(pisał|mówił|nauczał|głosił|twierdził|uważał|sądził|myślał|napisał|powiedział)\b/',
+            '/\b(na temat|o tym|w sprawie|w kwestii|w kontekście|na przykład|według|zdaniem)\b/',
+            '/\b(prymas|wyszyński|kardynał|stefan)\b.*\b(pisał|mówił|nauczał|głosił|myślał|uważał)\b/',
+            '/\?\s*$/',
+        ];
+
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $q)) {
+                return true;
+            }
+        }
+
+        // 4+ words without quotes → likely a sentence, use semantic
+        if (count($words) >= 4) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

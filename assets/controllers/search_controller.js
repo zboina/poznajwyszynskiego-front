@@ -30,9 +30,10 @@ export default class extends Controller {
     static values = {
         url: String,
         previewUrl: String,
+        openDoc: Number,
     };
     static targets = [
-        'input', 'volume', 'type', 'dateFrom', 'dateTo', 'tagsContainer', 'results',
+        'input', 'volume', 'type', 'dateFrom', 'dateTo', 'tagsContainer', 'tagSelect', 'results',
         'hero', 'filters', 'documentViewer', 'documentContent',
     ];
 
@@ -43,20 +44,47 @@ export default class extends Controller {
         this.abortController = null;
         this.docAbortController = null;
         this.viewingDocument = false;
+        this.currentDocIndex = -1;
+        this.resultDocIds = [];
+        this.resultDocSlugs = {};
+        this._searchUrl = null;
 
         // Listen for browser back/forward
         this._onPopState = this._handlePopState.bind(this);
         window.addEventListener('popstate', this._onPopState);
+
+        // Keyboard nav: left/right arrows for prev/next document
+        this._onKeyDown = this._handleKeyDown.bind(this);
+        window.addEventListener('keydown', this._onKeyDown);
+
+        // Auto-open document if URL is /tekst/{id}-{slug}
+        if (this.openDocValue) {
+            // Save search URL so we can go back
+            this._searchUrl = this.element.dataset.searchBaseUrl || '/szukaj';
+            this._openDocById(this.openDocValue.toString(), false);
+        }
     }
 
     // ─── Search ───
 
     onInput() {
+        const el = this.element;
+        if (el.classList.contains('layout-v4') || el.classList.contains('layout-v5') || el.classList.contains('layout-v6')) {
+            return;
+        }
         clearTimeout(this.debounceTimer);
         this.currentPage = 1;
         this.debounceTimer = setTimeout(() => {
             this.fetchResults();
         }, 400);
+    }
+
+    onEnterSearch(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            this.currentPage = 1;
+            this.fetchResults();
+        }
     }
 
     onFilterChange() {
@@ -80,7 +108,36 @@ export default class extends Controller {
             chip.classList.add('active');
         }
 
+        if (this.hasTagSelectTarget) {
+            this.tagSelectTarget.value = this.selectedTagId || '';
+        }
+
         this.fetchResults();
+    }
+
+    onTagSelectChange(event) {
+        const val = event.currentTarget.value;
+        this.currentPage = 1;
+        this.selectedTagId = val || null;
+
+        if (this.hasTagsContainerTarget) {
+            this.tagsContainerTarget.querySelectorAll('.tag-chip').forEach(c => {
+                c.classList.toggle('active', c.dataset.tagId === val);
+            });
+        }
+
+        this.fetchResults();
+    }
+
+    goHome(event) {
+        event.preventDefault();
+        // If viewing a document, close it first
+        if (this.viewingDocument) {
+            this._showSearchResults();
+        }
+        this.resetFilters();
+        history.pushState({ view: 'search' }, '', '/szukaj');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     resetFilters() {
@@ -94,6 +151,8 @@ export default class extends Controller {
         if (this.hasTagsContainerTarget) {
             this.tagsContainerTarget.querySelectorAll('.tag-chip').forEach(c => c.classList.remove('active'));
         }
+        if (this.hasTagSelectTarget) this.tagSelectTarget.value = '';
+        this.element.classList.remove('search-active');
         this.resultsTarget.innerHTML = EMPTY_HTML;
     }
 
@@ -114,7 +173,10 @@ export default class extends Controller {
         const dateFrom = this.hasDateFromTarget ? this.dateFromTarget.value : '';
         const dateTo = this.hasDateToTarget ? this.dateToTarget.value : '';
 
-        if (!query && !volume && !type && !this.selectedTagId && !dateFrom && !dateTo) {
+        const hasAnything = query || volume || type || this.selectedTagId || dateFrom || dateTo;
+        this.element.classList.toggle('search-active', !!hasAnything);
+
+        if (!hasAnything) {
             this.resultsTarget.innerHTML = EMPTY_HTML;
             return;
         }
@@ -160,19 +222,86 @@ export default class extends Controller {
         const docId = card.dataset.docId;
         if (!docId) return;
 
-        // Build preview URL, pass search query for highlighting
+        // Collect all result doc IDs + slugs for prev/next navigation
+        this.resultDocIds = [];
+        this.resultDocSlugs = {};
+        this.resultsTarget.querySelectorAll('[data-doc-id]').forEach(el => {
+            this.resultDocIds.push(el.dataset.docId);
+            this.resultDocSlugs[el.dataset.docId] = el.dataset.docSlug || '';
+        });
+        this.currentDocIndex = this.resultDocIds.indexOf(docId);
+
+        this._openDocById(docId, true);
+    }
+
+    prevDocument() {
+        if (this.currentDocIndex > 0) {
+            this.currentDocIndex--;
+            this._openDocById(this.resultDocIds[this.currentDocIndex], true);
+        }
+    }
+
+    nextDocument() {
+        if (this.currentDocIndex < this.resultDocIds.length - 1) {
+            this.currentDocIndex++;
+            this._openDocById(this.resultDocIds[this.currentDocIndex], true);
+        }
+    }
+
+    _buildDocUrl(docId) {
+        const slug = this.resultDocSlugs[docId] || '';
+        if (slug) {
+            return '/tekst/' + docId + '-' + slug;
+        }
+        return '/tekst/' + docId;
+    }
+
+    _openDocById(docId, pushState) {
         let previewUrl = this.previewUrlValue.replace('/0/', '/' + docId + '/');
         const query = this.hasInputTarget ? this.inputTarget.value.trim() : '';
         if (query) {
             previewUrl += '?q=' + encodeURIComponent(query);
         }
 
-        // Push history state so browser Back returns to results
-        history.pushState({ view: 'document', docId: docId }, '', '');
+        const docUrl = this._buildDocUrl(docId);
+
+        if (pushState) {
+            history.pushState({ view: 'document', docId: docId }, '', docUrl);
+        } else {
+            // Replace current URL without adding history entry (for initial load)
+            history.replaceState({ view: 'document', docId: docId }, '', docUrl);
+        }
         this.viewingDocument = true;
 
         this._showDocumentViewer();
+        this._updateDocNav();
         this.loadDocument(previewUrl);
+    }
+
+    _updateDocNav() {
+        const nav = document.getElementById('doc-nav-info');
+        const prevBtn = document.getElementById('doc-prev-btn');
+        const nextBtn = document.getElementById('doc-next-btn');
+        if (!nav) return;
+
+        const total = this.resultDocIds.length;
+        const idx = this.currentDocIndex;
+
+        if (total > 0 && idx >= 0) {
+            nav.textContent = (idx + 1) + ' / ' + total;
+            nav.style.display = '';
+        } else {
+            nav.style.display = 'none';
+        }
+
+        if (prevBtn) {
+            prevBtn.style.opacity = idx > 0 ? '1' : '.3';
+            prevBtn.style.pointerEvents = idx > 0 ? 'auto' : 'none';
+        }
+        if (nextBtn) {
+            nextBtn.style.opacity = idx < total - 1 ? '1' : '.3';
+            nextBtn.style.pointerEvents = idx < total - 1 ? 'auto' : 'none';
+        }
     }
 
     async loadDocument(url) {
@@ -201,8 +330,9 @@ export default class extends Controller {
 
     closeDocument() {
         if (this.viewingDocument) {
-            // Go back in history (triggers popstate which calls _showSearchResults)
-            history.back();
+            this._showSearchResults();
+            // Push search URL to history
+            history.pushState({ view: 'search' }, '', '/szukaj');
         }
     }
 
@@ -221,9 +351,28 @@ export default class extends Controller {
     }
 
     _handlePopState(event) {
-        // If we were viewing a document and user pressed Back, return to results
-        if (this.viewingDocument) {
+        const state = event.state;
+        if (state && state.view === 'document' && state.docId) {
+            // Forward navigation to a document
+            this._openDocById(state.docId, false);
+        } else if (this.viewingDocument) {
             this._showSearchResults();
+        }
+    }
+
+    _handleKeyDown(event) {
+        if (!this.viewingDocument) return;
+        if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') return;
+
+        if (event.key === 'ArrowLeft') {
+            event.preventDefault();
+            this.prevDocument();
+        } else if (event.key === 'ArrowRight') {
+            event.preventDefault();
+            this.nextDocument();
+        } else if (event.key === 'Escape') {
+            event.preventDefault();
+            this.closeDocument();
         }
     }
 
@@ -238,5 +387,6 @@ export default class extends Controller {
             this.docAbortController.abort();
         }
         window.removeEventListener('popstate', this._onPopState);
+        window.removeEventListener('keydown', this._onKeyDown);
     }
 }

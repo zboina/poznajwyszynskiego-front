@@ -19,10 +19,12 @@ class SecurityController extends AbstractController
             return $this->redirectToRoute('app_search');
         }
 
-        $totalDocs = (int) $this->connection->executeQuery('SELECT COUNT(*) FROM documents')->fetchOne();
-        $totalWords = (int) $this->connection->executeQuery('SELECT COALESCE(SUM(words_count),0) FROM documents')->fetchOne();
-        $totalVolumes = (int) $this->connection->executeQuery('SELECT COUNT(*) FROM volumes')->fetchOne();
-        $totalChars = (int) $this->connection->executeQuery('SELECT COALESCE(SUM(LENGTH(content)),0) FROM documents')->fetchOne();
+        // Login page is for guests — always show published-only stats
+        $pf = "JOIN volumes v ON v.id = d.volume_id AND v.status = 'opublikowany'";
+        $totalDocs = (int) $this->connection->executeQuery("SELECT COUNT(*) FROM documents d {$pf}")->fetchOne();
+        $totalWords = (int) $this->connection->executeQuery("SELECT COALESCE(SUM(d.words_count),0) FROM documents d {$pf}")->fetchOne();
+        $totalVolumes = (int) $this->connection->executeQuery("SELECT COUNT(*) FROM volumes WHERE status = 'opublikowany'")->fetchOne();
+        $totalChars = (int) $this->connection->executeQuery("SELECT COALESCE(SUM(LENGTH(d.content)),0) FROM documents d {$pf}")->fetchOne();
 
         return $this->render('security/login.html.twig', [
             'last_username' => $authUtils->getLastUsername(),
