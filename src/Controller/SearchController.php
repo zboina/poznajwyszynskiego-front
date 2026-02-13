@@ -421,6 +421,7 @@ class SearchController extends AbstractController
             'margin_left' => 18,
             'margin_right' => 18,
             'default_font' => 'dejavuserif',
+            'tempDir' => $this->getParameter('kernel.project_dir') . '/var/mpdf',
         ]);
 
         $mpdf->SetTitle($doc['title'] ?: 'Dokument');
