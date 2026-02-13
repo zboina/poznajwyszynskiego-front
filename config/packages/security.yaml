@@ -12,8 +12,8 @@ security:
         ROLE_VIP: ROLE_DONATOR
         ROLE_DONATOR: ROLE_USER
         ROLE_SUPER_ADMIN: [ROLE_VIP, ROLE_ADMIN]
-        ROLE_REDAKTOR: ROLE_VIP
-        ROLE_EDYTOR: ROLE_VIP
+        ROLE_REDAKTOR: ROLE_USER
+        ROLE_EDYTOR: ROLE_USER
 
     firewalls:
         dev:

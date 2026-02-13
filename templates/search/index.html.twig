@@ -111,6 +111,8 @@
         border-bottom: 1px solid #eee;
         box-shadow: 0 1px 4px rgba(0,0,0,.03);
     }
+    .filter-grid { display: flex; }
+    .filter-strip [data-search-target="tagsContainer"] { display: flex; }
     .filter-strip label {
         font-size: .65rem; text-transform: uppercase; letter-spacing: .06em;
         color: #999; font-weight: 700; margin-bottom: .2rem;
@@ -130,6 +132,35 @@
         transition: all .15s; display: inline-flex; align-items: center; gap: .3rem;
     }
     .btn-reset:hover { color: var(--brand); border-color: var(--brand); }
+
+    /* ── Filter toggle (mobile) ── */
+    .filter-toggle-bar {
+        display: none;
+        align-items: center; justify-content: space-between;
+        padding: .55rem 0; cursor: pointer; user-select: none;
+    }
+    .filter-toggle-bar span {
+        display: inline-flex; align-items: center; gap: .45rem;
+        font-size: .95rem; font-weight: 700; color: #333;
+    }
+    .filter-toggle-bar svg { flex-shrink: 0; }
+    .filter-count-badge {
+        display: none;
+        align-items: center; justify-content: center;
+        min-width: 1.3rem; height: 1.3rem;
+        font-size: .7rem; font-weight: 800; color: #fff;
+        background: var(--brand); border-radius: 50%;
+        padding: 0 .35rem; line-height: 1;
+    }
+    .filter-count-badge.visible { display: inline-flex; }
+    .filter-chevron {
+        transition: transform .2s ease; color: #666;
+    }
+    .filters-open .filter-chevron { transform: rotate(180deg); }
+    /* stuck (dark bg) variants for toggle bar */
+    .filter-strip.stuck .filter-toggle-bar span { color: #fff; }
+    .filter-strip.stuck .filter-toggle-bar svg { stroke: #fff; }
+    .filter-strip.stuck .filter-chevron { color: rgba(255,255,255,.7); stroke: rgba(255,255,255,.7); }
 
     /* ── Tags ── */
     .tag-chip {
@@ -190,6 +221,139 @@
     .text-gold { color: #C9A227; }
     .bg-navy { background: var(--brand-navy); }
     .spinner-border { color: var(--brand); }
+
+    /* ═══════ VIEWED DOCUMENTS ═══════ */
+    .result-card.rc-viewed {
+        background: #f8fdf8;
+        border-left-color: #2fb344;
+    }
+    .result-card.rc-viewed:hover {
+        border-left-color: #2fb344;
+    }
+    .rc-viewed-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: .25rem;
+        font-size: .65rem;
+        font-weight: 600;
+        color: #2fb344;
+        background: rgba(47,179,68,.08);
+        padding: .1rem .45rem;
+        border-radius: 10px;
+        margin-left: .4rem;
+        vertical-align: middle;
+        font-family: var(--font-body) !important;
+    }
+    .rc-viewed-badge svg {
+        color: #2fb344;
+        opacity: .7;
+    }
+
+    /* ═══════ ADMIN LINK ═══════ */
+    .admin-link {
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        color: rgba(255,255,255,.6);
+        font-size: .75rem;
+        font-weight: 600;
+        text-decoration: none;
+        padding: .2rem .55rem;
+        border-radius: 6px;
+        border: 1px solid rgba(255,255,255,.12);
+        transition: all .15s;
+    }
+    .admin-link:hover {
+        color: #fff;
+        background: rgba(255,255,255,.1);
+        border-color: rgba(255,255,255,.25);
+    }
+    .layout-v2 .admin-link {
+        color: #999;
+        border-color: #e0dbd5;
+    }
+    .layout-v2 .admin-link:hover {
+        color: var(--brand);
+        border-color: var(--brand);
+        background: rgba(114,47,55,.04);
+    }
+    .layout-v6 .admin-link {
+        color: #999;
+        border-color: #e0dbd5;
+    }
+    .layout-v6 .admin-link:hover {
+        color: var(--brand);
+        border-color: var(--brand);
+        background: rgba(114,47,55,.04);
+    }
+
+    /* ═══════ MY VIEWS DROPDOWN ═══════ */
+    .views-pill {
+        cursor: pointer;
+        border: 1px solid rgba(201,162,39,.3);
+    }
+    .views-pill:hover {
+        background: rgba(201,162,39,.3);
+    }
+    .my-views-dropdown {
+        display: none;
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        width: 300px;
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 8px 32px rgba(0,0,0,.15);
+        border: 1px solid #eee;
+        z-index: 9100;
+        overflow: hidden;
+        animation: mvSlide .15s ease;
+    }
+    .my-views-dropdown.active { display: block; }
+    @keyframes mvSlide {
+        from { opacity: 0; transform: translateY(-6px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    .mv-header {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: .5rem .75rem;
+        border-bottom: 1px solid #f0ece6;
+        font-size: .7rem; font-weight: 700; text-transform: uppercase;
+        letter-spacing: .05em; color: #999;
+    }
+    .mv-close {
+        background: none; border: none; font-size: 1.1rem; color: #bbb;
+        cursor: pointer; line-height: 1; padding: 0 .2rem;
+    }
+    .mv-close:hover { color: #555; }
+    .mv-list { }
+    .mv-item {
+        display: flex; align-items: center; gap: .5rem;
+        padding: .45rem .75rem;
+        border-bottom: 1px solid #f8f5f0;
+        text-decoration: none;
+        color: inherit;
+        transition: background .1s;
+    }
+    .mv-item:last-child { border-bottom: none; }
+    .mv-item:hover { background: #faf8f5; }
+    .mv-title {
+        flex: 1; min-width: 0;
+        font-size: .8rem; font-weight: 600; color: #333;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .mv-item:hover .mv-title { color: var(--brand); }
+    .mv-time {
+        flex-shrink: 0;
+        font-size: .68rem; color: #aaa; font-variant-numeric: tabular-nums;
+    }
+    .mv-empty {
+        padding: 1rem; text-align: center;
+        font-size: .82rem; color: #bbb;
+    }
+    @media (max-width: 575.98px) {
+        .my-views-dropdown { width: 260px; right: -1rem; }
+    }
 
     /* ═══════ SEARCH HIGHLIGHT ═══════ */
     .search-hl {
@@ -435,6 +599,75 @@
         border-radius: 0 2px 2px 0;
     }
 
+    /* ═══════ VIEW LIMIT MODAL ═══════ */
+    .view-modal-overlay {
+        display: none;
+        position: fixed; inset: 0; z-index: 9000;
+        background: rgba(0,0,0,.45);
+        backdrop-filter: blur(4px);
+        align-items: center; justify-content: center;
+        animation: modalFadeIn .2s ease;
+    }
+    .view-modal-overlay.active { display: flex; }
+    @keyframes modalFadeIn {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+    }
+    .view-modal {
+        background: #fff; border-radius: 16px;
+        padding: 2rem 2.25rem;
+        max-width: 400px; width: calc(100% - 2rem);
+        box-shadow: 0 20px 60px rgba(0,0,0,.2);
+        text-align: center;
+        animation: modalSlideUp .25s ease;
+    }
+    @keyframes modalSlideUp {
+        from { opacity: 0; transform: translateY(16px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    .view-modal-icon {
+        color: var(--brand); margin-bottom: .75rem;
+    }
+    .view-modal-title {
+        font-family: var(--font-heading) !important;
+        font-size: 1.25rem; font-weight: 700; color: #1a1a1a;
+        margin: 0 0 .5rem;
+    }
+    .view-modal-text {
+        font-size: .88rem; color: #555; line-height: 1.55;
+        margin: 0 0 1rem;
+    }
+    .view-modal-meter {
+        height: 6px; background: #f0ebe4; border-radius: 3px;
+        overflow: hidden; margin-bottom: .75rem;
+    }
+    .view-modal-meter-fill {
+        height: 100%; border-radius: 3px;
+        background: linear-gradient(90deg, #2fb344, #C9A227);
+        transition: width .3s ease;
+    }
+    .view-modal-hint {
+        font-size: .75rem; color: #aaa; margin: 0 0 1.25rem;
+    }
+    .view-modal-actions {
+        display: flex; gap: .6rem; justify-content: center;
+    }
+    .view-modal-btn {
+        display: inline-flex; align-items: center; justify-content: center; gap: .35rem;
+        border: none; border-radius: 10px; cursor: pointer;
+        font-size: .85rem; font-weight: 600;
+        padding: .6rem 1.25rem;
+        transition: all .15s;
+    }
+    .view-modal-btn--cancel {
+        background: #f5f3ef; color: #777;
+    }
+    .view-modal-btn--cancel:hover { background: #ece8e0; color: #555; }
+    .view-modal-btn--confirm {
+        background: var(--brand); color: #fff;
+    }
+    .view-modal-btn--confirm:hover { background: var(--brand-dark); }
+
     /* ── Doc reader ── */
     .doc-reader-outer {
         overflow: visible;
@@ -537,8 +770,12 @@
         .stats-row { gap: .35rem; }
         .stat-badge { font-size: .7rem; padding: .25rem .5rem; }
         .search-bar input { font-size: .95rem; padding: .75rem 1rem .75rem 2.8rem; }
-        .filter-strip .filter-grid { flex-direction: column; }
+        .filter-toggle-bar { display: flex; }
+        .filter-strip .filter-grid { display: none; flex-direction: column; }
         .filter-strip .filter-grid > div { width: 100%; }
+        .filter-strip.filters-open .filter-grid { display: flex; }
+        .filter-strip [data-search-target="tagsContainer"] { display: none; }
+        .filter-strip.filters-open [data-search-target="tagsContainer"] { display: flex; }
         .brand-mark span { display: none; }
         .result-card { padding: .75rem 1rem; }
         .result-card .rc-title { font-size: .88rem; }
@@ -953,8 +1190,9 @@
         .layout-v3 .hero-title { font-size: .85rem; }
         .layout-v3 .search-bar input { font-size: .95rem; padding: .7rem 1rem .7rem 2.5rem; }
         .layout-v3 .search-bar .bar-icon { left: .85rem; }
-        .layout-v3 .filter-strip .filter-grid { flex-direction: column; }
+        .layout-v3 .filter-strip .filter-grid { display: none; flex-direction: column; }
         .layout-v3 .filter-strip .filter-grid > div { width: 100%; }
+        .layout-v3 .filter-strip.filters-open .filter-grid { display: flex; }
         .layout-v3 .filter-strip .container-xl > .d-flex { justify-content: start !important; }
         .layout-v3 .brand-mark span { display: none; }
         .layout-v3 .doc-body { padding: 1.25rem 1rem !important; font-size: 1rem; }
@@ -1235,8 +1473,9 @@
         .layout-v4 .search-bar input { font-size: .95rem; padding: .7rem 1rem .7rem 2.5rem; }
         .layout-v4 .search-bar .bar-icon { left: .85rem; }
         .layout-v4.search-active .hero-title { font-size: .85rem; }
-        .layout-v4 .filter-strip .filter-grid { flex-direction: column; }
+        .layout-v4 .filter-strip .filter-grid { display: none; flex-direction: column; }
         .layout-v4 .filter-strip .filter-grid > div { width: 100%; }
+        .layout-v4 .filter-strip.filters-open .filter-grid { display: flex; }
         .layout-v4 .filter-strip .container-xl > .d-flex { justify-content: start !important; }
         .layout-v4 .brand-mark span { display: none; }
         .layout-v4 .doc-body { padding: 1.25rem 1rem !important; font-size: 1rem; }
@@ -1444,8 +1683,9 @@
         .layout-v5 .search-bar input { font-size: .95rem; padding: .7rem 1rem .7rem 2.5rem; }
         .layout-v5 .search-bar .bar-icon { left: .85rem; }
         .layout-v5.search-active .hero-title { font-size: .85rem; }
-        .layout-v5 .filter-strip .filter-grid { flex-direction: column; }
+        .layout-v5 .filter-strip .filter-grid { display: none; flex-direction: column; }
         .layout-v5 .filter-strip .filter-grid > div { width: 100%; }
+        .layout-v5 .filter-strip.filters-open .filter-grid { display: flex; }
         .layout-v5 .filter-strip .container-xl > .d-flex { justify-content: start !important; }
         .layout-v5 .brand-mark span { display: none; }
         .layout-v5 .doc-body { padding: 1.25rem 1rem !important; font-size: 1rem; }
@@ -1703,8 +1943,9 @@
         .layout-v6 .search-bar input { font-size: .95rem; padding: .7rem 1rem .7rem 2.5rem; }
         .layout-v6 .search-bar .bar-icon { left: .85rem; }
         .layout-v6.search-active .hero-title { font-size: .85rem; }
-        .layout-v6 .filter-strip .filter-grid { flex-direction: column; }
+        .layout-v6 .filter-strip .filter-grid { display: none; flex-direction: column; }
         .layout-v6 .filter-strip .filter-grid > div { width: 100%; }
+        .layout-v6 .filter-strip.filters-open .filter-grid { display: flex; }
         .layout-v6 .filter-strip .container-xl > .d-flex { justify-content: start !important; }
         .layout-v6 .brand-mark span { display: none; }
         .layout-v6 .doc-body { padding: 1.25rem 1rem !important; font-size: 1rem; }
@@ -1723,10 +1964,15 @@
 
 {% block body %}
 <div class="page"
-     data-controller="search"
+     data-controller="search session"
+     data-session-lifetime-value="3600"
+     data-session-login-url-value="{{ path('app_login') }}"
      data-search-url-value="{{ path('app_search_results') }}"
      data-search-preview-url-value="{{ path('app_document_preview', {id: 0}) }}"
-     {% if openDocId is defined and openDocId %}data-search-open-doc-value="{{ openDocId }}"{% endif %}>
+     data-search-my-views-url-value="{{ path('app_my_views') }}"
+     {% if openDocId is defined and openDocId %}data-search-open-doc-value="{{ openDocId }}"{% endif %}
+     data-search-access-level-value="{{ accessLevel }}"
+     {% if viewsRemaining is not null %}data-search-views-remaining-value="{{ viewsRemaining }}"{% endif %}>
 
     {# ═══════ SEARCH AREA ═══════ #}
     <div id="search-area">
@@ -1743,19 +1989,42 @@
                         <div class="user-pill">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" style="opacity:.6;"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><circle cx="12" cy="7" r="4"/><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"/></svg>
                             {{ app.user.name ?? app.user.email }}
-                            {% if is_granted('ROLE_VIP') %}
+                            {% if 'ROLE_SUPER_ADMIN' in app.user.roles %}
+                                <span class="role-badge" style="background:#e53e3e; color:#fff;">Admin</span>
+                            {% elseif 'ROLE_REDAKTOR' in app.user.roles %}
+                                <span class="role-badge" style="background:#6366f1; color:#fff;">Redaktor</span>
+                            {% elseif 'ROLE_EDYTOR' in app.user.roles %}
+                                <span class="role-badge" style="background:#8b5cf6; color:#fff;">Edytor</span>
+                            {% elseif 'ROLE_VIP' in app.user.roles %}
                                 <span class="role-badge" style="background:#C9A227; color:#1a1a1a;">VIP</span>
-                            {% elseif is_granted('ROLE_DONATOR') %}
+                            {% elseif 'ROLE_DONATOR' in app.user.roles %}
                                 <span class="role-badge" style="background:#2fb344; color:#fff;">Donator</span>
                             {% else %}
                                 <span class="role-badge" style="background:rgba(255,255,255,.2); color:#fff;">User</span>
                             {% endif %}
                         </div>
                         {% if accessLevel == 'user' and viewsRemaining is not null %}
-                            <div class="views-pill">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"/><path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6"/></svg>
-                                {{ viewsRemaining }}/5
+                            <div class="views-pill-wrap" style="position:relative;">
+                                <button class="views-pill" data-action="click->search#toggleMyViews" title="Moje podglądy">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"/><path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6"/></svg>
+                                    {{ viewsRemaining }}/5
+                                </button>
+                                <div class="my-views-dropdown" id="myViewsDropdown" data-search-target="myViewsDropdown">
+                                    <div class="mv-header">
+                                        <span>Moje podglądy (24h)</span>
+                                        <button class="mv-close" data-action="click->search#toggleMyViews">&times;</button>
+                                    </div>
+                                    <div class="mv-list" id="myViewsList">
+                                        <div class="mv-empty">Ładowanie...</div>
+                                    </div>
+                                </div>
                             </div>
+                        {% endif %}
+                        {% if is_granted('ROLE_ADMIN') %}
+                            <a href="{{ path('app_admin_users') }}" class="admin-link" title="Panel admina">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.066 2.573c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.573 1.066c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.066 -2.573c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+                                Admin
+                            </a>
                         {% endif %}
                         <a href="{{ path('app_logout') }}" class="btn btn-sm btn-ghost-light py-1 px-2" style="font-size: .78rem; opacity:.7;">Wyloguj</a>
                     {% else %}
@@ -1839,7 +2108,15 @@
         {# ── Filters ── #}
         <div class="filter-strip sticky-top" style="z-index: 100;" data-search-target="filters">
             <div class="container-xl py-2">
-                <div class="d-flex gap-2 align-items-end flex-wrap filter-grid">
+                <div class="filter-toggle-bar" onclick="this.closest('.filter-strip').classList.toggle('filters-open')">
+                    <span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 4h16v2.172a2 2 0 0 1 -.586 1.414l-4.414 4.414v7l-6 2v-8.5l-4.48 -4.928a2 2 0 0 1 -.52 -1.345v-2.227z"/></svg>
+                        Filtry
+                        <span class="filter-count-badge" id="filterCountBadge">0</span>
+                    </span>
+                    <svg class="filter-chevron" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 9l6 6l6 -6"/></svg>
+                </div>
+                <div class="gap-2 align-items-end flex-wrap filter-grid">
                     <div>
                         <label>Tom</label>
                         <select class="form-select form-select-sm" data-search-target="volume" data-action="change->search#onFilterChange">
@@ -1885,7 +2162,7 @@
                     </div>
                 </div>
                 {% if tags|length > 0 %}
-                <div class="mt-2 d-flex flex-wrap gap-1" data-search-target="tagsContainer">
+                <div class="mt-2 flex-wrap gap-1" data-search-target="tagsContainer">
                     {% for tag in tags %}
                         <span class="tag-chip"
                               data-tag-id="{{ tag.id }}"
@@ -1910,6 +2187,34 @@
         </div>
 
     </div>{# /search-area #}
+
+    {# ═══════ VIEW LIMIT MODAL ═══════ #}
+    <div class="view-modal-overlay" id="viewLimitModal" data-search-target="viewModal"
+         data-action="click->search#cancelViewModal">
+        <div class="view-modal" onclick="event.stopPropagation()">
+            <div class="view-modal-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"/><path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6"/></svg>
+            </div>
+            <h3 class="view-modal-title">Podgląd dokumentu</h3>
+            <p class="view-modal-text">
+                Pozostało <strong><span id="viewModalRemaining">{{ viewsRemaining ?? 5 }}</span> z&nbsp;5</strong>
+                podglądów w&nbsp;ciągu 24&nbsp;godzin. Otwarcie dokumentu zużyje&nbsp;1.
+            </p>
+            <div class="view-modal-meter">
+                <div class="view-modal-meter-fill" id="viewModalMeter"></div>
+            </div>
+            <p class="view-modal-hint">
+                Zostań <strong>Donatorem</strong>, aby uzyskać nieograniczony dostęp.
+            </p>
+            <div class="view-modal-actions">
+                <button class="view-modal-btn view-modal-btn--cancel" data-action="click->search#cancelViewModal">Anuluj</button>
+                <button class="view-modal-btn view-modal-btn--confirm" data-action="click->search#confirmViewModal">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l5 5l10 -10"/></svg>
+                    Otwórz tekst
+                </button>
+            </div>
+        </div>
+    </div>
 
     {# ═══════ DOCUMENT VIEWER ═══════ #}
     <div id="document-viewer" data-search-target="documentViewer">

@@ -82,6 +82,34 @@ class SearchController extends AbstractController
         ]);
     }
 
+    #[Route('/szukaj/moje-podglady', name: 'app_my_views')]
+    public function myViews(Request $request): Response
+    {
+        if (!$request->isXmlHttpRequest()) {
+            return $this->redirectToRoute('app_search');
+        }
+
+        /** @var User|null $user */
+        $user = $this->getUser();
+        if (!$user) {
+            return new Response('', 403);
+        }
+
+        $pj = $this->documentRepository->publishedJoin();
+        $docs = $this->connection->executeQuery(
+            "SELECT d.id, d.title, d.slug, d.document_type, dv.viewed_at
+             FROM document_views dv
+             JOIN documents d ON d.id = dv.document_id {$pj}
+             WHERE dv.user_id = :uid AND dv.viewed_at > NOW() - INTERVAL '24 hours'
+             ORDER BY dv.viewed_at DESC",
+            ['uid' => $user->getId()]
+        )->fetchAllAssociative();
+
+        return $this->render('search/_my_views.html.twig', [
+            'docs' => $docs,
+        ]);
+    }
+
     #[Route('/szukaj/wyniki', name: 'app_search_results')]
     public function results(Request $request): Response
     {
@@ -138,6 +166,12 @@ class SearchController extends AbstractController
 
         $pages = $canPaginate ? max(1, (int) ceil($data['total'] / $limit)) : 1;
 
+        // Get viewed document IDs for limited users
+        $viewedDocIds = [];
+        if ($accessLevel === 'user' && $user) {
+            $viewedDocIds = $this->getViewedDocIds($user->getId());
+        }
+
         // Truncate + highlight snippets
         foreach ($data['results'] as &$row) {
             if (!empty($row['snippet'])) {
@@ -159,6 +193,7 @@ class SearchController extends AbstractController
             'canPaginate' => $canPaginate,
             'page' => $page,
             'pages' => $pages,
+            'viewedDocIds' => $viewedDocIds,
         ]);
 
         $response->headers->set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
@@ -430,6 +465,20 @@ class SearchController extends AbstractController
             "SELECT 1 FROM document_views WHERE user_id = :uid AND document_id = :did AND viewed_at > NOW() - INTERVAL '24 hours' LIMIT 1",
             ['uid' => $userId, 'did' => $documentId]
         )->fetchOne();
+    }
+
+    private function getViewedDocIds(int $userId): array
+    {
+        $ids = $this->connection->executeQuery(
+            "SELECT DISTINCT document_id FROM document_views WHERE user_id = :uid AND viewed_at > NOW() - INTERVAL '24 hours'",
+            ['uid' => $userId]
+        )->fetchFirstColumn();
+
+        $map = [];
+        foreach ($ids as $id) {
+            $map[(int) $id] = true;
+        }
+        return $map;
     }
 
     private function recordView(int $userId, int $documentId): void

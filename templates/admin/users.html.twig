@@ -1,0 +1,250 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Zarządzanie użytkownikami — Admin{% endblock %}
+{% block body_class %}d-flex flex-column{% endblock %}
+
+{% block stylesheets %}
+<style>
+    :root {
+        --brand: #722F37;
+        --brand-dark: #5C2630;
+        --brand-navy: #1A365D;
+        --brand-gold: #C9A227;
+        --brand-cream: #FAF8F5;
+    }
+    body { background: var(--brand-cream); }
+
+    .admin-navbar {
+        background: var(--brand);
+        box-shadow: 0 2px 8px rgba(0,0,0,.15);
+    }
+    .admin-navbar a { color: #fff; text-decoration: none; }
+    .admin-navbar .brand-mark {
+        display: flex; align-items: center; gap: .5rem;
+        font-weight: 700; font-size: .9rem;
+    }
+    .admin-navbar .brand-mark img { border: 2px solid rgba(201,162,39,.45); }
+    .admin-back {
+        display: inline-flex; align-items: center; gap: .35rem;
+        color: rgba(255,255,255,.7); font-size: .82rem; font-weight: 500;
+        transition: color .15s;
+    }
+    .admin-back:hover { color: #fff; }
+
+    .admin-container { max-width: 1000px; margin: 0 auto; padding: 2rem 1rem; }
+    .admin-title {
+        font-family: var(--font-heading) !important;
+        font-size: 1.5rem; font-weight: 700; color: #1a1a1a;
+        margin-bottom: 1.5rem;
+    }
+
+    .admin-card {
+        background: #fff;
+        border-radius: 10px;
+        border: 1px solid #eee;
+        box-shadow: 0 2px 12px rgba(0,0,0,.04);
+        overflow: hidden;
+    }
+
+    .admin-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: .85rem;
+    }
+    .admin-table thead th {
+        background: #fafaf8;
+        border-bottom: 2px solid #eee;
+        padding: .65rem .75rem;
+        font-size: .7rem;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        color: #999;
+        font-weight: 700;
+        text-align: left;
+    }
+    .admin-table tbody td {
+        padding: .6rem .75rem;
+        border-bottom: 1px solid #f5f3ef;
+        color: #444;
+        vertical-align: middle;
+    }
+    .admin-table tbody tr:last-child td { border-bottom: none; }
+    .admin-table tbody tr:hover { background: #fafaf8; }
+
+    .role-tag {
+        display: inline-block;
+        font-size: .62rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        padding: .15rem .45rem;
+        border-radius: 4px;
+    }
+    .role-tag--admin { background: #fee2e2; color: #e53e3e; }
+    .role-tag--vip { background: #fef3c7; color: #92400e; }
+    .role-tag--donator { background: #d1fae5; color: #065f46; }
+    .role-tag--redaktor { background: #e0e7ff; color: #3730a3; }
+    .role-tag--edytor { background: #ede9fe; color: #5b21b6; }
+    .role-tag--user { background: #f3f4f6; color: #6b7280; }
+
+    .views-count {
+        display: inline-flex; align-items: center; gap: .3rem;
+        font-weight: 600;
+    }
+    .views-count--warn { color: #e53e3e; }
+    .views-count--ok { color: #555; }
+
+    .btn-reset-limit {
+        display: inline-flex; align-items: center; gap: .3rem;
+        font-size: .75rem; font-weight: 600;
+        color: #e53e3e; background: rgba(229,62,62,.06);
+        border: 1px solid rgba(229,62,62,.15);
+        border-radius: 6px; padding: .3rem .6rem;
+        cursor: pointer; transition: all .15s;
+    }
+    .btn-reset-limit:hover {
+        background: rgba(229,62,62,.12);
+        border-color: rgba(229,62,62,.3);
+    }
+    .btn-reset-limit:disabled {
+        opacity: .3;
+        cursor: default;
+    }
+
+    .flash-msg {
+        padding: .75rem 1rem;
+        border-radius: 8px;
+        font-size: .85rem;
+        font-weight: 500;
+        margin-bottom: 1rem;
+    }
+    .flash-msg--success { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+    .flash-msg--error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+
+    .text-muted-sm { font-size: .75rem; color: #aaa; }
+
+    @media (max-width: 767.98px) {
+        .admin-container { padding: 1rem .5rem; }
+        .admin-title { font-size: 1.2rem; }
+        .admin-table { font-size: .78rem; }
+        .admin-table thead th, .admin-table tbody td { padding: .45rem .5rem; }
+        .hide-mobile { display: none; }
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+    <nav class="admin-navbar">
+        <div class="container-xl d-flex align-items-center justify-content-between py-2">
+            <a href="{{ path('app_search') }}" class="brand-mark">
+                <img src="{{ asset('logo_PW_bez_obramowania.png') }}" alt="" width="30" height="30" class="rounded-circle">
+                <span>Dzieła Zebrane</span>
+            </a>
+            <a href="{{ path('app_search') }}" class="admin-back">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><polyline points="15 6 9 12 15 18"/></svg>
+                Powrót do wyszukiwarki
+            </a>
+        </div>
+    </nav>
+
+    <div class="admin-container">
+        <h1 class="admin-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" style="vertical-align: -4px; color: var(--brand); margin-right: .35rem;"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0 -3 -3.85"/></svg>
+            Zarządzanie użytkownikami
+        </h1>
+
+        {% for message in app.flashes('success') %}
+            <div class="flash-msg flash-msg--success">{{ message }}</div>
+        {% endfor %}
+        {% for message in app.flashes('error') %}
+            <div class="flash-msg flash-msg--error">{{ message }}</div>
+        {% endfor %}
+
+        <div class="admin-card">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Email</th>
+                        <th class="hide-mobile">Nazwa</th>
+                        <th>Rola</th>
+                        <th>Podglądy 24h</th>
+                        <th>Akcja</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                        {% set roles = u.roles ? u.roles|json_encode : '[]' %}
+                        {% set rolesArr = roles starts with '[' ? roles|replace({"[":"","]":"","\"":""})|split(',') : [] %}
+                        {% set topRole = 'ROLE_USER' %}
+                        {% if 'ROLE_SUPER_ADMIN' in roles %}
+                            {% set topRole = 'ROLE_SUPER_ADMIN' %}
+                        {% elseif 'ROLE_ADMIN' in roles %}
+                            {% set topRole = 'ROLE_ADMIN' %}
+                        {% elseif 'ROLE_REDAKTOR' in roles %}
+                            {% set topRole = 'ROLE_REDAKTOR' %}
+                        {% elseif 'ROLE_EDYTOR' in roles %}
+                            {% set topRole = 'ROLE_EDYTOR' %}
+                        {% elseif 'ROLE_VIP' in roles %}
+                            {% set topRole = 'ROLE_VIP' %}
+                        {% elseif 'ROLE_DONATOR' in roles %}
+                            {% set topRole = 'ROLE_DONATOR' %}
+                        {% endif %}
+
+                        {% set viewCount = viewCounts[u.id] ?? 0 %}
+                        {% set isLimitedUser = topRole == 'ROLE_USER' %}
+
+                        <tr>
+                            <td class="text-muted-sm">{{ u.id }}</td>
+                            <td>{{ u.email }}</td>
+                            <td class="hide-mobile">{{ u.name ?? '—' }}</td>
+                            <td>
+                                {% if topRole == 'ROLE_SUPER_ADMIN' %}
+                                    <span class="role-tag role-tag--admin">Super Admin</span>
+                                {% elseif topRole == 'ROLE_ADMIN' %}
+                                    <span class="role-tag role-tag--admin">Admin</span>
+                                {% elseif topRole == 'ROLE_VIP' %}
+                                    <span class="role-tag role-tag--vip">VIP</span>
+                                {% elseif topRole == 'ROLE_DONATOR' %}
+                                    <span class="role-tag role-tag--donator">Donator</span>
+                                {% elseif topRole == 'ROLE_REDAKTOR' %}
+                                    <span class="role-tag role-tag--redaktor">Redaktor</span>
+                                {% elseif topRole == 'ROLE_EDYTOR' %}
+                                    <span class="role-tag role-tag--edytor">Edytor</span>
+                                {% else %}
+                                    <span class="role-tag role-tag--user">User</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if isLimitedUser %}
+                                    <span class="views-count {{ viewCount >= 5 ? 'views-count--warn' : 'views-count--ok' }}">
+                                        {{ viewCount }}/5
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted-sm">—</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if isLimitedUser and viewCount > 0 %}
+                                    <form method="post" action="{{ path('app_admin_reset_views', {id: u.id}) }}"
+                                          onsubmit="return confirm('Czy na pewno chcesz zresetować limit podglądów dla {{ u.email }}?');"
+                                          style="display:inline;">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('reset-views-' ~ u.id) }}">
+                                        <button type="submit" class="btn-reset-limit">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4"/><path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4"/></svg>
+                                            Resetuj
+                                        </button>
+                                    </form>
+                                {% elseif isLimitedUser %}
+                                    <span class="text-muted-sm">Brak użycia</span>
+                                {% else %}
+                                    <span class="text-muted-sm">—</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

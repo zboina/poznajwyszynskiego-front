@@ -30,11 +30,14 @@ export default class extends Controller {
     static values = {
         url: String,
         previewUrl: String,
+        myViewsUrl: String,
         openDoc: Number,
+        accessLevel: String,
+        viewsRemaining: Number,
     };
     static targets = [
         'input', 'volume', 'type', 'dateFrom', 'dateTo', 'tagsContainer', 'tagSelect', 'results',
-        'hero', 'filters', 'documentViewer', 'documentContent',
+        'hero', 'filters', 'documentViewer', 'documentContent', 'viewModal', 'myViewsDropdown',
     ];
 
     connect() {
@@ -48,6 +51,8 @@ export default class extends Controller {
         this.resultDocIds = [];
         this.resultDocSlugs = {};
         this._searchUrl = null;
+        this._pendingDocId = null;
+        this._viewedDocIds = new Set();
 
         // Listen for browser back/forward
         this._onPopState = this._handlePopState.bind(this);
@@ -63,6 +68,8 @@ export default class extends Controller {
             this._searchUrl = this.element.dataset.searchBaseUrl || '/szukaj';
             this._openDocById(this.openDocValue.toString(), false);
         }
+
+        this._updateFilterBadge();
     }
 
     // ─── Search ───
@@ -89,6 +96,7 @@ export default class extends Controller {
 
     onFilterChange() {
         this.currentPage = 1;
+        this._updateFilterBadge();
         this.fetchResults();
     }
 
@@ -112,6 +120,7 @@ export default class extends Controller {
             this.tagSelectTarget.value = this.selectedTagId || '';
         }
 
+        this._updateFilterBadge();
         this.fetchResults();
     }
 
@@ -126,6 +135,7 @@ export default class extends Controller {
             });
         }
 
+        this._updateFilterBadge();
         this.fetchResults();
     }
 
@@ -154,6 +164,7 @@ export default class extends Controller {
         if (this.hasTagSelectTarget) this.tagSelectTarget.value = '';
         this.element.classList.remove('search-active');
         this.resultsTarget.innerHTML = EMPTY_HTML;
+        this._updateFilterBadge();
     }
 
     goToPage(event) {
@@ -207,6 +218,7 @@ export default class extends Controller {
 
             if (response.ok) {
                 this.resultsTarget.innerHTML = await response.text();
+                this._syncViewedFromDom();
             }
         } catch (e) {
             if (e.name !== 'AbortError') {
@@ -225,11 +237,16 @@ export default class extends Controller {
         // Collect all result doc IDs + slugs for prev/next navigation
         this.resultDocIds = [];
         this.resultDocSlugs = {};
-        this.resultsTarget.querySelectorAll('[data-doc-id]').forEach(el => {
+        this.resultsTarget.querySelectorAll('.result-card[data-doc-id]').forEach(el => {
             this.resultDocIds.push(el.dataset.docId);
             this.resultDocSlugs[el.dataset.docId] = el.dataset.docSlug || '';
         });
         this.currentDocIndex = this.resultDocIds.indexOf(docId);
+
+        if (this._shouldShowViewModal(docId)) {
+            this._showViewModal(docId);
+            return;
+        }
 
         this._openDocById(docId, true);
     }
@@ -237,14 +254,24 @@ export default class extends Controller {
     prevDocument() {
         if (this.currentDocIndex > 0) {
             this.currentDocIndex--;
-            this._openDocById(this.resultDocIds[this.currentDocIndex], true);
+            const docId = this.resultDocIds[this.currentDocIndex];
+            if (this._shouldShowViewModal(docId)) {
+                this._showViewModal(docId);
+                return;
+            }
+            this._openDocById(docId, true);
         }
     }
 
     nextDocument() {
         if (this.currentDocIndex < this.resultDocIds.length - 1) {
             this.currentDocIndex++;
-            this._openDocById(this.resultDocIds[this.currentDocIndex], true);
+            const docId = this.resultDocIds[this.currentDocIndex];
+            if (this._shouldShowViewModal(docId)) {
+                this._showViewModal(docId);
+                return;
+            }
+            this._openDocById(docId, true);
         }
     }
 
@@ -372,8 +399,190 @@ export default class extends Controller {
             this.nextDocument();
         } else if (event.key === 'Escape') {
             event.preventDefault();
-            this.closeDocument();
+            if (this._pendingDocId) {
+                this.cancelViewModal();
+            } else {
+                this.closeDocument();
+            }
         }
+    }
+
+    // ─── My views dropdown ───
+
+    toggleMyViews(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        var dropdown = document.getElementById('myViewsDropdown');
+        if (!dropdown) return;
+
+        var isOpen = dropdown.classList.contains('active');
+        if (isOpen) {
+            dropdown.classList.remove('active');
+            document.removeEventListener('click', this._closeMyViewsBound);
+            return;
+        }
+
+        // Fetch and show
+        dropdown.classList.add('active');
+        var list = document.getElementById('myViewsList');
+        if (list) list.innerHTML = '<div class="mv-empty">Ładowanie...</div>';
+
+        var self = this;
+        fetch(this.myViewsUrlValue, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        })
+        .then(function(r) { return r.text(); })
+        .then(function(html) {
+            if (list) list.innerHTML = html;
+        })
+        .catch(function() {
+            if (list) list.innerHTML = '<div class="mv-empty">Błąd ładowania</div>';
+        });
+
+        // Close on outside click
+        this._closeMyViewsBound = function(e) {
+            if (!dropdown.contains(e.target) && !e.target.closest('.views-pill')) {
+                dropdown.classList.remove('active');
+                document.removeEventListener('click', self._closeMyViewsBound);
+            }
+        };
+        setTimeout(function() {
+            document.addEventListener('click', self._closeMyViewsBound);
+        }, 10);
+    }
+
+    openViewedDoc(event) {
+        event.preventDefault();
+        var el = event.currentTarget;
+        var docId = el.dataset.docId;
+        var slug = el.dataset.docSlug || '';
+        if (!docId) return;
+
+        // Close dropdown
+        var dropdown = document.getElementById('myViewsDropdown');
+        if (dropdown) dropdown.classList.remove('active');
+
+        // Set up for navigation
+        this.resultDocSlugs[docId] = slug;
+        this._viewedDocIds.add(String(docId));
+
+        this._openDocById(docId, true);
+    }
+
+    // ─── View limit modal ───
+
+    _shouldShowViewModal(docId) {
+        // Only ROLE_USER with view limits
+        if (this.accessLevelValue !== 'user') return false;
+        // No limit attribute at all
+        if (!this.hasViewsRemainingValue) return false;
+        // Limit exhausted — no modal, backend handles it
+        if (this.viewsRemainingValue <= 0) return false;
+        // Already viewed — check JS set
+        if (this._viewedDocIds.has(String(docId))) return false;
+        // Already viewed — check DOM class (backend-rendered)
+        var found = document.querySelector('.result-card[data-doc-id="' + docId + '"]');
+        if (found && found.classList.contains('rc-viewed')) {
+            this._viewedDocIds.add(String(docId));
+            return false;
+        }
+        return true;
+    }
+
+    _syncViewedFromDom() {
+        var self = this;
+        document.querySelectorAll('.result-card.rc-viewed').forEach(function(el) {
+            if (el.dataset.docId) self._viewedDocIds.add(String(el.dataset.docId));
+        });
+    }
+
+    _showViewModal(docId) {
+        this._pendingDocId = docId;
+        var remaining = this.viewsRemainingValue;
+
+        var modal = document.getElementById('viewLimitModal');
+        if (!modal) {
+            this._openDocById(docId, true);
+            return;
+        }
+
+        var remainingEl = document.getElementById('viewModalRemaining');
+        var meterEl = document.getElementById('viewModalMeter');
+        if (remainingEl) remainingEl.textContent = remaining;
+        if (meterEl) meterEl.style.width = ((remaining / 5) * 100) + '%';
+
+        if (meterEl) {
+            if (remaining <= 1) {
+                meterEl.style.background = '#e53e3e';
+            } else if (remaining <= 2) {
+                meterEl.style.background = 'linear-gradient(90deg, #e53e3e, #C9A227)';
+            } else {
+                meterEl.style.background = 'linear-gradient(90deg, #2fb344, #C9A227)';
+            }
+        }
+
+        modal.classList.add('active');
+    }
+
+    cancelViewModal() {
+        this._pendingDocId = null;
+        var modal = document.getElementById('viewLimitModal');
+        if (modal) modal.classList.remove('active');
+    }
+
+    confirmViewModal() {
+        var docId = this._pendingDocId;
+        this._pendingDocId = null;
+
+        var modal = document.getElementById('viewLimitModal');
+        if (modal) modal.classList.remove('active');
+
+        if (!docId) return;
+
+        // Track viewed + decrement
+        this._viewedDocIds.add(String(docId));
+        if (this.hasViewsRemainingValue && this.viewsRemainingValue > 0) {
+            this.viewsRemainingValue--;
+        }
+
+        // Update navbar pill
+        var pill = document.querySelector('.views-pill');
+        if (pill) {
+            pill.textContent = this.viewsRemainingValue + '/5';
+            if (this.viewsRemainingValue <= 1) pill.style.color = '#e53e3e';
+        }
+
+        // Mark card as viewed in DOM — use document.querySelector (not Stimulus target)
+        var card = document.querySelector('.result-card[data-doc-id="' + docId + '"]');
+        if (card) {
+            card.classList.add('rc-viewed');
+            var title = card.querySelector('.rc-title');
+            if (title && !title.querySelector('.rc-viewed-badge')) {
+                var badge = document.createElement('span');
+                badge.className = 'rc-viewed-badge';
+                badge.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"/><path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6"/></svg> Odczytany';
+                title.appendChild(badge);
+            }
+        }
+
+        this._openDocById(docId, true);
+    }
+
+    // ─── Filter badge (mobile) ───
+
+    _updateFilterBadge() {
+        const badge = document.getElementById('filterCountBadge');
+        if (!badge) return;
+
+        let count = 0;
+        if (this.hasVolumeTarget && this.volumeTarget.value) count++;
+        if (this.hasTypeTarget && this.typeTarget.value) count++;
+        if (this.hasDateFromTarget && this.dateFromTarget.value) count++;
+        if (this.hasDateToTarget && this.dateToTarget.value) count++;
+        if (this.hasTagSelectTarget && this.tagSelectTarget.value) count++;
+
+        badge.textContent = count;
+        badge.classList.toggle('visible', count > 0);
     }
 
     // ─── Cleanup ───

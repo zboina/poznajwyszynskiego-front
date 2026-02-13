@@ -1,0 +1,13 @@
+{% if docs|length > 0 %}
+    {% for doc in docs %}
+        <a class="mv-item" href="#"
+           data-action="click->search#openViewedDoc"
+           data-doc-id="{{ doc.id }}"
+           data-doc-slug="{{ doc.slug ?? '' }}">
+            <span class="mv-title">{{ doc.title ?: '(bez tytułu)' }}</span>
+            <span class="mv-time">{{ doc.viewed_at|date('H:i') }}</span>
+        </a>
+    {% endfor %}
+{% else %}
+    <div class="mv-empty">Brak podglądów w ciągu 24h</div>
+{% endif %}
