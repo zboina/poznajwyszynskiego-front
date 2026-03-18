@@ -102,6 +102,102 @@
         @media (max-width: 575.98px) {
             .font-switcher { width: calc(100vw - 2rem); right: 1rem; bottom: .75rem; max-height: 70vh; }
         }
+
+        /* ── Welcome splash screen ── */
+        .pw-splash {
+            position: fixed; inset: 0; z-index: 99999;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            background: radial-gradient(ellipse at center, #1a1a1a 0%, #0a0a0a 100%);
+            transition: opacity .8s ease, visibility .8s ease;
+        }
+        .pw-splash.fade-out {
+            opacity: 0; visibility: hidden; pointer-events: none;
+        }
+        /* Phase 1: welcome with button */
+        .pw-splash-welcome {
+            display: flex; flex-direction: column;
+            align-items: center; text-align: center;
+            animation: pw-fade-in .8s ease-out;
+        }
+        .pw-splash-title {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-size: 1.4rem; font-weight: 400;
+            color: rgba(255,255,255,.5);
+            letter-spacing: .12em; text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+        .pw-splash-name {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: clamp(1.8rem, 5vw, 2.8rem); font-weight: 700;
+            color: #fff;
+            letter-spacing: .04em;
+            margin-bottom: 30px;
+        }
+        .pw-splash-name span { color: #C9A227; }
+        .pw-splash-enter {
+            display: inline-flex; align-items: center; gap: 10px;
+            padding: 14px 40px;
+            background: transparent;
+            border: 1.5px solid rgba(201,162,39,.4);
+            border-radius: 40px;
+            color: #C9A227;
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-size: 1.05rem; font-weight: 600;
+            letter-spacing: .2em; text-transform: uppercase;
+            cursor: pointer;
+            transition: all .3s ease;
+            animation: pw-btn-glow 2.5s ease-in-out infinite;
+        }
+        .pw-splash-enter:hover {
+            background: rgba(201,162,39,.1);
+            border-color: rgba(201,162,39,.7);
+            transform: scale(1.03);
+        }
+        @keyframes pw-btn-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(201,162,39,.05); }
+            50%      { box-shadow: 0 0 35px rgba(201,162,39,.15); }
+        }
+        /* Phase 2: video playing */
+        .pw-splash-video {
+            display: none; flex-direction: column;
+            align-items: center;
+            animation: pw-fade-in .5s ease-out;
+        }
+        .pw-splash-video.active { display: flex; }
+        .pw-splash-video-circle {
+            width: 220px; height: 220px;
+            border-radius: 50%; overflow: hidden;
+            box-shadow:
+                0 0 0 2px rgba(201,162,39,.3),
+                0 0 40px rgba(201,162,39,.1),
+                0 8px 40px rgba(0,0,0,.5);
+            animation: pw-video-pulse 2.5s ease-in-out infinite;
+        }
+        .pw-splash-video-circle video {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            filter: contrast(1.1) brightness(1.05);
+        }
+        .pw-splash-video-text {
+            margin-top: 24px;
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-size: .8rem; font-style: italic;
+            color: rgba(255,255,255,.3);
+            letter-spacing: .08em;
+        }
+        @keyframes pw-video-pulse {
+            0%, 100% { box-shadow: 0 0 0 2px rgba(201,162,39,.3), 0 0 40px rgba(201,162,39,.1), 0 8px 40px rgba(0,0,0,.5); }
+            50%      { box-shadow: 0 0 0 3px rgba(201,162,39,.5), 0 0 60px rgba(201,162,39,.2), 0 8px 40px rgba(0,0,0,.5); }
+        }
+        @keyframes pw-fade-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @media (min-width: 768px) {
+            .pw-splash-video-circle { width: 280px; height: 280px; }
+            .pw-splash-title { font-size: 1.6rem; }
+        }
     </style>
     {% block stylesheets %}{% endblock %}
     {% block javascripts %}
@@ -109,8 +205,73 @@
     {% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}"{% if app.user and not is_granted('ROLE_VIP') %} data-controller="protection"{% endif %}>
+    {# ── Welcome splash (only on full page load, not Turbo; once per session) ── #}
+    <div class="pw-splash" id="pwSplash" style="display:none">
+        <div class="pw-splash-welcome" id="pwWelcome">
+            <div class="pw-splash-title">Poznaj teksty</div>
+            <div class="pw-splash-name">Kardynała <span>Wyszyńskiego</span></div>
+            <button class="pw-splash-enter" id="pwEnter">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                Wejdź
+            </button>
+        </div>
+        <div class="pw-splash-video" id="pwVideo">
+            <div class="pw-splash-video-circle">
+                <video playsinline id="pwVideoEl">
+                    <source src="{{ asset('wyszynski_loader.webm') }}" type="video/webm">
+                    <source src="{{ asset('wyszynski_loader.mp4') }}" type="video/mp4">
+                </video>
+            </div>
+            <div class="pw-splash-video-text">poznajwyszynskiego.pl</div>
+        </div>
+    </div>
+    <script>
+    (function() {
+        if (window.__pwTurboNav) return;
+        // if (sessionStorage.getItem('pw_welcomed')) return;
+
+        var splash = document.getElementById('pwSplash');
+        if (!splash) return;
+        splash.style.display = '';
+
+        var welcome = document.getElementById('pwWelcome');
+        var videoWrap = document.getElementById('pwVideo');
+        var video = document.getElementById('pwVideoEl');
+        var btn = document.getElementById('pwEnter');
+
+        function closeSplash() {
+            splash.classList.add('fade-out');
+            setTimeout(function() { splash.remove(); }, 900);
+            sessionStorage.setItem('pw_welcomed', '1');
+        }
+
+        btn.addEventListener('click', function() {
+            // Hide welcome, show video
+            welcome.style.display = 'none';
+            videoWrap.classList.add('active');
+
+            // Play with sound (allowed because this is a click handler)
+            video.muted = false;
+            video.loop = false;
+            video.play();
+
+            // When video ends, fade out splash
+            video.addEventListener('ended', closeSplash);
+            setTimeout(closeSplash, 9000); // safety
+        });
+    })();
+    </script>
+
     {% block body %}{% endblock %}
     <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js" defer></script>
+    <script>
+    (function() {
+        // Block splash on Turbo navigations
+        document.addEventListener('turbo:before-render', function() {
+            window.__pwTurboNav = true;
+        });
+    })();
+    </script>
 
     {# ── Font switcher (temporary testing panel) ── #}
     <div class="font-switcher collapsed" id="fontSwitcher">
