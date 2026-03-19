@@ -2040,6 +2040,9 @@
                         <a href="{{ path('app_logout') }}" class="btn btn-sm btn-ghost-light py-1 px-2" style="font-size: .78rem; opacity:.7;">Wyloguj</a>
                     {% else %}
                         <a href="{{ path('app_login') }}" class="btn btn-sm btn-ghost-light py-1 px-2">Zaloguj się</a>
+                        {% if site_settings.demo %}
+                            <button type="button" id="navDemoBtn" class="btn btn-sm py-1 px-2" style="font-size:.6rem; opacity:.35; letter-spacing:.1em; border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.5);">DEMO</button>
+                        {% endif %}
                     {% endif %}
                 </div>
             </div>
@@ -2588,4 +2591,58 @@
     })();
 })();
 </script>
+
+{% if site_settings.demo %}
+<div id="navDemoPopup" style="display:none; position:fixed; top:50px; right:15px; z-index:9999; background:#fff; border-radius:12px; box-shadow:0 8px 30px rgba(0,0,0,.2); padding:16px 20px; width:240px;">
+    <div style="font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:#722F37; margin-bottom:10px;">Tryb Demo</div>
+    <div style="display:flex; gap:6px;">
+        <input type="password" id="navDemoPass" placeholder="Hasło..." style="flex:1; border:1px solid #ddd; padding:7px 10px; border-radius:8px; font-size:.8rem; outline:none;">
+        <button type="button" id="navDemoGo" style="background:#722F37; color:#fff; border:none; padding:7px 12px; border-radius:8px; font-size:.75rem; font-weight:600; cursor:pointer;">OK</button>
+    </div>
+    <div id="navDemoError" style="display:none; color:#ef4444; font-size:.7rem; margin-top:6px;">Nieprawidłowe hasło</div>
+</div>
+<script>
+(function() {
+    var btn = document.getElementById('navDemoBtn');
+    var popup = document.getElementById('navDemoPopup');
+    if (!btn || !popup) return;
+    var pass = document.getElementById('navDemoPass');
+    var go = document.getElementById('navDemoGo');
+    var err = document.getElementById('navDemoError');
+
+    btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        popup.style.display = popup.style.display === 'none' ? '' : 'none';
+        if (popup.style.display !== 'none') pass.focus();
+    });
+    document.addEventListener('click', function(e) {
+        if (!popup.contains(e.target) && e.target !== btn) popup.style.display = 'none';
+    });
+
+    function submit() {
+        var val = pass.value.trim();
+        if (!val) return;
+        go.disabled = true; go.textContent = '...';
+        fetch('{{ path("app_demo_verify") }}', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: 'password=' + encodeURIComponent(val)
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.ok) {
+                window.location.href = '{{ path("app_demo_select") }}';
+            } else {
+                err.style.display = '';
+                go.disabled = false; go.textContent = 'OK';
+                pass.value = ''; pass.focus();
+            }
+        })
+        .catch(function() { err.style.display = ''; go.disabled = false; go.textContent = 'OK'; });
+    }
+    go.addEventListener('click', submit);
+    pass.addEventListener('keydown', function(e) { if (e.key === 'Enter') submit(); });
+})();
+</script>
+{% endif %}
 {% endblock %}
