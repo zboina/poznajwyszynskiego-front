@@ -231,6 +231,19 @@
                     Zaloguj się
                 </button>
             </form>
+
+            {% if site_settings.demo %}
+            <div style="margin-top: 18px; text-align: center;">
+                <button type="button" id="loginDemoBtn" style="background: none; border: 1px solid rgba(114,47,55,.2); color: rgba(114,47,55,.4); font-size: .65rem; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; padding: 4px 14px; border-radius: 12px; cursor: pointer; transition: all .3s;">DEMO</button>
+                <div id="loginDemoForm" style="display:none; margin-top: 10px;">
+                    <div style="display: flex; gap: 6px; justify-content: center;">
+                        <input type="password" id="loginDemoPass" placeholder="Hasło demo..." style="border: 1px solid #ddd; padding: 7px 12px; border-radius: 20px; font-size: .8rem; width: 160px; outline: none;">
+                        <button type="button" id="loginDemoGo" style="background: #722F37; color: #fff; border: none; padding: 7px 14px; border-radius: 20px; font-size: .75rem; font-weight: 600; cursor: pointer;">OK</button>
+                    </div>
+                    <div id="loginDemoError" style="display:none; color: #ef4444; font-size: .7rem; margin-top: 6px;">Nieprawidłowe hasło</div>
+                </div>
+            </div>
+            {% endif %}
         </div>
 
         {# ── Quote ── #}
@@ -247,4 +260,52 @@
 
     </div>
 </div>
+
+{% if site_settings.demo %}
+<script>
+(function() {
+    var btn = document.getElementById('loginDemoBtn');
+    var form = document.getElementById('loginDemoForm');
+    var pass = document.getElementById('loginDemoPass');
+    var go = document.getElementById('loginDemoGo');
+    var err = document.getElementById('loginDemoError');
+    if (!btn) return;
+
+    btn.addEventListener('click', function() {
+        btn.style.display = 'none';
+        form.style.display = '';
+        pass.focus();
+    });
+
+    function submit() {
+        var val = pass.value.trim();
+        if (!val) return;
+        go.disabled = true; go.textContent = '...';
+
+        fetch('{{ path("app_demo_verify") }}', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: 'password=' + encodeURIComponent(val)
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.ok) {
+                window.location.href = '{{ path("app_demo_select") }}';
+            } else {
+                err.style.display = '';
+                go.disabled = false; go.textContent = 'OK';
+                pass.value = ''; pass.focus();
+            }
+        })
+        .catch(function() {
+            err.style.display = '';
+            go.disabled = false; go.textContent = 'OK';
+        });
+    }
+
+    go.addEventListener('click', submit);
+    pass.addEventListener('keydown', function(e) { if (e.key === 'Enter') submit(); });
+})();
+</script>
+{% endif %}
 {% endblock %}
