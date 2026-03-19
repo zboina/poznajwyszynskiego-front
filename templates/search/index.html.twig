@@ -1974,6 +1974,17 @@
      data-search-access-level-value="{{ accessLevel }}"
      {% if viewsRemaining is not null %}data-search-views-remaining-value="{{ viewsRemaining }}"{% endif %}>
 
+    {# ── Demo banner ── #}
+    {% if app.session.get('demo_verified') %}
+    <div style="background: linear-gradient(135deg, #722F37, #5a252c); color: #fff; text-align: center; padding: 6px 15px; font-size: .72rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; position: relative; z-index: 201;">
+        TRYB DEMO
+        {% set dr = app.session.get('demo_role', 'user') %}
+        — {{ dr == 'guest' ? 'Gość' : (dr == 'user' ? 'Użytkownik' : (dr == 'donator' ? 'Donator' : 'VIP')) }}
+        <a href="{{ path('app_demo_select') }}" style="color: #C9A227; margin-left: 10px; text-decoration: none;">Zmień rolę</a>
+        <a href="{{ path('app_demo_exit') }}" style="color: rgba(255,255,255,.5); margin-left: 10px; text-decoration: none;">Zakończ</a>
+    </div>
+    {% endif %}
+
     {# ═══════ SEARCH AREA ═══════ #}
     <div id="search-area">
 

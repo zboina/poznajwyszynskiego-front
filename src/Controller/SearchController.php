@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\User;
 use App\Repository\DocumentRepository;
 use App\Service\EmbeddingService;
+use App\Service\SettingsService;
 use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -17,6 +18,7 @@ class SearchController extends AbstractController
         private DocumentRepository $documentRepository,
         private Connection $connection,
         private EmbeddingService $embeddingService,
+        private SettingsService $settingsService,
     ) {}
 
     #[Route('/szukaj', name: 'app_search')]
@@ -24,6 +26,11 @@ class SearchController extends AbstractController
     #[Route('/tekst/{id}', name: 'app_search_doc_short', requirements: ['id' => '\d+'])]
     public function index(?int $id = null, ?string $slug = null): Response
     {
+        // Guest access only when demo mode is on
+        if (!$this->getUser() && !$this->settingsService->isDemoEnabled()) {
+            return $this->redirectToRoute('app_login');
+        }
+
         $pj = $this->documentRepository->publishedJoin();
 
         // If we have an id but no/wrong slug, redirect to canonical URL
@@ -115,6 +122,10 @@ class SearchController extends AbstractController
     {
         if (!$request->isXmlHttpRequest()) {
             return $this->redirectToRoute('app_search');
+        }
+
+        if (!$this->getUser() && !$this->settingsService->isDemoEnabled()) {
+            return new Response('', 403);
         }
 
         /** @var User|null $user */
@@ -306,6 +317,10 @@ class SearchController extends AbstractController
     {
         if (!$request->isXmlHttpRequest()) {
             return $this->redirectToRoute('app_search');
+        }
+
+        if (!$this->getUser() && !$this->settingsService->isDemoEnabled()) {
+            return new Response('', 403);
         }
 
         $pj = $this->documentRepository->publishedJoin();

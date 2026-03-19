@@ -30,11 +30,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name: 'is_active', options: ['default' => true])]
     private bool $isActive = true;
 
-    #[ORM\Column(name: 'created_at', nullable: true)]
-    private ?\DateTimeImmutable $createdAt = null;
+    #[ORM\Column(name: 'created_at', type: 'datetime', nullable: true)]
+    private ?\DateTimeInterface $createdAt = null;
 
-    #[ORM\Column(name: 'last_login_at', nullable: true)]
-    private ?\DateTimeImmutable $lastLoginAt = null;
+    #[ORM\Column(name: 'last_login_at', type: 'datetime', nullable: true)]
+    private ?\DateTimeInterface $lastLoginAt = null;
 
     public function getId(): ?int
     {

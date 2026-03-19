@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DEMO - Wybierz typ konta | poznajwyszynskiego.pl</title>
+    <link rel="icon" href="{{ asset('logo_PW_bez_obramowania.png') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --burgundy: #722F37;
+            --gold: #C9A227;
+            --navy: #1A365D;
+            --cream: #FAF8F5;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--cream);
+            min-height: 100vh;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 20px;
+        }
+
+        .demo-badge {
+            position: fixed; top: 0; left: 0; right: 0;
+            background: linear-gradient(135deg, var(--burgundy), #5a252c);
+            color: #fff; text-align: center;
+            padding: 8px; font-size: .75rem; font-weight: 600;
+            letter-spacing: .1em; text-transform: uppercase; z-index: 100;
+        }
+        .demo-badge a { color: var(--gold); text-decoration: none; margin-left: 15px; }
+
+        .demo-header {
+            text-align: center; margin-bottom: 40px; margin-top: 30px;
+        }
+        .demo-header h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 700;
+            color: var(--navy); margin-bottom: 8px;
+        }
+        .demo-header p {
+            color: #6b7280; font-size: .95rem; max-width: 500px; margin: 0 auto;
+        }
+
+        .roles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px; max-width: 1100px; width: 100%;
+        }
+
+        .role-card {
+            background: #fff; border-radius: 16px;
+            border: 2px solid #e5e7eb;
+            padding: 28px; text-align: center;
+            transition: all .3s ease; cursor: pointer;
+            text-decoration: none; color: inherit;
+            display: flex; flex-direction: column;
+        }
+        .role-card:hover {
+            border-color: var(--gold);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0,0,0,.1);
+        }
+        .role-card.active {
+            border-color: var(--burgundy);
+            box-shadow: 0 0 0 3px rgba(114,47,55,.15);
+        }
+
+        .role-icon {
+            width: 56px; height: 56px;
+            border-radius: 50%; margin: 0 auto 16px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem;
+        }
+        .role-card--guest .role-icon { background: #f3f4f6; color: #9ca3af; }
+        .role-card--user .role-icon { background: #dbeafe; color: #2563eb; }
+        .role-card--donator .role-icon { background: #fce7f3; color: #db2777; }
+        .role-card--vip .role-icon { background: #fef3c7; color: #d97706; }
+
+        .role-name {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.4rem; font-weight: 700;
+            margin-bottom: 4px; color: var(--navy);
+        }
+        .role-subtitle {
+            font-size: .8rem; color: #9ca3af;
+            margin-bottom: 16px; font-weight: 500;
+        }
+
+        .role-features {
+            text-align: left; flex: 1;
+            font-size: .82rem; line-height: 1.8;
+        }
+        .role-features li {
+            list-style: none; padding-left: 22px; position: relative;
+        }
+        .role-features li::before {
+            content: ''; position: absolute; left: 0; top: 8px;
+            width: 12px; height: 12px; border-radius: 50%;
+        }
+        .role-features li.yes::before { background: #10b981; }
+        .role-features li.no::before { background: #ef4444; opacity: .4; }
+        .role-features li.partial::before { background: #f59e0b; }
+        .role-features li.no { color: #9ca3af; text-decoration: line-through; }
+
+        .role-action {
+            margin-top: 18px; padding: 10px 24px;
+            border-radius: 30px; font-weight: 600;
+            font-size: .85rem; letter-spacing: .03em;
+            border: none; cursor: pointer;
+            transition: all .2s ease;
+            display: inline-block; text-decoration: none;
+        }
+        .role-card--guest .role-action { background: #f3f4f6; color: #4b5563; }
+        .role-card--user .role-action { background: #dbeafe; color: #1d4ed8; }
+        .role-card--donator .role-action { background: #fce7f3; color: #be185d; }
+        .role-card--vip .role-action { background: #fef3c7; color: #b45309; }
+        .role-action:hover { filter: brightness(0.95); transform: scale(1.02); }
+
+        @media (max-width: 600px) {
+            .roles-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-badge">
+        TRYB DEMO - Prezentacja dostępów
+        <a href="{{ path('app_demo_exit') }}">Zakończ demo</a>
+    </div>
+
+    <div class="demo-header">
+        <h1>Wybierz typ konta</h1>
+        <p>Każdy poziom dostępu oferuje inne możliwości. Wybierz rolę, aby zobaczyć jak działa strona z perspektywy danego użytkownika.</p>
+    </div>
+
+    <div class="roles-grid">
+        {# ── GUEST ── #}
+        <a href="{{ path('app_demo_activate', {role: 'guest'}) }}" class="role-card role-card--guest {{ currentRole == 'guest' ? 'active' : '' }}">
+            <div class="role-icon">👤</div>
+            <div class="role-name">Gość</div>
+            <div class="role-subtitle">Bez rejestracji</div>
+            <ul class="role-features">
+                <li class="yes">Wyszukiwarka tytułów i treści</li>
+                <li class="yes">Lista dokumentów i tomów</li>
+                <li class="yes">Podgląd metadanych dokumentu</li>
+                <li class="no">Odczyt pełnej treści dokumentu</li>
+                <li class="no">Przeglądanie więcej niż 10 wyników</li>
+                <li class="no">Eksport dokumentów do PDF</li>
+            </ul>
+            <div class="role-action">Wejdź jako gość</div>
+        </a>
+
+        {# ── USER ── #}
+        <a href="{{ path('app_demo_activate', {role: 'user'}) }}" class="role-card role-card--user {{ currentRole == 'user' ? 'active' : '' }}">
+            <div class="role-icon">🔑</div>
+            <div class="role-name">Użytkownik</div>
+            <div class="role-subtitle">Bezpłatna rejestracja</div>
+            <ul class="role-features">
+                <li class="yes">Wyszukiwarka tytułów i treści</li>
+                <li class="yes">Lista dokumentów i tomów</li>
+                <li class="yes">Podgląd metadanych dokumentu</li>
+                <li class="partial">Odczyt treści: 5 dokumentów / 24h</li>
+                <li class="no">Przeglądanie więcej niż 10 wyników</li>
+                <li class="no">Eksport dokumentów do PDF</li>
+            </ul>
+            <div class="role-action">Wejdź jako użytkownik</div>
+        </a>
+
+        {# ── DONATOR ── #}
+        <a href="{{ path('app_demo_activate', {role: 'donator'}) }}" class="role-card role-card--donator {{ currentRole == 'donator' ? 'active' : '' }}">
+            <div class="role-icon">❤️</div>
+            <div class="role-name">Donator</div>
+            <div class="role-subtitle">Wsparcie projektu</div>
+            <ul class="role-features">
+                <li class="yes">Wyszukiwarka tytułów i treści</li>
+                <li class="yes">Lista dokumentów i tomów</li>
+                <li class="yes">Podgląd metadanych dokumentu</li>
+                <li class="yes">Odczyt treści: bez limitu</li>
+                <li class="yes">Paginacja: 20 wyników na stronę</li>
+                <li class="no">Eksport dokumentów do PDF</li>
+            </ul>
+            <div class="role-action">Wejdź jako donator</div>
+        </a>
+
+        {# ── VIP ── #}
+        <a href="{{ path('app_demo_activate', {role: 'vip'}) }}" class="role-card role-card--vip {{ currentRole == 'vip' ? 'active' : '' }}">
+            <div class="role-icon">👑</div>
+            <div class="role-name">VIP</div>
+            <div class="role-subtitle">Pełny dostęp</div>
+            <ul class="role-features">
+                <li class="yes">Wyszukiwarka tytułów i treści</li>
+                <li class="yes">Lista dokumentów i tomów</li>
+                <li class="yes">Podgląd metadanych dokumentu</li>
+                <li class="yes">Odczyt treści: bez limitu</li>
+                <li class="yes">Paginacja: 20 wyników na stronę</li>
+                <li class="yes">Eksport dokumentów do PDF</li>
+            </ul>
+            <div class="role-action">Wejdź jako VIP</div>
+        </a>
+    </div>
+</body>
+</html>

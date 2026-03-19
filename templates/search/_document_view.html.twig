@@ -81,14 +81,22 @@
     <div class="p-4">
         <div class="empty py-5">
             <div class="empty-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-lg text-muted" width="40" height="40" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><rect x="5" y="11" width="14" height="10" rx="2"/><circle cx="12" cy="16" r="1"/><path d="M8 11v-4a4 4 0 0 1 8 0v4"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-lg" width="40" height="40" viewBox="0 0 24 24" stroke-width="1.5" stroke="#722F37" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><rect x="5" y="11" width="14" height="10" rx="2"/><circle cx="12" cy="16" r="1"/><path d="M8 11v-4a4 4 0 0 1 8 0v4"/></svg>
             </div>
-            <p class="empty-title h3">Treść dostępna po zalogowaniu</p>
-            <p class="empty-subtitle text-secondary">
-                Zaloguj się, aby zobaczyć pełną treść tego dokumentu.
+            <p class="empty-title h3">Aby czytać treść dokumentów, załóż bezpłatne konto</p>
+            <p class="empty-subtitle text-secondary" style="max-width: 420px; margin: 0 auto;">
+                Rejestracja jest darmowa i daje dostęp do <strong>5 dokumentów dziennie</strong>.
+                Jeśli potrzebujesz więcej, możesz zostać Donatorem lub uzyskać dostęp VIP.
             </p>
-            <div class="empty-action">
-                <a href="{{ path('app_login') }}" class="btn" style="background:#722F37;color:#fff;">Zaloguj się</a>
+            <div class="empty-action mt-3 d-flex gap-2 justify-content-center flex-wrap">
+                <a href="{{ path('app_login') }}" class="btn" style="background:#722F37; color:#fff;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" class="me-1"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"/><path d="M16 19h6"/><path d="M19 16v6"/><path d="M6 21v-2a4 4 0 0 1 4 -4h4"/></svg>
+                    Zarejestruj się / Zaloguj
+                </a>
+                <button onclick="history.back()" class="btn btn-outline-secondary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" class="me-1"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 14l-4 -4l4 -4"/><path d="M5 10h11a4 4 0 1 1 0 8h-1"/></svg>
+                    Wróć do wyników
+                </button>
             </div>
         </div>
     </div>
