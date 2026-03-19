@@ -318,16 +318,13 @@
     };
     (function() {
         if (window.__pwTurboNav) return;
-        // if (sessionStorage.getItem('pw_welcomed')) return;
+        if (sessionStorage.getItem('pw_welcomed')) return;
 
-        // Skip splash in demo mode
+        // Skip splash in demo mode or when logged in
         var isDemo = {{ app.session.get('demo_verified') ? 'true' : 'false' }};
         if (isDemo) return;
-
-        // Skip splash if user is already logged in or on search page
         var isLoggedIn = {{ app.user ? 'true' : 'false' }};
-        var isSearchPage = (location.pathname.indexOf('/szukaj') === 0);
-        if (isLoggedIn || isSearchPage) return;
+        if (isLoggedIn) return;
 
         var loaderSetting = window.__pwDefaults.loader; // 'off', 'dark', 'light'
         if (loaderSetting === 'off') return;
@@ -349,7 +346,7 @@
         function closeSplash() {
             splash.classList.add('fade-out');
             setTimeout(function() { splash.remove(); }, 900);
-            // sessionStorage.setItem('pw_welcomed', '1');
+            sessionStorage.setItem('pw_welcomed', '1');
         }
 
         btn.addEventListener('click', function() {
