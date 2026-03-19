@@ -86,10 +86,11 @@ class DemoController extends AbstractController
         $session->set('demo_role', $role);
 
         if ($role === 'guest') {
-            // Logout current demo user, keep demo session flags
-            $security->logout(false);
-            $request->getSession()->set('demo_verified', true);
-            $request->getSession()->set('demo_role', 'guest');
+            if ($this->getUser()) {
+                $security->logout(false);
+                $request->getSession()->set('demo_verified', true);
+                $request->getSession()->set('demo_role', 'guest');
+            }
             return $this->redirectToRoute('app_search');
         }
 
