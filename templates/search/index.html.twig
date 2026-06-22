@@ -474,6 +474,24 @@
     .doc-body p { margin-bottom: 1em; text-indent: 1.5em; }
     .doc-body p:first-child { text-indent: 0; }
     .doc-body h2, .doc-body h3 { color: var(--brand); margin-top: 1.5em; margin-bottom: .5em; text-indent: 0; }
+    .doc-body .page-marker {
+        display: inline-block;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--brand);
+        background-color: #f5ecd9;
+        border: 1px solid #c8b78d;
+        border-radius: 3px;
+        padding: 0 .35em;
+        margin: 0 .25em;
+        font-family: var(--font-body) !important;
+        text-indent: 0;
+        white-space: nowrap;
+        vertical-align: baseline;
+        cursor: help;
+        line-height: 1.2;
+    }
+    .doc-body .page-marker:hover { background-color: #ede0bb; }
 
     /* ── Footnotes ── */
     .footnotes { margin-top: 2.5em; padding-top: 1.5em; font-size: .88rem; color: #555; border-top: 1px solid #ddd; }

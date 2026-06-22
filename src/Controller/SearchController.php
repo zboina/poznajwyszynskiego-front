@@ -301,7 +301,7 @@ class SearchController extends AbstractController
             throw $this->createNotFoundException();
         }
 
-        $html = $this->formatContent($content ?: '');
+        $html = $this->formatContent($content ?: '', $this->fetchPageBreaks($id));
         $footnotes = $this->getFootnotes($id);
         $html = $this->applyFootnotes($html, $footnotes);
 
@@ -366,7 +366,7 @@ class SearchController extends AbstractController
                         'SELECT content FROM documents WHERE id = :id',
                         ['id' => $id]
                     )->fetchOne();
-                    $content = $this->formatContent($raw ?: '');
+                    $content = $this->formatContent($raw ?: '', $this->fetchPageBreaks($id));
                     $footnotes = $this->getFootnotes($id);
                     $content = $this->applyFootnotes($content, $footnotes);
                     if ($searchQuery) {
@@ -380,7 +380,7 @@ class SearchController extends AbstractController
                     'SELECT content FROM documents WHERE id = :id',
                     ['id' => $id]
                 )->fetchOne();
-                $content = $this->formatContent($raw ?: '');
+                $content = $this->formatContent($raw ?: '', $this->fetchPageBreaks($id));
                 $footnotes = $this->getFootnotes($id);
                 $content = $this->applyFootnotes($content, $footnotes);
                 if ($searchQuery) {
@@ -422,7 +422,7 @@ class SearchController extends AbstractController
             throw $this->createNotFoundException();
         }
 
-        $doc['content'] = $this->formatContent($doc['content'] ?? '');
+        $doc['content'] = $this->formatContent($doc['content'] ?? '', $this->fetchPageBreaks($id));
         $footnotes = $this->getFootnotes($id);
         $doc['content'] = $this->applyFootnotes($doc['content'], $footnotes);
 
@@ -505,19 +505,93 @@ class SearchController extends AbstractController
         );
     }
 
-    private function formatContent(string $text): string
+    private const PAGE_MARKER_OPEN = "\u{E000}PB:";
+    private const PAGE_MARKER_CLOSE = "\u{E001}";
+
+    private function formatContent(string $text, ?array $pageBreaks = null): string
     {
         if (str_contains($text, '<p>') || str_contains($text, '<div>')) {
             return $text;
         }
 
+        if (!empty($pageBreaks)) {
+            $text = $this->injectPageMarkerSentinels($text, $pageBreaks);
+        }
+
         $text = htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $paragraphs = preg_split('/\n{2,}/', trim($text));
 
-        return implode("\n", array_map(
+        $html = implode("\n", array_map(
             fn(string $p) => '<p>' . nl2br(trim($p)) . '</p>',
             array_filter($paragraphs, fn(string $p) => trim($p) !== '')
         ));
+
+        if (!empty($pageBreaks)) {
+            $open = preg_quote(self::PAGE_MARKER_OPEN, '/');
+            $close = preg_quote(self::PAGE_MARKER_CLOSE, '/');
+            $html = preg_replace_callback(
+                '/' . $open . '(\d+)' . $close . '/u',
+                fn($m) => '<span class="page-marker" data-page="' . $m[1] . '" title="Strona ' . $m[1] . ' wydania drukowanego">[s. ' . $m[1] . ']</span>',
+                $html
+            ) ?? $html;
+        }
+
+        return $html;
+    }
+
+    /**
+     * @param array<int, array{paragraph?:int,char_in_para?:int,page?:int}> $pageBreaks
+     */
+    private function injectPageMarkerSentinels(string $content, array $pageBreaks): string
+    {
+        $byPara = [];
+        foreach ($pageBreaks as $b) {
+            if (!isset($b['paragraph'], $b['page'])) {
+                continue;
+            }
+            $byPara[(int) $b['paragraph']][] = $b;
+        }
+        if (empty($byPara)) {
+            return $content;
+        }
+
+        $segments = preg_split('/(\n\s*\n)/', $content, -1, PREG_SPLIT_DELIM_CAPTURE);
+        if ($segments === false) {
+            return $content;
+        }
+
+        $paraIdx = 0;
+        $out = '';
+        foreach ($segments as $j => $segment) {
+            $isSeparator = ($j % 2) === 1;
+            if (!$isSeparator && isset($byPara[$paraIdx])) {
+                $entries = $byPara[$paraIdx];
+                usort($entries, fn($a, $b) => ($b['char_in_para'] ?? 0) <=> ($a['char_in_para'] ?? 0));
+                foreach ($entries as $b) {
+                    $offset = max(0, min(strlen($segment), (int) ($b['char_in_para'] ?? 0)));
+                    $marker = self::PAGE_MARKER_OPEN . (int) $b['page'] . self::PAGE_MARKER_CLOSE;
+                    $segment = substr($segment, 0, $offset) . $marker . substr($segment, $offset);
+                }
+            }
+            $out .= $segment;
+            if (!$isSeparator) {
+                $paraIdx++;
+            }
+        }
+        return $out;
+    }
+
+    private function fetchPageBreaks(int $documentId): ?array
+    {
+        $raw = $this->connection->executeQuery(
+            'SELECT page_breaks FROM documents WHERE id = :id',
+            ['id' => $documentId]
+        )->fetchOne();
+        if (!$raw) {
+            return null;
+        }
+        $decoded = is_string($raw) ? json_decode($raw, true) : $raw;
+        return is_array($decoded) ? $decoded : null;
     }
 
     private function getFootnotes(int $documentId): array
