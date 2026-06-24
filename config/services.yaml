@@ -19,5 +19,12 @@ services:
     App\:
         resource: '../src/'
 
+    # RAG answer generation: provider/model/key from env (embeddings stay local).
+    App\Service\RagAnswerer:
+        arguments:
+            $provider: '%env(RAG_LLM_PROVIDER)%'
+            $openrouterModel: '%env(RAG_LLM_MODEL)%'
+            $openrouterKey: '%env(OPENROUTER_API_KEY)%'
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

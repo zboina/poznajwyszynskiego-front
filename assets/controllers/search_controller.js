@@ -66,6 +66,8 @@ export default class extends Controller {
         if (this.openDocValue) {
             // Save search URL so we can go back
             this._searchUrl = this.element.dataset.searchBaseUrl || '/szukaj';
+            // ?frag=N (from an assistant citation) → highlight that passage once.
+            this._pendingFrag = new URLSearchParams(window.location.search).get('frag');
             this._openDocById(this.openDocValue.toString(), false);
         }
 
@@ -285,9 +287,19 @@ export default class extends Controller {
 
     _openDocById(docId, pushState) {
         let previewUrl = this.previewUrlValue.replace('/0/', '/' + docId + '/');
+        const params = new URLSearchParams();
         const query = this.hasInputTarget ? this.inputTarget.value.trim() : '';
         if (query) {
-            previewUrl += '?q=' + encodeURIComponent(query);
+            params.set('q', query);
+        }
+        // Carry an assistant-citation fragment through on the first open only.
+        if (this._pendingFrag) {
+            params.set('frag', this._pendingFrag);
+            this._pendingFrag = null;
+        }
+        const qs = params.toString();
+        if (qs) {
+            previewUrl += '?' + qs;
         }
 
         const docUrl = this._buildDocUrl(docId);
@@ -345,6 +357,7 @@ export default class extends Controller {
 
             if (response.ok) {
                 this.documentContentTarget.innerHTML = await response.text();
+                this._scrollToHighlight();
             } else {
                 this.documentContentTarget.innerHTML = ERROR_HTML;
             }
@@ -353,6 +366,15 @@ export default class extends Controller {
                 this.documentContentTarget.innerHTML = ERROR_HTML;
             }
         }
+    }
+
+    // Scroll the cited passage (server-rendered <mark class="rag-hl">) into view.
+    _scrollToHighlight() {
+        const mark = this.documentContentTarget.querySelector('mark.rag-hl');
+        if (!mark) return;
+        requestAnimationFrame(() => {
+            mark.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
     }
 
     closeDocument() {

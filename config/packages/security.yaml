@@ -39,6 +39,7 @@ security:
         - { path: ^/szukaj$, roles: PUBLIC_ACCESS }
         - { path: ^/szukaj/wyniki$, roles: PUBLIC_ACCESS }
         - { path: ^/tekst/, roles: PUBLIC_ACCESS }
+        - { path: ^/asystent, roles: PUBLIC_ACCESS }
         - { path: ^/dokument/\d+/podglad$, roles: PUBLIC_ACCESS }
         - { path: ^/, roles: ROLE_USER }
 

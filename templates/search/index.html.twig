@@ -493,6 +493,22 @@
     }
     .doc-body .page-marker:hover { background-color: #ede0bb; }
 
+    /* ── Cited passage (from the AI assistant) ── */
+    .doc-body mark.rag-hl {
+        background: linear-gradient(180deg, #fff6c2 0%, #ffe98a 100%);
+        color: inherit;
+        padding: .08em .05em;
+        border-radius: 2px;
+        box-shadow: 0 0 0 1px rgba(200,167,39,.45);
+        scroll-margin-top: 90px;
+        animation: ragHlPulse 2.4s ease-out 1;
+    }
+    @keyframes ragHlPulse {
+        0%   { box-shadow: 0 0 0 6px rgba(200,167,39,.45); }
+        60%  { box-shadow: 0 0 0 6px rgba(200,167,39,.18); }
+        100% { box-shadow: 0 0 0 1px rgba(200,167,39,.45); }
+    }
+
     /* ── Footnotes ── */
     .footnotes { margin-top: 2.5em; padding-top: 1.5em; font-size: .88rem; color: #555; border-top: 1px solid #ddd; }
     .footnotes ol { padding-left: 1.5em; }

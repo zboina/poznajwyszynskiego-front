@@ -301,7 +301,9 @@ class SearchController extends AbstractController
             throw $this->createNotFoundException();
         }
 
-        $html = $this->formatContent($content ?: '', $this->fetchPageBreaks($id));
+        $content = (string) ($content ?: '');
+        $highlight = $this->chunkHighlight($request->query->get('frag'), $id, $content);
+        $html = $this->formatContent($content, $this->fetchPageBreaks($id), $highlight);
         $footnotes = $this->getFootnotes($id);
         $html = $this->applyFootnotes($html, $footnotes);
 
@@ -350,6 +352,7 @@ class SearchController extends AbstractController
         $limitReached = false;
 
         $searchQuery = $request->query->get('q', '');
+        $frag = $request->query->get('frag');
 
         if ($accessLevel !== 'guest') {
             if ($accessLevel === 'user') {
@@ -362,11 +365,11 @@ class SearchController extends AbstractController
                     if (!$alreadyViewed) {
                         $this->recordView($user->getId(), $id);
                     }
-                    $raw = $this->connection->executeQuery(
+                    $raw = (string) ($this->connection->executeQuery(
                         'SELECT content FROM documents WHERE id = :id',
                         ['id' => $id]
-                    )->fetchOne();
-                    $content = $this->formatContent($raw ?: '', $this->fetchPageBreaks($id));
+                    )->fetchOne() ?: '');
+                    $content = $this->formatContent($raw, $this->fetchPageBreaks($id), $this->chunkHighlight($frag, $id, $raw));
                     $footnotes = $this->getFootnotes($id);
                     $content = $this->applyFootnotes($content, $footnotes);
                     if ($searchQuery) {
@@ -376,11 +379,11 @@ class SearchController extends AbstractController
                 $viewsUsed = $this->getViewsLast24h($user->getId());
                 $viewsRemaining = max(0, 5 - $viewsUsed);
             } else {
-                $raw = $this->connection->executeQuery(
+                $raw = (string) ($this->connection->executeQuery(
                     'SELECT content FROM documents WHERE id = :id',
                     ['id' => $id]
-                )->fetchOne();
-                $content = $this->formatContent($raw ?: '', $this->fetchPageBreaks($id));
+                )->fetchOne() ?: '');
+                $content = $this->formatContent($raw, $this->fetchPageBreaks($id), $this->chunkHighlight($frag, $id, $raw));
                 $footnotes = $this->getFootnotes($id);
                 $content = $this->applyFootnotes($content, $footnotes);
                 if ($searchQuery) {
@@ -507,15 +510,21 @@ class SearchController extends AbstractController
 
     private const PAGE_MARKER_OPEN = "\u{E000}PB:";
     private const PAGE_MARKER_CLOSE = "\u{E001}";
+    private const HL_OPEN = "\u{E002}";
+    private const HL_CLOSE = "\u{E003}";
 
-    private function formatContent(string $text, ?array $pageBreaks = null): string
+    /**
+     * @param array<int, array{paragraph?:int,char_in_para?:int,page?:int}>|null $pageBreaks
+     * @param array{start:int,end:int}|null $highlight Byte range in $text to wrap as the cited passage.
+     */
+    private function formatContent(string $text, ?array $pageBreaks = null, ?array $highlight = null): string
     {
         if (str_contains($text, '<p>') || str_contains($text, '<div>')) {
             return $text;
         }
 
-        if (!empty($pageBreaks)) {
-            $text = $this->injectPageMarkerSentinels($text, $pageBreaks);
+        if (!empty($pageBreaks) || $highlight !== null) {
+            $text = $this->injectSentinels($text, $pageBreaks ?? [], $highlight);
         }
 
         $text = htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
@@ -531,54 +540,132 @@ class SearchController extends AbstractController
             $close = preg_quote(self::PAGE_MARKER_CLOSE, '/');
             $html = preg_replace_callback(
                 '/' . $open . '(\d+)' . $close . '/u',
-                fn($m) => '<span class="page-marker" data-page="' . $m[1] . '" title="Strona ' . $m[1] . ' wydania drukowanego">[s. ' . $m[1] . ']</span>',
+                fn($m) => '<span class="page-marker" id="strona-' . $m[1] . '" data-page="' . $m[1] . '" title="Strona ' . $m[1] . ' wydania drukowanego">[s. ' . $m[1] . ']</span>',
                 $html
             ) ?? $html;
+        }
+
+        if ($highlight !== null) {
+            $html = str_replace(
+                [self::HL_OPEN, self::HL_CLOSE],
+                ['<mark class="rag-hl">', '</mark>'],
+                $html
+            );
         }
 
         return $html;
     }
 
     /**
+     * Insert page-marker and (optionally) highlight sentinels into the raw text
+     * in one pass, using absolute byte offsets so the two never disturb each
+     * other. Highlight runs are split at paragraph breaks so no <mark> ever
+     * crosses a </p> boundary once paragraphs are wrapped.
+     *
      * @param array<int, array{paragraph?:int,char_in_para?:int,page?:int}> $pageBreaks
+     * @param array{start:int,end:int}|null $highlight
      */
-    private function injectPageMarkerSentinels(string $content, array $pageBreaks): string
+    private function injectSentinels(string $content, array $pageBreaks, ?array $highlight): string
     {
+        $ins = []; // [offset, order, text] — order breaks ties at the same offset
+
         $byPara = [];
         foreach ($pageBreaks as $b) {
-            if (!isset($b['paragraph'], $b['page'])) {
-                continue;
+            if (isset($b['paragraph'], $b['page'])) {
+                $byPara[(int) $b['paragraph']][] = $b;
             }
-            $byPara[(int) $b['paragraph']][] = $b;
         }
-        if (empty($byPara)) {
-            return $content;
-        }
-
-        $segments = preg_split('/(\n\s*\n)/', $content, -1, PREG_SPLIT_DELIM_CAPTURE);
-        if ($segments === false) {
-            return $content;
-        }
-
-        $paraIdx = 0;
-        $out = '';
-        foreach ($segments as $j => $segment) {
-            $isSeparator = ($j % 2) === 1;
-            if (!$isSeparator && isset($byPara[$paraIdx])) {
-                $entries = $byPara[$paraIdx];
-                usort($entries, fn($a, $b) => ($b['char_in_para'] ?? 0) <=> ($a['char_in_para'] ?? 0));
-                foreach ($entries as $b) {
-                    $offset = max(0, min(strlen($segment), (int) ($b['char_in_para'] ?? 0)));
-                    $marker = self::PAGE_MARKER_OPEN . (int) $b['page'] . self::PAGE_MARKER_CLOSE;
-                    $segment = substr($segment, 0, $offset) . $marker . substr($segment, $offset);
+        if ($byPara) {
+            $segments = preg_split('/(\n\s*\n)/', $content, -1, PREG_SPLIT_DELIM_CAPTURE);
+            if ($segments !== false) {
+                $paraIdx = 0;
+                $abs = 0;
+                foreach ($segments as $j => $segment) {
+                    $isSeparator = ($j % 2) === 1;
+                    if (!$isSeparator && isset($byPara[$paraIdx])) {
+                        foreach ($byPara[$paraIdx] as $b) {
+                            $off = max(0, min(strlen($segment), (int) ($b['char_in_para'] ?? 0)));
+                            $ins[] = [$abs + $off, 1, self::PAGE_MARKER_OPEN . (int) $b['page'] . self::PAGE_MARKER_CLOSE];
+                        }
+                    }
+                    $abs += strlen($segment);
+                    if (!$isSeparator) {
+                        $paraIdx++;
+                    }
                 }
             }
-            $out .= $segment;
-            if (!$isSeparator) {
-                $paraIdx++;
+        }
+
+        if ($highlight !== null) {
+            $s = max(0, (int) $highlight['start']);
+            $e = min(strlen($content), (int) $highlight['end']);
+            if ($e > $s) {
+                $ins[] = [$s, 0, self::HL_OPEN];   // order 0 → sits left of a page marker at the same offset
+                $ins[] = [$e, 2, self::HL_CLOSE];  // order 2 → sits right
+                if (preg_match_all('/\n{2,}/', $content, $m, PREG_OFFSET_CAPTURE)) {
+                    foreach ($m[0] as [$sepStr, $sepOff]) {
+                        $sepEnd = $sepOff + strlen($sepStr);
+                        if ($sepOff > $s && $sepEnd < $e) {
+                            $ins[] = [$sepOff, 2, self::HL_CLOSE]; // close before the blank line
+                            $ins[] = [$sepEnd, 0, self::HL_OPEN];  // reopen in the next paragraph
+                        }
+                    }
+                }
             }
         }
-        return $out;
+
+        if (!$ins) {
+            return $content;
+        }
+
+        usort($ins, fn($a, $b) => ($a[0] <=> $b[0]) ?: ($a[1] <=> $b[1]));
+        for ($i = count($ins) - 1; $i >= 0; $i--) {
+            [$off, , $txt] = $ins[$i];
+            $content = substr($content, 0, $off) . $txt . substr($content, $off);
+        }
+        return $content;
+    }
+
+    /**
+     * Resolve a chunk id to a byte range inside the document's raw content.
+     * The chunk text is the same words as the source (whitespace re-normalised
+     * during chunking), so we anchor on the first and last few tokens with a
+     * whitespace-flexible pattern and span between them.
+     *
+     * @return array{start:int,end:int}|null
+     */
+    private function chunkHighlight(?string $frag, int $documentId, string $content): ?array
+    {
+        if ($frag === null || $frag === '' || !ctype_digit($frag) || $content === '') {
+            return null;
+        }
+        $chunkText = $this->connection->executeQuery(
+            'SELECT content FROM document_chunks WHERE id = :cid AND document_id = :did',
+            ['cid' => (int) $frag, 'did' => $documentId]
+        )->fetchOne();
+        if ($chunkText === false) {
+            return null;
+        }
+
+        $toks = preg_split('/\s+/u', trim((string) $chunkText), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        if (!$toks) {
+            return null;
+        }
+        $pat = fn(array $t) => '/' . implode('\s+', array_map(fn($x) => preg_quote($x, '/'), $t)) . '/su';
+
+        $head = array_slice($toks, 0, 12);
+        if (@preg_match($pat($head), $content, $mh, PREG_OFFSET_CAPTURE) !== 1) {
+            return null;
+        }
+        $start = $mh[0][1];
+
+        $tail = array_slice($toks, -12);
+        if (@preg_match($pat($tail), $content, $mt, PREG_OFFSET_CAPTURE, $start) === 1) {
+            $end = $mt[0][1] + strlen($mt[0][0]);
+        } else {
+            $end = $start + strlen($mh[0][0]);
+        }
+        return ['start' => $start, 'end' => $end];
     }
 
     private function fetchPageBreaks(int $documentId): ?array
