@@ -199,6 +199,12 @@
 
         {# ── Login form ── #}
         <div class="login-card">
+            {% for msg in app.flashes('success') %}
+                <div class="alert alert-success mb-3">{{ msg }}</div>
+            {% endfor %}
+            {% for msg in app.flashes('error') %}
+                <div class="alert alert-danger mb-3">{{ msg }}</div>
+            {% endfor %}
             {% if error %}
                 <div class="alert alert-danger mb-3">
                     {{ error.messageKey|trans(error.messageData, 'security') }}
@@ -244,6 +250,12 @@
                 </div>
             </div>
             {% endif %}
+        </div>
+
+        {# ── Register prompt ── #}
+        <div style="text-align:center;margin-top:1.25rem;font-size:.9rem;color:#777;">
+            Nie masz konta?
+            <a href="{{ path('app_register') }}" style="color:#722F37;font-weight:600;text-decoration:none;">Zarejestruj się</a>
         </div>
 
         {# ── Quote ── #}

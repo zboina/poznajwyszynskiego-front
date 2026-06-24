@@ -122,6 +122,13 @@
         border: 0; outline: 0; background: transparent; color: var(--pw-maroon);
         font-weight: 600; font-size: .82rem; cursor: pointer; padding-right: .2rem; }
     .rag-composer .hint { text-align: center; color: #9a917f; font-size: .78rem; margin-top: .5rem; }
+    .rag-blocked {
+        display: flex; align-items: center; justify-content: center; gap: .5rem; flex-wrap: wrap;
+        background: #fff; border: 1px solid var(--pw-gold); border-radius: 16px;
+        padding: .85rem 1.1rem; color: #8a3b3b; font-weight: 600; font-size: .92rem;
+        box-shadow: 0 6px 28px rgba(60,50,30,.12); }
+    .rag-blocked a { color: var(--pw-maroon); font-weight: 700; text-decoration: none; }
+    .rag-blocked a:hover { text-decoration: underline; }
     .rag-badge { background: var(--pw-cream); border: 1px solid var(--pw-gold); color: #5a4a2e;
         border-radius: 999px; padding: .1rem .6rem; font-size: .75rem; font-weight: 600; }
 
@@ -186,6 +193,7 @@
 {% endblock %}
 
 {% block body %}
+{% include 'partials/_topbar.html.twig' %}
 <div class="rag-page">
 <div class="rag-wrap">
     <div class="rag-hero">
@@ -201,7 +209,15 @@
                     {%- for v in volumes %} {{ v.roman }}{% if not loop.last %},{% endif %}{% endfor -%}
                 </span>
             {% endif %}
+            {% if not unlimited %}
+                <span class="rag-badge" id="rag-credits" title="Pula pytań do asystenta">
+                    Pozostało pytań: <strong id="rag-credits-n">{{ credits }}</strong>
+                </span>
+            {% endif %}
         </p>
+        {% if not unlimited and credits <= 0 %}
+            <p class="mt-1"><a href="{{ path('app_donate') }}" style="color:var(--pw-maroon);font-weight:700;">Doładuj pulę pytań — Wesprzyj →</a></p>
+        {% endif %}
     </div>
 
     <div class="rag-histbar" id="rag-histbar" style="display:none;">
@@ -239,10 +255,15 @@
             </select>
         </div>
         {% endif %}
-        <div class="box">
+        <div class="box" id="rag-box">
             <textarea id="rag-q" rows="1" placeholder="Napisz pytanie do tekstów Prymasa…"></textarea>
             <button id="rag-send" class="send" title="Wyślij"><i class="ti ti-send"></i></button>
             <button id="rag-stop" class="send stop" title="Zatrzymaj" style="display:none;"><i class="ti ti-player-stop-filled"></i></button>
+        </div>
+        <div class="rag-blocked" id="rag-blocked" style="display:none;">
+            <i class="ti ti-lock"></i>
+            <span>Wykorzystałeś pulę pytań do asystenta.</span>
+            <a href="{{ path('app_donate') }}">Doładuj — Wesprzyj →</a>
         </div>
         <div class="hint">Odpowiedzi generowane przez AI na podstawie korpusu — zweryfikuj z oryginałem przed cytowaniem.</div>
     </div>
@@ -282,8 +303,37 @@
     const stop = document.getElementById('rag-stop');
     const scope = document.getElementById('rag-scope');
     const examples = document.getElementById('rag-examples');
+    const box = document.getElementById('rag-box');
+    const blocked = document.getElementById('rag-blocked');
     let seq = 0;
     let activeES = null;   // EventSource currently streaming, if any
+    const unlimited = {{ unlimited ? 'true' : 'false' }};
+    let credits = {{ credits|default(0) }};
+
+    // Whether the user may currently ask a question.
+    function canAsk() { return unlimited || credits > 0; }
+
+    // Lock/unlock the composer based on the remaining question pool.
+    function renderAskability() {
+        const n = document.getElementById('rag-credits-n');
+        if (n) n.textContent = credits;
+        if (canAsk()) {
+            if (box) box.style.display = '';
+            if (blocked) blocked.style.display = 'none';
+            q.disabled = false;
+        } else {
+            if (box) box.style.display = 'none';
+            if (blocked) blocked.style.display = '';
+            q.disabled = true;
+        }
+    }
+
+    // Server decrements a credit when a real answer is generated (citations returned).
+    function spendCredit() {
+        if (unlimited) return;
+        credits = Math.max(0, credits - 1);
+        renderAskability();
+    }
 
     // Auto-follow the stream only when the reader is already near the bottom,
     // so we never yank the page while they're reading earlier text.
@@ -468,6 +518,7 @@
 
     function ask(question) {
         if (activeES) return; // one stream at a time
+        if (!canAsk()) { renderAskability(); return; }
         examples.style.display = 'none';
         const refs = createMsg(question, true);
         refs.msg.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -493,6 +544,8 @@
             // Retrieved candidates; the visible source list is decided on 'done'
             // from what the answer actually cites (avoids "no answer" + sources).
             citations = JSON.parse(e.data).citations || [];
+            // Non-empty citations ⇒ the server is calling the LLM and spends a credit.
+            if (citations.length) spendCredit();
             refs.statusEl.lastChild.textContent = ' Przygotowuję odpowiedź…';
         });
         es.addEventListener('token', e => {
@@ -566,7 +619,10 @@
     function autosize() { q.style.height = 'auto'; q.style.height = Math.min(q.scrollHeight, 160) + 'px'; }
 
     // ── History archive (localStorage; survives refresh, stays on this device) ──
-    const HKEY = 'rag-history-v1';
+    // Scoped per user so a different account on the same browser never sees
+    // another user's conversations.
+    const HKEY = 'rag-history-v1:' + ({{ app.user ? app.user.id : 0 }});
+    try { localStorage.removeItem('rag-history-v1'); } catch (_) {} // drop legacy shared key
     const HMAX = 50;
     const histbar = document.getElementById('rag-histbar');
     const histcount = document.getElementById('rag-histcount');
@@ -655,6 +711,7 @@
         c.addEventListener('click', () => ask(c.textContent.trim())));
 
     restoreHistory();
+    renderAskability();
 })();
 </script>
 {% endblock %}

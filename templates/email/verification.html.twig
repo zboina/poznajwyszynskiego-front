@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pl">
+<body style="margin:0;padding:0;background:#FAF8F5;font-family:Arial,Helvetica,sans-serif;color:#2b2620;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF8F5;padding:32px 0;">
+        <tr><td align="center">
+            <table width="520" cellpadding="0" cellspacing="0" style="background:#fff;border:1px solid #e8e0d4;border-radius:12px;overflow:hidden;">
+                <tr><td style="background:#722F37;color:#fff;padding:20px 28px;font-size:18px;font-weight:bold;">
+                    Dzieła Zebrane kard. Stefana Wyszyńskiego
+                </td></tr>
+                <tr><td style="padding:28px;">
+                    <p style="font-size:16px;margin:0 0 12px;">Witaj{% if name %} {{ name }}{% endif %}!</p>
+                    <p style="font-size:15px;line-height:1.6;color:#555;margin:0 0 22px;">
+                        Dziękujemy za rejestrację. Aby aktywować konto i móc się zalogować,
+                        potwierdź swój adres e-mail klikając poniższy przycisk.
+                    </p>
+                    <p style="text-align:center;margin:0 0 24px;">
+                        <a href="{{ url }}" style="background:#722F37;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:15px;font-weight:bold;display:inline-block;">
+                            Potwierdź adres e-mail
+                        </a>
+                    </p>
+                    <p style="font-size:13px;color:#888;line-height:1.6;margin:0 0 6px;">
+                        Jeśli przycisk nie działa, skopiuj ten odnośnik do przeglądarki:
+                    </p>
+                    <p style="font-size:12px;color:#722F37;word-break:break-all;margin:0 0 18px;">{{ url }}</p>
+                    <p style="font-size:13px;color:#aaa;margin:0;">
+                        Link jest ważny {{ ttlHours }} godziny. Jeśli to nie Ty zakładałeś konto, zignoruj tę wiadomość.
+                    </p>
+                </td></tr>
+            </table>
+        </td></tr>
+    </table>
+</body>
+</html>

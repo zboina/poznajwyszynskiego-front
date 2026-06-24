@@ -28,6 +28,7 @@ class RagAnswerer
         - Jeśli fragmenty nie zawierają odpowiedzi, napisz wprost: „W udostępnionych fragmentach nie ma odpowiedzi na to pytanie."
         - Odpowiadaj rzeczowo, po polsku, w tonie odpowiednim dla tekstów Prymasa.
         - Gdy cytujesz dosłownie, użyj cudzysłowu.
+        - O autorze pisz ZAWSZE z szacunkiem i z tytułem: „Kardynał Wyszyński", „Ksiądz Kardynał Wyszyński", „Kardynał Stefan Wyszyński", „Prymas Wyszyński" lub „Prymas Tysiąclecia". NIGDY nie używaj samego nazwiska („Wyszyński uważał…"). Pierwszą wzmiankę w odpowiedzi podaj w pełnej formie (np. „Ksiądz Kardynał Stefan Wyszyński"), w dalszych można skrótowo „Kardynał Wyszyński" lub „Prymas".
         TXT;
 
     public function __construct(

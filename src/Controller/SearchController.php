@@ -399,6 +399,8 @@ class SearchController extends AbstractController
             'viewsRemaining' => $viewsRemaining,
             'content' => $content,
             'limitReached' => $limitReached,
+            'aiCredits' => $user?->getAiCredits() ?? 0,
+            'pdfCost' => self::PDF_CREDIT_COST,
         ]);
 
         $response->headers->set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
@@ -407,10 +409,33 @@ class SearchController extends AbstractController
         return $response;
     }
 
-    #[Route('/dokument/{id}/pdf', name: 'app_document_pdf', requirements: ['id' => '\d+'])]
-    public function documentPdf(int $id): Response
+    public const PDF_CREDIT_COST = 10;
+
+    #[Route('/dokument/{id}/pdf', name: 'app_document_pdf', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
+    public function documentPdf(int $id, Request $request): Response
     {
-        $this->denyAccessUnlessGranted('ROLE_VIP');
+        /** @var User|null $user */
+        $user = $this->getUser();
+        $isVip = $this->isGranted('ROLE_VIP'); // VIP ma eksport PDF gratis
+
+        if (!$isVip) {
+            if (!$user) {
+                return $this->redirectToRoute('app_login');
+            }
+            // Płatne kredytami → tylko POST z CSRF (zwykły GET/odświeżenie nie pobiera kredytów).
+            if (!$request->isMethod('POST') || !$this->isCsrfTokenValid('pdf', (string) $request->request->get('_csrf_token'))) {
+                return $this->redirectToRoute('app_search_doc_short', ['id' => $id]);
+            }
+            // Atomowe pobranie kredytów — zapobiega podwójnemu naliczeniu / wyścigowi.
+            $affected = $this->connection->executeStatement(
+                'UPDATE "user" SET ai_credits = ai_credits - :c WHERE id = :id AND ai_credits >= :c',
+                ['c' => self::PDF_CREDIT_COST, 'id' => $user->getId()]
+            );
+            if ($affected === 0) {
+                $this->addFlash('error', sprintf('Pobranie PDF kosztuje %d kredytów, a nie masz ich wystarczająco. Wesprzyj projekt, aby doładować pulę.', self::PDF_CREDIT_COST));
+                return $this->redirectToRoute('app_donate');
+            }
+        }
 
         $pj = $this->documentRepository->publishedJoin();
         $doc = $this->connection->executeQuery(
@@ -438,7 +463,7 @@ class SearchController extends AbstractController
             'margin_bottom' => 20,
             'margin_left' => 18,
             'margin_right' => 18,
-            'default_font' => 'dejavuserif',
+            'default_font' => 'dejavusans',
             'tempDir' => $this->getParameter('kernel.project_dir') . '/var/mpdf',
         ]);
 

@@ -1,0 +1,82 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Rejestracja — Dzieła Zebrane Kardynała Stefana Wyszyńskiego{% endblock %}
+{% block body_class %}d-flex flex-column{% endblock %}
+
+{% block stylesheets %}
+<style>
+    :root { --tblr-primary: #722F37; --tblr-primary-rgb: 114,47,55; }
+    .login-page { min-height: 100vh; background: #FAF8F5; display: flex; align-items: center; justify-content: center; padding: 2rem 1rem; }
+    .login-wrapper { width: 100%; max-width: 460px; }
+    .login-header { text-align: center; margin-bottom: 2rem; }
+    .login-logo { width: 76px; height: 76px; border-radius: 50%; border: 2px solid #e8e0d4; margin-bottom: 1.25rem; }
+    .login-title { font-family: var(--font-heading) !important; font-size: 1.7rem; font-weight: 700; color: #1a1a1a; margin: 0 0 .25rem; }
+    .login-subtitle { font-size: .95rem; color: #888; margin: 0; }
+    .login-card { background: #fff; border: 1px solid #e8e0d4; border-radius: 12px; padding: 2.25rem; }
+    .login-card .form-label { font-size: .82rem; font-weight: 500; color: #555; margin-bottom: .35rem; }
+    .login-card .form-control {
+        background: #FAFAF8; border: 1px solid #ddd; border-radius: 8px; color: #1a1a1a;
+        font-size: .95rem; padding: .65rem .9rem; transition: border-color .2s, box-shadow .2s; width: 100%; }
+    .login-card .form-control:focus { background: #fff; border-color: #722F37; box-shadow: 0 0 0 3px rgba(114,47,55,.08); outline: 0; }
+    .btn-login {
+        width: 100%; background: #722F37; color: #fff; border: 0; border-radius: 8px;
+        padding: .7rem; font-size: .98rem; font-weight: 600; cursor: pointer; transition: background .2s; }
+    .btn-login:hover { background: #5C2630; }
+    .login-divider { height: 1px; background: #eee; margin: 1.25rem 0; }
+    .login-foot { text-align: center; margin-top: 1.25rem; font-size: .9rem; color: #777; }
+    .login-foot a { color: #722F37; font-weight: 600; text-decoration: none; }
+    .login-foot a:hover { text-decoration: underline; }
+    .reg-check { display: flex; gap: .5rem; align-items: flex-start; font-size: .85rem; color: #555; }
+    .reg-check input { margin-top: .2rem; }
+    .reg-check a { color: #722F37; }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="login-page">
+    <div class="login-wrapper">
+        <div class="login-header">
+            <img src="{{ asset('logo_PW_bez_obramowania.png') }}" alt="Logo" class="login-logo">
+            <h1 class="login-title">Załóż konto</h1>
+            <p class="login-subtitle">Dostęp do Dzieł Zebranych kard. Wyszyńskiego</p>
+        </div>
+
+        <div class="login-card">
+            {% for e in errors %}
+                <div class="alert alert-danger py-2 mb-3">{{ e }}</div>
+            {% endfor %}
+
+            <form method="post" novalidate data-turbo="false">
+                <div class="mb-3">
+                    <label class="form-label" for="r-name">Imię i nazwisko <span class="text-muted">(opcjonalnie)</span></label>
+                    <input type="text" name="name" id="r-name" class="form-control" value="{{ old.name }}" autocomplete="name">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="r-email">Adres e-mail</label>
+                    <input type="email" name="email" id="r-email" class="form-control" value="{{ old.email }}" autocomplete="email" required autofocus>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="r-pass">Hasło <span class="text-muted">(min. 8 znaków)</span></label>
+                    <input type="password" name="password" id="r-pass" class="form-control" autocomplete="new-password" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="r-pass2">Powtórz hasło</label>
+                    <input type="password" name="password2" id="r-pass2" class="form-control" autocomplete="new-password" required>
+                </div>
+                <div class="mb-3 reg-check">
+                    <input type="checkbox" name="agree" id="r-agree" value="1" required>
+                    <label for="r-agree">Akceptuję regulamin i politykę prywatności serwisu.</label>
+                </div>
+
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token('register') }}">
+                <div class="login-divider"></div>
+                <button type="submit" class="btn-login">Załóż konto</button>
+            </form>
+        </div>
+
+        <div class="login-foot">
+            Masz już konto? <a href="{{ path('app_login') }}">Zaloguj się</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

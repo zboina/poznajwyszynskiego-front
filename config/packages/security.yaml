@@ -22,6 +22,7 @@ security:
         main:
             lazy: true
             provider: app_user_provider
+            user_checker: App\Security\UserChecker
             form_login:
                 login_path: app_login
                 check_path: app_login
@@ -33,6 +34,7 @@ security:
 
     access_control:
         - { path: ^/logowanie, roles: PUBLIC_ACCESS }
+        - { path: ^/rejestracja, roles: PUBLIC_ACCESS }
         - { path: ^/wyloguj, roles: PUBLIC_ACCESS }
         - { path: ^/demo, roles: PUBLIC_ACCESS }
         - { path: ^/$, roles: PUBLIC_ACCESS }
@@ -41,6 +43,7 @@ security:
         - { path: ^/tekst/, roles: PUBLIC_ACCESS }
         - { path: ^/asystent, roles: PUBLIC_ACCESS }
         - { path: ^/dokument/\d+/podglad$, roles: PUBLIC_ACCESS }
+        - { path: ^/webhook/stripe$, roles: PUBLIC_ACCESS }
         - { path: ^/, roles: ROLE_USER }
 
 when@test:

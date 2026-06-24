@@ -1,0 +1,119 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Wesprzyj — Dzieła Zebrane Kardynała Stefana Wyszyńskiego{% endblock %}
+
+{% block stylesheets %}
+<style>
+    :root { --pw-maroon: #722F37; --pw-gold: #c8b78d; --pw-cream: #f8f4ec; }
+    .don-page { background: radial-gradient(1200px 400px at 50% -120px, #faf6ee 0%, transparent 70%); min-height: 100vh; }
+    .don-wrap { max-width: 640px; margin: 0 auto; padding: 2.5rem 1rem 4rem; }
+    .don-hero { text-align: center; margin-bottom: 2rem; }
+    .don-hero .crest { width: 60px; height: 60px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: .75rem; background: var(--pw-maroon); color: #fff; font-size: 1.6rem; box-shadow: 0 6px 20px rgba(114,47,55,.35); }
+    .don-hero h1 { font-family: var(--font-heading); color: var(--pw-maroon); font-weight: 700; font-size: 2rem; margin: 0; }
+    .don-hero p { color: #6b6256; max-width: 520px; margin: .5rem auto 0; }
+    .don-card { background: #fff; border: 1px solid #ece5d8; border-radius: 16px; box-shadow: 0 4px 24px rgba(60,50,30,.07); padding: 1.75rem; }
+    .don-credits { background: var(--pw-cream); border: 1px solid var(--pw-gold); border-radius: 12px; padding: 1rem 1.25rem; text-align: center; margin-bottom: 1.25rem; }
+    .don-credits .big { font-size: 1.7rem; font-weight: 800; color: var(--pw-maroon); font-family: var(--font-heading); }
+    .don-credits .lbl { color: #8a7d68; font-size: .85rem; }
+    .don-quick { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    .don-quick button { flex: 1 1 auto; border: 1px solid var(--pw-gold); background: #fff; color: #5a4a2e; border-radius: 10px; padding: .6rem 0; font-weight: 700; cursor: pointer; transition: all .15s; }
+    .don-quick button:hover, .don-quick button.active { background: var(--pw-maroon); color: #fff; border-color: var(--pw-maroon); }
+    .don-amount { display: flex; align-items: center; gap: .5rem; border: 1px solid var(--pw-gold); border-radius: 10px; padding: .5rem .9rem; margin-bottom: 1.25rem; }
+    .don-amount input { flex: 1; border: 0; outline: 0; font-size: 1.4rem; font-weight: 700; color: #2b2620; width: 100%; }
+    .don-amount .cur { font-size: 1.2rem; color: #8a7d68; font-weight: 700; }
+    .don-submit { width: 100%; background: var(--pw-maroon); color: #fff; border: 0; border-radius: 12px; padding: .85rem; font-size: 1.05rem; font-weight: 700; cursor: pointer; transition: background .2s; }
+    .don-submit:hover { background: #5C2630; }
+    .don-note { color: #9a917f; font-size: .82rem; text-align: center; margin-top: 1rem; }
+    .don-methods { text-align: center; color: #8a7d68; font-size: .85rem; margin-top: .75rem; }
+    .don-perks { list-style: none; padding: 0; margin: 1.25rem 0 0; }
+    .don-perks li { display: flex; gap: .5rem; align-items: flex-start; color: #4a443a; padding: .25rem 0; font-size: .95rem; }
+    .don-perks i { color: var(--pw-maroon); margin-top: .15rem; }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="don-page">
+<div class="don-wrap">
+    <div class="don-hero">
+        <div class="crest"><i class="ti ti-heart-handshake"></i></div>
+        <h1>Wesprzyj projekt</h1>
+        <p>Twoja darowizna utrzymuje cyfrowe wydanie Dzieł Zebranych i odblokowuje
+           <strong>asystenta AI</strong>. Kwota przekłada się na pulę pytań do asystenta.</p>
+    </div>
+
+    <div class="don-card">
+        {% for msg in app.flashes('error') %}
+            <div class="alert alert-danger py-2 mb-3">{{ msg }}</div>
+        {% endfor %}
+
+        {% if currentCredits > 0 %}
+            <div class="alert alert-success py-2 mb-3">
+                Masz obecnie <strong>{{ currentCredits }}</strong> dostępnych pytań do asystenta.
+            </div>
+        {% endif %}
+
+        {% if not configured %}
+            <div class="alert alert-warning mb-0">
+                Płatności są w trakcie konfiguracji i będą dostępne wkrótce.
+            </div>
+        {% else %}
+            <div class="don-credits">
+                <div class="big" id="don-credits-val">{{ (minPln * creditsPerPln) }}</div>
+                <div class="lbl">pytań do asystenta AI</div>
+            </div>
+
+            <div class="don-quick" id="don-quick">
+                <button type="button" data-pln="30">30 zł</button>
+                <button type="button" data-pln="50">50 zł</button>
+                <button type="button" data-pln="100">100 zł</button>
+                <button type="button" data-pln="200">200 zł</button>
+            </div>
+
+            <form method="post" action="{{ path('app_donate_checkout') }}" data-turbo="false">
+                <div class="don-amount">
+                    <input type="number" name="amount" id="don-amount" min="{{ minPln }}" step="1"
+                           value="30" inputmode="numeric" aria-label="Kwota darowizny w złotych">
+                    <span class="cur">zł</span>
+                </div>
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token('donate') }}">
+                <button type="submit" class="don-submit">
+                    <i class="ti ti-lock me-1"></i> Przejdź do płatności
+                </button>
+                <div class="don-methods"><i class="ti ti-brand-stripe"></i> BLIK · karta · Przelewy24 — bezpiecznie przez Stripe</div>
+                <div class="don-note">Minimalna darowizna {{ minPln }} zł = {{ minPln * creditsPerPln }} pytań. Dostęp na {{ periodMonths }} miesięcy.</div>
+            </form>
+
+            <ul class="don-perks">
+                <li><i class="ti ti-message-chatbot"></i> Asystent AI z odpowiedziami i cytatami z Dzieł Zebranych</li>
+                <li><i class="ti ti-book"></i> Nielimitowany dostęp do treści dokumentów</li>
+                <li><i class="ti ti-clock"></i> Pula pytań nie znika po sesji — zostaje na koncie</li>
+            </ul>
+        {% endif %}
+    </div>
+</div>
+</div>
+
+{% if configured %}
+<script>
+(function() {
+    const rate = {{ creditsPerPln }};
+    const min = {{ minPln }};
+    const amount = document.getElementById('don-amount');
+    const out = document.getElementById('don-credits-val');
+    const quick = document.getElementById('don-quick');
+
+    function refresh() {
+        const pln = parseFloat(String(amount.value).replace(',', '.')) || 0;
+        out.textContent = Math.max(0, Math.round(pln * rate));
+        quick.querySelectorAll('button').forEach(b =>
+            b.classList.toggle('active', parseInt(b.dataset.pln, 10) === Math.round(pln)));
+    }
+    amount.addEventListener('input', refresh);
+    quick.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+        amount.value = b.dataset.pln; refresh();
+    }));
+    refresh();
+})();
+</script>
+{% endif %}
+{% endblock %}

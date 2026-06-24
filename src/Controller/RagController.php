@@ -2,10 +2,13 @@
 
 namespace App\Controller;
 
+use App\Entity\RagQuery;
+use App\Entity\User;
 use App\Service\ChunkRetriever;
 use App\Service\DocxBuilder;
 use App\Service\RagAnswerer;
 use App\Service\SettingsService;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -20,10 +23,18 @@ class RagController extends AbstractController
         private SettingsService $settings,
         private DocxBuilder $docx,
         private ChunkRetriever $retriever,
+        private EntityManagerInterface $em,
     ) {}
 
+    /** Admins and demo sessions ask without spending credits. */
+    private function isUnlimited(Request $request): bool
+    {
+        return $this->isGranted('ROLE_ADMIN')
+            || $request->getSession()->get('demo_verified') === true;
+    }
+
     #[Route('/asystent', name: 'app_rag')]
-    public function index(): Response
+    public function index(Request $request): Response
     {
         if (!$this->getUser() && !$this->settings->isDemoEnabled()) {
             return $this->redirectToRoute('app_login');
@@ -33,7 +44,14 @@ class RagController extends AbstractController
             return $v;
         }, $this->retriever->availableVolumes());
 
-        return $this->render('rag/index.html.twig', ['volumes' => $volumes]);
+        /** @var User|null $user */
+        $user = $this->getUser();
+
+        return $this->render('rag/index.html.twig', [
+            'volumes' => $volumes,
+            'unlimited' => $this->isUnlimited($request),
+            'credits' => $user ? $user->getAiCredits() : 0,
+        ]);
     }
 
     #[Route('/asystent/zapytaj', name: 'app_rag_ask', methods: ['POST'])]
@@ -50,7 +68,26 @@ class RagController extends AbstractController
         }
         $volumeId = isset($data['volume']) && $data['volume'] ? (int) $data['volume'] : null;
 
+        /** @var User|null $user */
+        $user = $this->getUser();
+        $unlimited = $this->isUnlimited($request);
+
+        if (!$unlimited && (!$user instanceof User || $user->getAiCredits() <= 0)) {
+            return new JsonResponse([
+                'answer' => 'Wykorzystałeś pulę pytań do asystenta. Doładuj pulę w zakładce „Wesprzyj".',
+                'citations' => [],
+                'used' => false,
+                'blocked' => true,
+            ]);
+        }
+
         $result = $this->rag->answer($question, 8, $volumeId);
+
+        if (!$unlimited && $user instanceof User && ($result['used'] ?? false)) {
+            $user->spendAiCredit();
+            $this->em->persist(new RagQuery($user->getId(), $volumeId));
+            $this->em->flush();
+        }
 
         return new JsonResponse($result);
     }
@@ -65,8 +102,13 @@ class RagController extends AbstractController
         $question = trim((string) $request->query->get('q', ''));
         $volumeId = $request->query->get('volume') ? (int) $request->query->get('volume') : null;
 
+        /** @var User|null $user */
+        $user = $this->getUser();
+        $unlimited = $this->isUnlimited($request);
         $rag = $this->rag;
-        $response = new StreamedResponse(function () use ($rag, $question, $volumeId) {
+        $em = $this->em;
+
+        $response = new StreamedResponse(function () use ($rag, $em, $user, $unlimited, $question, $volumeId) {
             $emit = function (string $event, array $data) {
                 echo "event: {$event}\n";
                 echo 'data: ' . json_encode($data) . "\n\n";
@@ -79,6 +121,14 @@ class RagController extends AbstractController
                 return;
             }
 
+            // Credit gate: assistant runs on a donation-funded question pool.
+            if (!$unlimited && (!$user instanceof User || $user->getAiCredits() <= 0)) {
+                $emit('citations', ['citations' => []]);
+                $emit('token', ['t' => 'Wykorzystałeś pulę pytań do asystenta. Aby zadawać dalej, doładuj pulę w zakładce **Wesprzyj** — każda darowizna dodaje pytania.']);
+                $emit('done', []);
+                return;
+            }
+
             $prep = $rag->prepare($question, 8, $volumeId);
             $emit('citations', ['citations' => $prep['citations']]);
 
@@ -86,6 +136,13 @@ class RagController extends AbstractController
                 $emit('token', ['t' => $prep['empty']]);
                 $emit('done', []);
                 return;
+            }
+
+            // We are about to call the LLM → spend one credit (unless unlimited).
+            if (!$unlimited && $user instanceof User) {
+                $user->spendAiCredit();
+                $em->persist(new RagQuery($user->getId(), $volumeId));
+                $em->flush();
             }
 
             $rag->streamChat($rag->systemPrompt(), $prep['user'], function (string $tok) use ($emit) {

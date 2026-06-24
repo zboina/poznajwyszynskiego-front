@@ -18,7 +18,10 @@ framework:
             messenger.bus.default: []
 
         routing:
-            Symfony\Component\Mailer\Messenger\SendEmailMessage: async
+            # Maile wysyłamy SYNCHRONICZNIE — brak workera messenger:consume na serwerze.
+            # Routowane do async lądowały w kolejce (messenger_messages) i nigdy nie wychodziły.
+            # Aby wrócić do async: odkomentuj i uruchom workera (systemd/supervisor).
+            # Symfony\Component\Mailer\Messenger\SendEmailMessage: async
             Symfony\Component\Notifier\Message\ChatMessage: async
             Symfony\Component\Notifier\Message\SmsMessage: async
 

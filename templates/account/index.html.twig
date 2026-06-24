@@ -1,0 +1,118 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Moje konto — Dzieła Zebrane{% endblock %}
+
+{% block stylesheets %}
+<style>
+    :root { --pw-maroon: #722F37; --pw-gold: #c8b78d; --pw-cream: #f8f4ec; }
+    .acc-page { background: radial-gradient(1200px 400px at 50% -120px, #faf6ee 0%, transparent 70%); min-height: 100vh; }
+    .acc-wrap { max-width: 860px; margin: 0 auto; padding: 2.5rem 1rem 5rem; }
+    .acc-head { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.75rem; }
+    .acc-avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--pw-maroon); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 700; flex: 0 0 auto; }
+    .acc-head h1 { font-family: var(--font-heading); color: var(--pw-maroon); font-weight: 700; font-size: 1.7rem; margin: 0; }
+    .acc-head .email { color: #8a7d68; font-size: .92rem; }
+    .acc-role { display: inline-block; font-size: .72rem; font-weight: 700; padding: .12rem .55rem; border-radius: 999px; vertical-align: middle; margin-left: .4rem; }
+    .acc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+    @media (max-width: 640px) { .acc-grid { grid-template-columns: 1fr; } }
+    .acc-card { background: #fff; border: 1px solid #ece5d8; border-radius: 16px; box-shadow: 0 4px 24px rgba(60,50,30,.06); padding: 1.4rem 1.5rem; }
+    .acc-card .lbl { color: #8a7d68; font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; margin-bottom: .4rem; }
+    .acc-card .big { font-family: var(--font-heading); color: var(--pw-maroon); font-weight: 800; font-size: 2rem; line-height: 1.1; }
+    .acc-card .sub { color: #6b6256; font-size: .9rem; margin-top: .35rem; }
+    .acc-cta { display: inline-flex; align-items: center; gap: .4rem; margin-top: .9rem; background: var(--pw-maroon); color: #fff; text-decoration: none; padding: .5rem 1rem; border-radius: 10px; font-weight: 700; font-size: .88rem; }
+    .acc-cta:hover { background: #5C2630; color: #fff; }
+    .acc-section-ttl { font-family: var(--font-heading); color: var(--pw-maroon); font-weight: 700; font-size: 1.2rem; margin: .5rem 0 .75rem; }
+    .acc-table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #ece5d8; border-radius: 12px; overflow: hidden; }
+    .acc-table th { text-align: left; font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; color: #8a7d68; padding: .7rem .9rem; background: var(--pw-cream); border-bottom: 1px solid #ece5d8; }
+    .acc-table td { padding: .7rem .9rem; border-bottom: 1px solid #f1ece1; font-size: .92rem; color: #2b2620; }
+    .acc-table tr:last-child td { border-bottom: 0; }
+    .pay-status { font-size: .75rem; font-weight: 700; padding: .1rem .5rem; border-radius: 999px; }
+    .pay-paid { background: #e8f5e9; color: #2e7d32; }
+    .pay-pending { background: #fff4e0; color: #b06f00; }
+    .pay-other { background: #f0eadf; color: #6b6256; }
+    .acc-empty { background: #fff; border: 1px dashed #d8cdb5; border-radius: 16px; padding: 2.5rem; text-align: center; color: #6b6256; }
+    .acc-empty .ic { font-size: 2rem; color: var(--pw-gold); }
+</style>
+{% endblock %}
+
+{% block body %}
+{% include 'partials/_topbar.html.twig' %}
+{% set roleLabel = 'Konto bezpłatne' %}{% set roleBg = '#efe9dd' %}{% set roleFg = '#6b6256' %}
+{% if 'ROLE_VIP' in app.user.roles %}{% set roleLabel = 'VIP' %}{% set roleBg = '#C9A227' %}{% set roleFg = '#1a1a1a' %}
+{% elseif 'ROLE_DONATOR' in app.user.roles %}{% set roleLabel = 'Donator' %}{% set roleBg = '#2fb344' %}{% set roleFg = '#fff' %}{% endif %}
+{% set expires = app.user.accessExpiresAt %}
+{% set active = expires and expires > date() %}
+
+<div class="acc-page">
+<div class="acc-wrap">
+    <div class="acc-head">
+        <div class="acc-avatar">{{ (app.user.name ?? app.user.email)|first|upper }}</div>
+        <div>
+            <h1>{{ app.user.name ?? 'Moje konto' }}
+                <span class="acc-role" style="background:{{ roleBg }};color:{{ roleFg }};">{{ roleLabel }}</span>
+            </h1>
+            <div class="email">{{ app.user.email }}</div>
+        </div>
+    </div>
+
+    <div class="acc-grid">
+        <div class="acc-card">
+            <div class="lbl">Pytania do asystenta AI</div>
+            <div class="big">{{ app.user.aiCredits }}</div>
+            <div class="sub">
+                {% if app.user.aiCredits > 0 %}pozostałych pytań w Twojej puli{% else %}brak puli — wesprzyj, aby zadawać pytania{% endif %}
+            </div>
+            <a href="{{ path('app_donate') }}" class="acc-cta">
+                <i class="ti ti-heart-handshake"></i> {{ app.user.aiCredits > 0 ? 'Doładuj pulę' : 'Wesprzyj i odblokuj' }}
+            </a>
+        </div>
+
+        <div class="acc-card">
+            <div class="lbl">Status dostępu</div>
+            <div class="big" style="font-size:1.5rem;">{{ roleLabel }}</div>
+            <div class="sub">
+                {% if active %}
+                    Aktywny do <strong>{{ expires|date('d.m.Y') }}</strong>
+                {% elseif expires %}
+                    Wygasł {{ expires|date('d.m.Y') }} — odnów wsparciem
+                {% else %}
+                    Dostęp podstawowy: 5 dokumentów / 24 h
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="acc-section-ttl">Historia wsparcia</div>
+    {% if payments is empty %}
+        <div class="acc-empty">
+            <div class="ic"><i class="ti ti-receipt"></i></div>
+            <p class="mt-2 mb-3">Nie masz jeszcze żadnej darowizny.</p>
+            <a href="{{ path('app_donate') }}" class="acc-cta"><i class="ti ti-heart-handshake"></i> Wesprzyj projekt</a>
+        </div>
+    {% else %}
+        <table class="acc-table">
+            <thead>
+                <tr><th>Data</th><th>Kwota</th><th>Status</th><th>Przyznano</th><th>Okres</th></tr>
+            </thead>
+            <tbody>
+            {% for p in payments %}
+                <tr>
+                    <td>{{ p.createdAt|date('d.m.Y') }}</td>
+                    <td><strong>{{ (p.amount / 100)|number_format(2, ',', ' ') }} zł</strong></td>
+                    <td>
+                        {% if p.status == 'paid' %}<span class="pay-status pay-paid">Opłacona</span>
+                        {% elseif p.status == 'pending' %}<span class="pay-status pay-pending">Oczekuje</span>
+                        {% else %}<span class="pay-status pay-other">{{ p.status }}</span>{% endif %}
+                    </td>
+                    <td>{% if p.grantedRole == 'ROLE_VIP' %}VIP{% elseif p.grantedRole == 'ROLE_DONATOR' %}Donator{% else %}—{% endif %}</td>
+                    <td>{{ p.periodMonths }} mies.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        <p class="text-muted mt-2" style="font-size:.85rem;">
+            Łączne wsparcie: <strong>{{ (totalGrosze / 100)|number_format(2, ',', ' ') }} zł</strong>. Dziękujemy!
+        </p>
+    {% endif %}
+</div>
+</div>
+{% endblock %}

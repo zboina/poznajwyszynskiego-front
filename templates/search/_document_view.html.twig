@@ -19,11 +19,18 @@
                         {{ viewsRemaining }}/5
                     </span>
                 {% endif %}
+                {% set pdfIcon %}<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M5 12v-7a2 2 0 0 1 2 -2h7l5 5v4"/><path d="M5 18h1.5a1.5 1.5 0 0 0 0 -3h-1.5v6"/><path d="M17 18h2"/><path d="M20 15h-3v6"/><path d="M11 15v6h1a2 2 0 0 0 2 -2v-2a2 2 0 0 0 -2 -2h-1z"/></svg>{% endset %}
                 {% if accessLevel == 'vip' %}
-                    <a href="{{ path('app_document_pdf', {id: doc.id}) }}" class="doc-pdf-btn" target="_blank">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M5 12v-7a2 2 0 0 1 2 -2h7l5 5v4"/><path d="M5 18h1.5a1.5 1.5 0 0 0 0 -3h-1.5v6"/><path d="M17 18h2"/><path d="M20 15h-3v6"/><path d="M11 15v6h1a2 2 0 0 0 2 -2v-2a2 2 0 0 0 -2 -2h-1z"/></svg>
-                        PDF
-                    </a>
+                    <a href="{{ path('app_document_pdf', {id: doc.id}) }}" class="doc-pdf-btn" target="_blank">{{ pdfIcon }} PDF</a>
+                {% elseif accessLevel in ['user', 'donator'] %}
+                    <button type="button" class="doc-pdf-btn doc-pdf-credits"
+                            data-doc-id="{{ doc.id }}"
+                            data-credits="{{ aiCredits }}"
+                            data-cost="{{ pdfCost }}"
+                            data-url="{{ path('app_document_pdf', {id: doc.id}) }}"
+                            data-csrf="{{ csrf_token('pdf') }}">
+                        {{ pdfIcon }} PDF ({{ pdfCost }} kr.)
+                    </button>
                 {% endif %}
             </div>
         </div>
