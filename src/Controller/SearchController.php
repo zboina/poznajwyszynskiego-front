@@ -284,11 +284,12 @@ class SearchController extends AbstractController
                     403
                 );
             }
+        }
 
-            // Record view if new document
-            if (!$alreadyViewed) {
-                $this->recordView($user->getId(), $id);
-            }
+        // Rejestruj wyświetlenie dla każdego zalogowanego użytkownika (donator/VIP też),
+        // aby pełna aktywność czytania była widoczna w panelu obsługi. Dedup 24h jest w recordView().
+        if ($user) {
+            $this->recordView($user->getId(), $id);
         }
 
         $pj = $this->documentRepository->publishedJoin();
@@ -379,6 +380,8 @@ class SearchController extends AbstractController
                 $viewsUsed = $this->getViewsLast24h($user->getId());
                 $viewsRemaining = max(0, 5 - $viewsUsed);
             } else {
+                // Donator/VIP — bez limitu, ale rejestrujemy wyświetlenie do logów aktywności (dedup 24h w recordView()).
+                $this->recordView($user->getId(), $id);
                 $raw = (string) ($this->connection->executeQuery(
                     'SELECT content FROM documents WHERE id = :id',
                     ['id' => $id]
@@ -527,6 +530,11 @@ class SearchController extends AbstractController
 
     private function recordView(int $userId, int $documentId): void
     {
+        // Jeden wpis na dokument na 24h — spójnie z licznikiem limitu i bez zaśmiecania logów aktywności.
+        if ($this->hasViewedDocument($userId, $documentId)) {
+            return;
+        }
+
         $this->connection->executeStatement(
             'INSERT INTO document_views (user_id, document_id, viewed_at) VALUES (:uid, :did, NOW())',
             ['uid' => $userId, 'did' => $documentId]

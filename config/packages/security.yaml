@@ -22,6 +22,8 @@ security:
         main:
             lazy: true
             provider: app_user_provider
+            # Osobny kontekst — token bezpieczeństwa nie współdzieli klucza sesji z panelem admina.
+            context: web
             user_checker: App\Security\UserChecker
             form_login:
                 login_path: app_login

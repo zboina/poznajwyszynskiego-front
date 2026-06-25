@@ -4,6 +4,9 @@ framework:
 
     # Note that the session will be started ONLY if you read or write from it.
     session:
+        # Własna nazwa ciasteczka — panel admina stoi na tym samym hoście (inny port),
+        # a ciasteczka są współdzielone między portami. Bez tego sesje obu aplikacji kolidują.
+        name: WEB_PWSESSID
         cookie_lifetime: 3600
         gc_maxlifetime: 3600
 

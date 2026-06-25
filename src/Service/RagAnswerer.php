@@ -45,19 +45,37 @@ class RagAnswerer
     }
 
     /**
-     * @return array{answer:string, citations:array<int,array>, used:bool}
+     * @return array{answer:string, citations:array<int,array>, used:bool, usage:array}
      */
     public function answer(string $question, int $k = 8, ?int $volumeId = null): array
     {
         $prep = $this->prepare($question, $k, $volumeId);
         if (!$prep['citations']) {
-            return ['answer' => $prep['empty'], 'citations' => [], 'used' => false];
+            return ['answer' => $prep['empty'], 'citations' => [], 'used' => false, 'usage' => $this->emptyUsage()];
         }
-        $answer = $this->chat(self::SYSTEM_PROMPT, $prep['user']);
+        $res = $this->chat(self::SYSTEM_PROMPT, $prep['user']);
         return [
-            'answer' => $answer ?? 'Nie udało się wygenerować odpowiedzi (model niedostępny).',
+            'answer' => $res['content'] ?? 'Nie udało się wygenerować odpowiedzi (model niedostępny).',
             'citations' => $prep['citations'],
-            'used' => $answer !== null,
+            'used' => $res['content'] !== null,
+            'usage' => $res['usage'],
+        ];
+    }
+
+    /** Puste zużycie (cache hit / brak modelu). */
+    private function emptyUsage(?string $model = null): array
+    {
+        return ['model' => $model, 'inputTokens' => 0, 'outputTokens' => 0, 'costUsd' => 0.0];
+    }
+
+    /** Normalizuje obiekt usage z OpenRouter (tokeny + realny koszt USD). */
+    private function parseOpenRouterUsage(array $u): array
+    {
+        return [
+            'model' => $this->openrouterModel,
+            'inputTokens' => (int) ($u['prompt_tokens'] ?? 0),
+            'outputTokens' => (int) ($u['completion_tokens'] ?? 0),
+            'costUsd' => (float) ($u['cost'] ?? 0),
         ];
     }
 
@@ -87,17 +105,17 @@ class RagAnswerer
     /**
      * Stream tokens from the local model. $onToken is called with each text delta.
      */
-    public function streamChat(string $system, string $user, callable $onToken): void
+    /** @return array usage = {model, inputTokens, outputTokens, costUsd} */
+    public function streamChat(string $system, string $user, callable $onToken): array
     {
-        if ($this->useOpenRouter()) {
-            $this->streamOpenRouter($system, $user, $onToken);
-        } else {
-            $this->streamOllama($system, $user, $onToken);
-        }
+        return $this->useOpenRouter()
+            ? $this->streamOpenRouter($system, $user, $onToken)
+            : $this->streamOllama($system, $user, $onToken);
     }
 
-    private function streamOllama(string $system, string $user, callable $onToken): void
+    private function streamOllama(string $system, string $user, callable $onToken): array
     {
+        $usage = $this->emptyUsage($this->ollamaModel);
         $payload = json_encode([
             'model' => $this->ollamaModel,
             'stream' => true,
@@ -115,7 +133,7 @@ class RagAnswerer
             CURLOPT_POSTFIELDS => $payload,
             CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
             CURLOPT_TIMEOUT => 600,
-            CURLOPT_WRITEFUNCTION => function ($ch, $data) use (&$buffer, $onToken) {
+            CURLOPT_WRITEFUNCTION => function ($ch, $data) use (&$buffer, &$usage, $onToken) {
                 $buffer .= $data;
                 // Ollama streams newline-delimited JSON objects.
                 while (($pos = strpos($buffer, "\n")) !== false) {
@@ -130,12 +148,19 @@ class RagAnswerer
                     if ($tok !== '') {
                         $onToken($tok);
                     }
+                    // Ostatni obiekt (done) niesie liczbę tokenów; koszt = 0 (model lokalny).
+                    if ($obj['done'] ?? false) {
+                        $usage['inputTokens'] = (int) ($obj['prompt_eval_count'] ?? 0);
+                        $usage['outputTokens'] = (int) ($obj['eval_count'] ?? 0);
+                    }
                 }
                 return strlen($data);
             },
         ]);
         curl_exec($ch);
         curl_close($ch);
+
+        return $usage;
     }
 
     /**
@@ -191,14 +216,16 @@ class RagAnswerer
         return $out ?: (string) $n;
     }
 
-    private function chat(string $system, string $user): ?string
+    /** @return array{content:?string, usage:array} */
+    private function chat(string $system, string $user): array
     {
         return $this->useOpenRouter()
             ? $this->chatOpenRouter($system, $user)
             : $this->chatOllama($system, $user);
     }
 
-    private function chatOllama(string $system, string $user): ?string
+    /** @return array{content:?string, usage:array} */
+    private function chatOllama(string $system, string $user): array
     {
         $payload = json_encode([
             'model' => $this->ollamaModel,
@@ -227,14 +254,23 @@ class RagAnswerer
         curl_close($ch);
 
         if ($code !== 200 || !$resp) {
-            return null;
+            return ['content' => null, 'usage' => $this->emptyUsage($this->ollamaModel)];
         }
         $data = json_decode($resp, true);
         $content = $data['message']['content'] ?? null;
-        return is_string($content) ? trim($content) : null;
+        return [
+            'content' => is_string($content) ? trim($content) : null,
+            'usage' => [
+                'model' => $this->ollamaModel,
+                'inputTokens' => (int) ($data['prompt_eval_count'] ?? 0),
+                'outputTokens' => (int) ($data['eval_count'] ?? 0),
+                'costUsd' => 0.0, // model lokalny — bez kosztu
+            ],
+        ];
     }
 
-    private function chatOpenRouter(string $system, string $user): ?string
+    /** @return array{content:?string, usage:array} */
+    private function chatOpenRouter(string $system, string $user): array
     {
         $ch = curl_init(self::OPENROUTER_URL);
         curl_setopt_array($ch, [
@@ -242,6 +278,7 @@ class RagAnswerer
             CURLOPT_POSTFIELDS => json_encode([
                 'model' => $this->openrouterModel,
                 'temperature' => 0.2,
+                'usage' => ['include' => true], // OpenRouter zwróci tokeny + realny koszt
                 'messages' => [
                     ['role' => 'system', 'content' => $system],
                     ['role' => 'user', 'content' => $user],
@@ -256,18 +293,24 @@ class RagAnswerer
         curl_close($ch);
 
         if ($code !== 200 || !$resp) {
-            return null;
+            return ['content' => null, 'usage' => $this->emptyUsage($this->openrouterModel)];
         }
-        $content = json_decode($resp, true)['choices'][0]['message']['content'] ?? null;
-        return is_string($content) ? trim($content) : null;
+        $data = json_decode($resp, true);
+        $content = $data['choices'][0]['message']['content'] ?? null;
+        return [
+            'content' => is_string($content) ? trim($content) : null,
+            'usage' => $this->parseOpenRouterUsage($data['usage'] ?? []),
+        ];
     }
 
-    private function streamOpenRouter(string $system, string $user, callable $onToken): void
+    private function streamOpenRouter(string $system, string $user, callable $onToken): array
     {
+        $usage = $this->emptyUsage($this->openrouterModel);
         $payload = json_encode([
             'model' => $this->openrouterModel,
             'temperature' => 0.2,
             'stream' => true,
+            'usage' => ['include' => true], // tokeny + realny koszt w końcowym chunku
             'messages' => [
                 ['role' => 'system', 'content' => $system],
                 ['role' => 'user', 'content' => $user],
@@ -281,7 +324,7 @@ class RagAnswerer
             CURLOPT_POSTFIELDS => $payload,
             CURLOPT_HTTPHEADER => $this->openRouterHeaders(),
             CURLOPT_TIMEOUT => 120,
-            CURLOPT_WRITEFUNCTION => function ($ch, $data) use (&$buffer, $onToken) {
+            CURLOPT_WRITEFUNCTION => function ($ch, $data) use (&$buffer, &$usage, $onToken) {
                 $buffer .= $data;
                 // OpenAI-style SSE: "data: {json}\n\n", terminated by "data: [DONE]".
                 while (($pos = strpos($buffer, "\n")) !== false) {
@@ -294,9 +337,14 @@ class RagAnswerer
                     if ($json === '[DONE]') {
                         continue;
                     }
-                    $tok = json_decode($json, true)['choices'][0]['delta']['content'] ?? '';
+                    $obj = json_decode($json, true);
+                    $tok = $obj['choices'][0]['delta']['content'] ?? '';
                     if ($tok !== '') {
                         $onToken($tok);
+                    }
+                    // Końcowy chunk zawiera usage z realnym kosztem.
+                    if (isset($obj['usage'])) {
+                        $usage = $this->parseOpenRouterUsage($obj['usage']);
                     }
                 }
                 return strlen($data);
@@ -304,6 +352,8 @@ class RagAnswerer
         ]);
         curl_exec($ch);
         curl_close($ch);
+
+        return $usage;
     }
 
     private function openRouterHeaders(): array

@@ -28,14 +28,37 @@ class RagController extends AbstractController
         private RagCache $cache,
     ) {}
 
-    /** Spend one credit + log usage (no-op for unlimited users). */
-    private function spend(?User $user, bool $unlimited, ?int $volumeId): void
+    /**
+     * Loguje zapytanie i pobiera kredyt (konta z limitem). Konta bez limitu
+     * (admin/demo) też są logowane — z kosztem 0 kredytów — by panel finansów AI
+     * obejmował WSZYSTKIE realne koszty OpenRouter. Zwraca wpis do uzupełnienia o usage.
+     */
+    private function spend(?User $user, bool $unlimited, ?int $volumeId, string $question, bool $cached): ?RagQuery
     {
-        if ($unlimited || !$user instanceof User) {
+        if (!$user instanceof User) {
+            return null; // demo bez konta — nie ma do kogo przypisać wpisu
+        }
+        if (!$unlimited) {
+            $user->spendAiCredit();
+        }
+        $rq = new RagQuery($user->getId(), $volumeId, $question, $cached, $unlimited ? 0 : 1);
+        $this->em->persist($rq);
+        $this->em->flush();
+        return $rq;
+    }
+
+    /** Uzupełnia wpis o realne zużycie modelu (tokeny + koszt USD). */
+    private function recordUsage(?RagQuery $rq, array $usage): void
+    {
+        if (!$rq) {
             return;
         }
-        $user->spendAiCredit();
-        $this->em->persist(new RagQuery($user->getId(), $volumeId));
+        $rq->setUsage(
+            $usage['model'] ?? null,
+            (int) ($usage['inputTokens'] ?? 0),
+            (int) ($usage['outputTokens'] ?? 0),
+            (float) ($usage['costUsd'] ?? 0),
+        );
         $this->em->flush();
     }
 
@@ -96,7 +119,7 @@ class RagController extends AbstractController
 
         // Cache hit: serve stored answer, skip the paid model.
         if ($hit = $this->cache->get($question, $volumeId)) {
-            $this->spend($user, $unlimited, $volumeId);
+            $this->spend($user, $unlimited, $volumeId, $question, true);
             return new JsonResponse([
                 'answer' => $hit['answer'],
                 'citations' => $hit['citations'],
@@ -108,7 +131,8 @@ class RagController extends AbstractController
         $result = $this->rag->answer($question, 8, $volumeId);
 
         if ($result['used'] ?? false) {
-            $this->spend($user, $unlimited, $volumeId);
+            $rq = $this->spend($user, $unlimited, $volumeId, $question, false);
+            $this->recordUsage($rq, $result['usage'] ?? []);
             $this->cache->put($question, $volumeId, (string) $result['answer'], $result['citations'] ?? []);
         }
 
@@ -152,7 +176,7 @@ class RagController extends AbstractController
             // Cache hit → serve the stored answer instantly, skip the paid model.
             if ($hit = $this->cache->get($question, $volumeId)) {
                 $emit('citations', ['citations' => $hit['citations']]);
-                $this->spend($user, $unlimited, $volumeId);
+                $this->spend($user, $unlimited, $volumeId, $question, true);
                 $emit('token', ['t' => $hit['answer']]);
                 $emit('done', ['cached' => true]);
                 return;
@@ -168,14 +192,17 @@ class RagController extends AbstractController
             }
 
             // Real answer about to be generated → spend one credit (unless unlimited).
-            $this->spend($user, $unlimited, $volumeId);
+            $rq = $this->spend($user, $unlimited, $volumeId, $question, false);
 
             $full = '';
-            $this->rag->streamChat($this->rag->systemPrompt(), $prep['user'], function (string $tok) use ($emit, &$full) {
+            $usage = $this->rag->streamChat($this->rag->systemPrompt(), $prep['user'], function (string $tok) use ($emit, &$full) {
                 $full .= $tok;
                 $emit('token', ['t' => $tok]);
             });
             $emit('done', []);
+
+            // Uzupełnij wpis o realne zużycie (tokeny + koszt USD z OpenRouter).
+            $this->recordUsage($rq, $usage);
 
             // Persist for next time (first write wins).
             if (trim($full) !== '') {
