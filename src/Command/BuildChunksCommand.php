@@ -140,6 +140,17 @@ class BuildChunksCommand extends Command
         $output->writeln('');
 
         $io->success(sprintf('Zapisano %d/%d chunków%s', $total - $errors, $total, $errors ? " (błędy: {$errors})" : ''));
+
+        // Korpus się zmienił → unieważnij cache odpowiedzi asystenta (jeśli tabela istnieje).
+        try {
+            $cleared = (int) $this->db->executeStatement('DELETE FROM rag_cache');
+            if ($cleared > 0) {
+                $io->writeln(sprintf('Wyczyszczono cache asystenta: %d wpisów.', $cleared));
+            }
+        } catch (\Throwable $e) {
+            // tabela rag_cache może jeszcze nie istnieć — pomijamy
+        }
+
         return $errors > 0 ? Command::FAILURE : Command::SUCCESS;
     }
 

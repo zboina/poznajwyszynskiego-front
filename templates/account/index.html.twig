@@ -35,7 +35,7 @@
 {% endblock %}
 
 {% block body %}
-{% include 'partials/_topbar.html.twig' %}
+{% include 'partials/_navbar.html.twig' %}
 {% set roleLabel = 'Konto bezpłatne' %}{% set roleBg = '#efe9dd' %}{% set roleFg = '#6b6256' %}
 {% if 'ROLE_VIP' in app.user.roles %}{% set roleLabel = 'VIP' %}{% set roleBg = '#C9A227' %}{% set roleFg = '#1a1a1a' %}
 {% elseif 'ROLE_DONATOR' in app.user.roles %}{% set roleLabel = 'Donator' %}{% set roleBg = '#2fb344' %}{% set roleFg = '#fff' %}{% endif %}

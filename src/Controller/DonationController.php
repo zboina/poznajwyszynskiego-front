@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Service\StripeService;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -16,12 +17,23 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
  */
 class DonationController extends AbstractController
 {
-    public const MIN_PLN = 10;
     public const CREDITS_PER_PLN = 25;
     public const PERIOD_MONTHS = 12;
     public const GRANTED_ROLE = 'ROLE_DONATOR';
 
-    public function __construct(private StripeService $stripe) {}
+    // Twardy próg Stripe dla PLN: API odrzuca (400) płatności poniżej 2,00 zł.
+    public const STRIPE_MIN_PLN = 2;
+
+    // Minimalna wpłata (zł) — z env (DONATE_MIN_PLN), nigdy poniżej progu Stripe.
+    private int $minPln;
+
+    public function __construct(
+        private StripeService $stripe,
+        private LoggerInterface $logger,
+        int $donateMinPln = 10,
+    ) {
+        $this->minPln = max(self::STRIPE_MIN_PLN, $donateMinPln);
+    }
 
     public static function creditsFor(int $amountGrosze): int
     {
@@ -32,7 +44,7 @@ class DonationController extends AbstractController
     public function index(): Response
     {
         return $this->render('donation/index.html.twig', [
-            'minPln' => self::MIN_PLN,
+            'minPln' => $this->minPln,
             'creditsPerPln' => self::CREDITS_PER_PLN,
             'periodMonths' => self::PERIOD_MONTHS,
             'configured' => $this->stripe->isConfigured(),
@@ -61,8 +73,8 @@ class DonationController extends AbstractController
         $pln = is_numeric($raw) ? (float) $raw : 0.0;
         $amountGrosze = (int) round($pln * 100);
 
-        if ($amountGrosze < self::MIN_PLN * 100) {
-            $this->addFlash('error', sprintf('Minimalna darowizna to %d zł.', self::MIN_PLN));
+        if ($amountGrosze < $this->minPln * 100) {
+            $this->addFlash('error', sprintf('Minimalna darowizna to %d zł.', $this->minPln));
             return $this->redirectToRoute('app_donate');
         }
 
@@ -83,6 +95,10 @@ class DonationController extends AbstractController
                 $metadata,
             );
         } catch (\Throwable $e) {
+            $this->logger->error('Stripe checkout nie powiódł się (kwota {gr} gr): {err}', [
+                'gr' => $amountGrosze,
+                'err' => $e->getMessage(),
+            ]);
             $this->addFlash('error', 'Nie udało się rozpocząć płatności. Spróbuj ponownie później.');
             return $this->redirectToRoute('app_donate');
         }

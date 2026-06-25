@@ -19,6 +19,7 @@ class RegistrationController extends AbstractController
         private UserPasswordHasherInterface $hasher,
         private EmailVerificationService $verifier,
         private LoggerInterface $logger,
+        private string $registerPin = '',
     ) {}
 
     #[Route('/rejestracja', name: 'app_register', methods: ['GET', 'POST'])]
@@ -29,6 +30,10 @@ class RegistrationController extends AbstractController
             return $this->redirectToRoute('app_search');
         }
 
+        // PIN aktywny tylko gdy ustawiony w env (REGISTER_PIN) — wtedy rejestracja
+        // wymaga podania kodu zaproszenia. Pusty PIN = rejestracja otwarta.
+        $pinRequired = $this->registerPin !== '';
+
         $old = ['email' => '', 'name' => ''];
 
         if ($request->isMethod('POST')) {
@@ -37,11 +42,15 @@ class RegistrationController extends AbstractController
             $password = (string) $request->request->get('password');
             $password2 = (string) $request->request->get('password2');
             $agree = (bool) $request->request->get('agree');
+            $pin = trim((string) $request->request->get('pin'));
             $old = ['email' => $email, 'name' => $name];
 
             $errors = [];
             if (!$this->isCsrfTokenValid('register', (string) $request->request->get('_csrf_token'))) {
                 $errors[] = 'Sesja wygasła — spróbuj ponownie.';
+            }
+            if ($pinRequired && !hash_equals($this->registerPin, $pin)) {
+                $errors[] = 'Nieprawidłowy kod PIN rejestracji.';
             }
             if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $errors[] = 'Podaj poprawny adres e-mail.';
@@ -60,7 +69,7 @@ class RegistrationController extends AbstractController
             }
 
             if ($errors) {
-                return $this->render('registration/register.html.twig', ['errors' => $errors, 'old' => $old]);
+                return $this->render('registration/register.html.twig', ['errors' => $errors, 'old' => $old, 'pinRequired' => $pinRequired]);
             }
 
             $user = new User();
@@ -89,7 +98,7 @@ class RegistrationController extends AbstractController
             return $this->redirectToRoute('app_register_check_email');
         }
 
-        return $this->render('registration/register.html.twig', ['errors' => [], 'old' => $old]);
+        return $this->render('registration/register.html.twig', ['errors' => [], 'old' => $old, 'pinRequired' => $pinRequired]);
     }
 
     #[Route('/rejestracja/sprawdz-email', name: 'app_register_check_email', methods: ['GET'])]

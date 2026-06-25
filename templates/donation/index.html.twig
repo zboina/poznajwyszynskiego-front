@@ -57,22 +57,24 @@
                 Płatności są w trakcie konfiguracji i będą dostępne wkrótce.
             </div>
         {% else %}
+            {# Domyślna kwota: 30 zł, ale nigdy poniżej minimum (minPln z env). #}
+            {% set defaultPln = max(30, minPln) %}
+
             <div class="don-credits">
-                <div class="big" id="don-credits-val">{{ (minPln * creditsPerPln) }}</div>
+                <div class="big" id="don-credits-val">{{ (defaultPln * creditsPerPln) }}</div>
                 <div class="lbl">pytań do asystenta AI</div>
             </div>
 
             <div class="don-quick" id="don-quick">
-                <button type="button" data-pln="30">30 zł</button>
-                <button type="button" data-pln="50">50 zł</button>
-                <button type="button" data-pln="100">100 zł</button>
-                <button type="button" data-pln="200">200 zł</button>
+                {% for q in [30, 50, 100, 200]|filter(q => q >= minPln) %}
+                    <button type="button" data-pln="{{ q }}">{{ q }} zł</button>
+                {% endfor %}
             </div>
 
             <form method="post" action="{{ path('app_donate_checkout') }}" data-turbo="false">
                 <div class="don-amount">
                     <input type="number" name="amount" id="don-amount" min="{{ minPln }}" step="1"
-                           value="30" inputmode="numeric" aria-label="Kwota darowizny w złotych">
+                           value="{{ defaultPln }}" inputmode="numeric" aria-label="Kwota darowizny w złotych">
                     <span class="cur">zł</span>
                 </div>
                 <input type="hidden" name="_csrf_token" value="{{ csrf_token('donate') }}">

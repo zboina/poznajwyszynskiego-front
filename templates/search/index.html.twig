@@ -17,48 +17,11 @@
     :root, :host { margin-left: 0 !important; margin-right: 0 !important; }
     body { background: var(--brand-cream); }
 
-    /* ═══════ NAVBAR ═══════ */
-    .app-navbar {
-        background: var(--brand);
-        box-shadow: 0 2px 8px rgba(0,0,0,.15);
-        position: relative;
-        z-index: 200;
-    }
-    .brand-mark {
-        display: flex; align-items: center; gap: .5rem;
-        text-decoration: none; color: #fff;
-    }
-    .brand-mark img { border: 2px solid rgba(201,162,39,.45); }
-    .brand-mark span { font-weight: 700; font-size: .9rem; letter-spacing: .01em; }
-    .user-pill {
-        display: inline-flex; align-items: center; gap: .35rem;
-        background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.15);
-        border-radius: 20px; padding: .25rem .65rem .25rem .45rem;
-        color: #fff; font-size: .78rem; white-space: nowrap;
-    }
-    .user-pill .role-badge {
-        font-size: .6rem; padding: .1rem .4rem; border-radius: 10px; font-weight: 700;
-        text-transform: uppercase; letter-spacing: .04em;
-    }
-    .views-pill {
-        display: inline-flex; align-items: center; gap: .3rem;
-        background: rgba(201,162,39,.2); border: 1px solid rgba(201,162,39,.3);
-        border-radius: 20px; padding: .2rem .6rem;
-        color: #C9A227; font-size: .75rem; font-weight: 600;
-    }
-    /* Wspólna nawigacja w pasku (spójna z partials/_topbar) */
-    .nav-links-c { display: flex; align-items: center; gap: .25rem; }
-    .app-navbar .pwnav-link {
-        display: inline-flex; align-items: center; gap: .35rem; text-decoration: none;
-        color: rgba(255,255,255,.78); font-size: .85rem; font-weight: 600;
-        padding: .4rem .7rem; border-radius: 8px; transition: background .15s, color .15s;
-    }
-    .app-navbar .pwnav-link:hover { color: #fff; background: rgba(255,255,255,.1); }
-    .app-navbar .pwnav-link.active { color: #fff; background: rgba(255,255,255,.16); }
-    .layout-v2 .app-navbar .pwnav-link { color: rgba(26,26,26,.7); }
-    .layout-v2 .app-navbar .pwnav-link:hover,
-    .layout-v2 .app-navbar .pwnav-link.active { color: #1a1a1a; background: rgba(0,0,0,.06); }
-    @media (max-width: 760px) { .nav-links-c .t { display: none; } }
+    /* ═══════ NAVBAR ═══════
+       Styl paska (bazowy + warianty motywów v1–v6) jest w jednym miejscu:
+       templates/partials/_navbar.html.twig — wspólnym dla wszystkich widoków.
+       Poniżej zostają tylko reguły specyficzne dla wyszukiwarki (dropdown
+       „Moje podglądy", warianty .views-pill/.admin-link per motyw). */
 
     /* ═══════ HERO ═══════ */
     .search-hero {
@@ -73,8 +36,9 @@
             radial-gradient(circle at 85% 15%, rgba(26,54,93,.12) 0%, transparent 40%);
         pointer-events: none;
     }
-    .hero-title { font-size: 1.6rem; font-weight: 800; letter-spacing: -.01em; font-family: var(--font-heading) !important; }
-    .hero-subtitle { font-size: .92rem; opacity: .7; font-family: var(--font-heading) !important; }
+    /* color jawnie — Tabler nadaje h1 ciemny kolor, który wygrywa z dziedziczonym .text-white */
+    .hero-title { color: #fff; text-shadow: 0 1px 6px rgba(0,0,0,.35); font-size: 1.6rem; font-weight: 800; letter-spacing: -.01em; font-family: var(--font-heading) !important; }
+    .hero-subtitle { color: #fff; font-size: .92rem; opacity: .7; font-family: var(--font-heading) !important; }
 
     /* ── Stats row ── */
     .stats-row {
@@ -2036,84 +2000,7 @@
     <div id="search-area">
 
         {# ── Navbar ── #}
-        <nav class="app-navbar">
-            <div class="container-xl d-flex align-items-center justify-content-between py-2">
-                <a href="{{ path('app_search') }}" class="brand-mark" data-action="click->search#goHome" style="text-decoration:none; color:inherit;">
-                    <img src="{{ asset('logo_PW_bez_obramowania.png') }}" alt="" width="30" height="30" class="rounded-circle">
-                    <span>Dzieła Zebrane</span>
-                </a>
-                <div class="nav-links-c">
-                    <a href="{{ path('app_search') }}" class="pwnav-link active">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10" cy="10" r="7"/><path d="m21 21-6-6"/></svg>
-                        <span class="t">Wyszukiwarka</span>
-                    </a>
-                    <a href="{{ path('app_rag') }}" class="pwnav-link">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9h8M8 13h6"/><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                        <span class="t">Asystent AI</span>
-                    </a>
-                    {% if app.user %}
-                    <a href="{{ path('app_account') }}" class="pwnav-link">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v2"/></svg>
-                        <span class="t">Moje konto</span>
-                    </a>
-                    {% endif %}
-                </div>
-                <div class="d-flex align-items-center gap-2">
-                    {% if app.user %}
-                        <a href="{{ path('app_account') }}" class="user-pill" style="text-decoration:none;color:inherit;" title="Moje konto">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" style="opacity:.6;"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><circle cx="12" cy="7" r="4"/><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"/></svg>
-                            {{ app.user.name ?? app.user.email }}
-                            {% if 'ROLE_SUPER_ADMIN' in app.user.roles %}
-                                <span class="role-badge" style="background:#e53e3e; color:#fff;">Admin</span>
-                            {% elseif 'ROLE_REDAKTOR' in app.user.roles %}
-                                <span class="role-badge" style="background:#6366f1; color:#fff;">Redaktor</span>
-                            {% elseif 'ROLE_EDYTOR' in app.user.roles %}
-                                <span class="role-badge" style="background:#8b5cf6; color:#fff;">Edytor</span>
-                            {% elseif 'ROLE_VIP' in app.user.roles %}
-                                <span class="role-badge" style="background:#C9A227; color:#1a1a1a;">VIP</span>
-                            {% elseif 'ROLE_DONATOR' in app.user.roles %}
-                                <span class="role-badge" style="background:#2fb344; color:#fff;">Donator</span>
-                            {% else %}
-                                <span class="role-badge" style="background:rgba(255,255,255,.2); color:#fff;">User</span>
-                            {% endif %}
-                        </a>
-                        {% if accessLevel == 'user' and viewsRemaining is not null %}
-                            <div class="views-pill-wrap" style="position:relative;">
-                                <button class="views-pill" data-action="click->search#toggleMyViews" title="Moje podglądy">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"/><path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6"/></svg>
-                                    {{ viewsRemaining }}/5
-                                </button>
-                                <div class="my-views-dropdown" id="myViewsDropdown" data-search-target="myViewsDropdown">
-                                    <div class="mv-header">
-                                        <span>Moje podglądy (24h)</span>
-                                        <button class="mv-close" data-action="click->search#toggleMyViews">&times;</button>
-                                    </div>
-                                    <div class="mv-list" id="myViewsList">
-                                        <div class="mv-empty">Ładowanie...</div>
-                                    </div>
-                                </div>
-                            </div>
-                        {% endif %}
-                        {% if is_granted('ROLE_ADMIN') %}
-                            <a href="{{ path('app_admin_users') }}" class="admin-link" title="Panel admina">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.066 2.573c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.573 1.066c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.066 -2.573c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z"/><circle cx="12" cy="12" r="3"/></svg>
-                                Admin
-                            </a>
-                        {% endif %}
-                        <a href="{{ path('app_donate') }}" class="btn btn-sm py-1 px-2 d-inline-flex align-items-center gap-1" style="font-size:.78rem; background:#C9A227; color:#1a1a1a; font-weight:700;" title="Wesprzyj projekt">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-                            Wesprzyj
-                        </a>
-                        <a href="{{ path('app_logout') }}" class="btn btn-sm btn-ghost-light py-1 px-2" style="font-size: .78rem; opacity:.7;">Wyloguj</a>
-                    {% else %}
-                        <a href="{{ path('app_login') }}" class="btn btn-sm btn-ghost-light py-1 px-2">Zaloguj się</a>
-                        {% if site_settings.demo %}
-                            <button type="button" id="navDemoBtn" class="btn btn-sm py-1 px-2" style="font-size:.65rem; letter-spacing:.1em; border: 1px solid rgba(201,162,39,.4); color: #C9A227; font-weight:700;">DEMO</button>
-                        {% endif %}
-                    {% endif %}
-                </div>
-            </div>
-        </nav>
+        {% include 'partials/_navbar.html.twig' with { navExtras: true } %}
 
         {# ── Hero ── #}
         <div class="search-hero text-white" data-search-target="hero">

@@ -7,6 +7,7 @@ use App\Entity\User;
 use App\Service\ChunkRetriever;
 use App\Service\DocxBuilder;
 use App\Service\RagAnswerer;
+use App\Service\RagCache;
 use App\Service\SettingsService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -24,7 +25,19 @@ class RagController extends AbstractController
         private DocxBuilder $docx,
         private ChunkRetriever $retriever,
         private EntityManagerInterface $em,
+        private RagCache $cache,
     ) {}
+
+    /** Spend one credit + log usage (no-op for unlimited users). */
+    private function spend(?User $user, bool $unlimited, ?int $volumeId): void
+    {
+        if ($unlimited || !$user instanceof User) {
+            return;
+        }
+        $user->spendAiCredit();
+        $this->em->persist(new RagQuery($user->getId(), $volumeId));
+        $this->em->flush();
+    }
 
     /** Admins and demo sessions ask without spending credits. */
     private function isUnlimited(Request $request): bool
@@ -81,12 +94,22 @@ class RagController extends AbstractController
             ]);
         }
 
+        // Cache hit: serve stored answer, skip the paid model.
+        if ($hit = $this->cache->get($question, $volumeId)) {
+            $this->spend($user, $unlimited, $volumeId);
+            return new JsonResponse([
+                'answer' => $hit['answer'],
+                'citations' => $hit['citations'],
+                'used' => true,
+                'cached' => true,
+            ]);
+        }
+
         $result = $this->rag->answer($question, 8, $volumeId);
 
-        if (!$unlimited && $user instanceof User && ($result['used'] ?? false)) {
-            $user->spendAiCredit();
-            $this->em->persist(new RagQuery($user->getId(), $volumeId));
-            $this->em->flush();
+        if ($result['used'] ?? false) {
+            $this->spend($user, $unlimited, $volumeId);
+            $this->cache->put($question, $volumeId, (string) $result['answer'], $result['citations'] ?? []);
         }
 
         return new JsonResponse($result);
@@ -105,10 +128,7 @@ class RagController extends AbstractController
         /** @var User|null $user */
         $user = $this->getUser();
         $unlimited = $this->isUnlimited($request);
-        $rag = $this->rag;
-        $em = $this->em;
-
-        $response = new StreamedResponse(function () use ($rag, $em, $user, $unlimited, $question, $volumeId) {
+        $response = new StreamedResponse(function () use ($user, $unlimited, $question, $volumeId) {
             $emit = function (string $event, array $data) {
                 echo "event: {$event}\n";
                 echo 'data: ' . json_encode($data) . "\n\n";
@@ -129,7 +149,16 @@ class RagController extends AbstractController
                 return;
             }
 
-            $prep = $rag->prepare($question, 8, $volumeId);
+            // Cache hit → serve the stored answer instantly, skip the paid model.
+            if ($hit = $this->cache->get($question, $volumeId)) {
+                $emit('citations', ['citations' => $hit['citations']]);
+                $this->spend($user, $unlimited, $volumeId);
+                $emit('token', ['t' => $hit['answer']]);
+                $emit('done', ['cached' => true]);
+                return;
+            }
+
+            $prep = $this->rag->prepare($question, 8, $volumeId);
             $emit('citations', ['citations' => $prep['citations']]);
 
             if (!$prep['citations']) {
@@ -138,17 +167,20 @@ class RagController extends AbstractController
                 return;
             }
 
-            // We are about to call the LLM → spend one credit (unless unlimited).
-            if (!$unlimited && $user instanceof User) {
-                $user->spendAiCredit();
-                $em->persist(new RagQuery($user->getId(), $volumeId));
-                $em->flush();
-            }
+            // Real answer about to be generated → spend one credit (unless unlimited).
+            $this->spend($user, $unlimited, $volumeId);
 
-            $rag->streamChat($rag->systemPrompt(), $prep['user'], function (string $tok) use ($emit) {
+            $full = '';
+            $this->rag->streamChat($this->rag->systemPrompt(), $prep['user'], function (string $tok) use ($emit, &$full) {
+                $full .= $tok;
                 $emit('token', ['t' => $tok]);
             });
             $emit('done', []);
+
+            // Persist for next time (first write wins).
+            if (trim($full) !== '') {
+                $this->cache->put($question, $volumeId, $full, $prep['citations']);
+            }
         });
 
         $response->headers->set('Content-Type', 'text/event-stream');

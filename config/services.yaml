@@ -32,5 +32,15 @@ services:
             $secretKey: '%env(STRIPE_SECRET_KEY)%'
             $webhookSecret: '%env(STRIPE_WEBHOOK_SECRET)%'
 
+    # Rejestracja — opcjonalny PIN zaproszenia (gdy pusty, rejestracja otwarta).
+    App\Controller\RegistrationController:
+        arguments:
+            $registerPin: '%env(REGISTER_PIN)%'
+
+    # Darowizny — minimalna kwota wpłaty (zł) z env.
+    App\Controller\DonationController:
+        arguments:
+            $donateMinPln: '%env(int:DONATE_MIN_PLN)%'
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

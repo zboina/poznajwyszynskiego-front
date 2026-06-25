@@ -20,8 +20,16 @@
     .login-card .form-control:focus { background: #fff; border-color: #722F37; box-shadow: 0 0 0 3px rgba(114,47,55,.08); outline: 0; }
     .btn-login {
         width: 100%; background: #722F37; color: #fff; border: 0; border-radius: 8px;
-        padding: .7rem; font-size: .98rem; font-weight: 600; cursor: pointer; transition: background .2s; }
+        padding: .7rem; font-size: .98rem; font-weight: 600; cursor: pointer; transition: background .2s;
+        display: inline-flex; align-items: center; justify-content: center; gap: .5rem; }
     .btn-login:hover { background: #5C2630; }
+    .btn-login:disabled { opacity: .75; cursor: not-allowed; }
+    .btn-login .spinner {
+        width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.4);
+        border-top-color: #fff; border-radius: 50%; display: none;
+        animation: btn-spin .6s linear infinite; }
+    .btn-login.is-loading .spinner { display: inline-block; }
+    @keyframes btn-spin { to { transform: rotate(360deg); } }
     .login-divider { height: 1px; background: #eee; margin: 1.25rem 0; }
     .login-foot { text-align: center; margin-top: 1.25rem; font-size: .9rem; color: #777; }
     .login-foot a { color: #722F37; font-weight: 600; text-decoration: none; }
@@ -46,7 +54,7 @@
                 <div class="alert alert-danger py-2 mb-3">{{ e }}</div>
             {% endfor %}
 
-            <form method="post" novalidate data-turbo="false">
+            <form method="post" novalidate data-turbo="false" id="register-form">
                 <div class="mb-3">
                     <label class="form-label" for="r-name">Imię i nazwisko <span class="text-muted">(opcjonalnie)</span></label>
                     <input type="text" name="name" id="r-name" class="form-control" value="{{ old.name }}" autocomplete="name">
@@ -55,6 +63,13 @@
                     <label class="form-label" for="r-email">Adres e-mail</label>
                     <input type="email" name="email" id="r-email" class="form-control" value="{{ old.email }}" autocomplete="email" required autofocus>
                 </div>
+                {% if pinRequired %}
+                <div class="mb-3">
+                    <label class="form-label" for="r-pin">Kod PIN zaproszenia</label>
+                    <input type="text" name="pin" id="r-pin" class="form-control" autocomplete="off" inputmode="numeric" required>
+                    <small class="text-muted">Rejestracja jest na razie ograniczona — podaj kod otrzymany od administratora.</small>
+                </div>
+                {% endif %}
                 <div class="mb-3">
                     <label class="form-label" for="r-pass">Hasło <span class="text-muted">(min. 8 znaków)</span></label>
                     <input type="password" name="password" id="r-pass" class="form-control" autocomplete="new-password" required>
@@ -70,7 +85,10 @@
 
                 <input type="hidden" name="_csrf_token" value="{{ csrf_token('register') }}">
                 <div class="login-divider"></div>
-                <button type="submit" class="btn-login">Załóż konto</button>
+                <button type="submit" class="btn-login" id="register-submit">
+                    <span class="spinner" aria-hidden="true"></span>
+                    <span class="label">Załóż konto</span>
+                </button>
             </form>
         </div>
 
@@ -79,4 +97,33 @@
         </div>
     </div>
 </div>
+
+<script>
+    (function () {
+        var form = document.getElementById('register-form');
+        var btn = document.getElementById('register-submit');
+        if (!form || !btn) return;
+        var label = btn.querySelector('.label');
+
+        form.addEventListener('submit', function (e) {
+            // Już wysyłamy — zablokuj kolejne kliknięcia.
+            if (btn.dataset.submitting === '1') { e.preventDefault(); return; }
+            btn.dataset.submitting = '1';
+            btn.classList.add('is-loading');
+            if (label) label.textContent = 'Zakładanie konta…';
+            // disabled ustawiamy po starcie wysyłki, by nie przerwać POST-a.
+            setTimeout(function () { btn.disabled = true; }, 0);
+        });
+
+        // Powrót przez „wstecz" z bfcache — odblokuj przycisk.
+        window.addEventListener('pageshow', function (ev) {
+            if (ev.persisted) {
+                btn.disabled = false;
+                btn.classList.remove('is-loading');
+                btn.dataset.submitting = '';
+                if (label) label.textContent = 'Załóż konto';
+            }
+        });
+    })();
+</script>
 {% endblock %}

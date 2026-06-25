@@ -6,10 +6,22 @@
 {# Tabler core (loaded in base) nie zawiera fontu ikon — dociągamy go, bo ten widok używa klas `ti ti-*` #}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css">
 <style>
-    :root { --pw-maroon: #722F37; --pw-gold: #c8b78d; --pw-cream: #f8f4ec; }
+    :root { --pw-maroon: #722F37; --pw-maroon-dark: #5C2630; --pw-gold: #c8b78d; --pw-cream: #f8f4ec; }
+
+    /* ═══════ Motywy v1–v6 — klasa layout-* jest na <body> (skrypt w _navbar).
+       Cała strona używa var(--pw-maroon), więc zmiana tokenu przeskinowuje
+       hero, dymki, przycisk wyślij, źródła, composer i modal. ═══════ */
+    body.layout-v3, body.layout-v4 { --pw-maroon: #1A365D; --pw-maroon-dark: #12243f; }
+    body.layout-v5 { --pw-maroon: #5C2630; --pw-maroon-dark: #481d26; }
 
     .rag-page { background:
         radial-gradient(1200px 400px at 50% -120px, #faf6ee 0%, transparent 70%); min-height: 100vh; }
+    /* Tło dopasowane do temperatury motywu. */
+    body.layout-v2 .rag-page { background: #fff; }
+    body.layout-v3 .rag-page, body.layout-v4 .rag-page {
+        background: radial-gradient(1200px 400px at 50% -120px, #eaf0f8 0%, transparent 70%); }
+    body.layout-v5 .rag-page { background: radial-gradient(1200px 400px at 50% -120px, #f7eef0 0%, transparent 70%); }
+    body.layout-v6 .rag-page { background: var(--pw-cream); }
     .rag-wrap { max-width: 860px; margin: 0 auto; padding: 2.5rem 1rem 11rem; }
 
     .rag-hero { text-align: center; margin-bottom: 2rem; }
@@ -89,11 +101,30 @@
     .rag-toolbar { margin-top: 1rem; display: flex; gap: .5rem; }
     .rag-toolbar .btn { font-size: .85rem; }
 
-    .rag-examples .chip {
-        display: inline-block; cursor: pointer; border: 1px solid var(--pw-gold);
-        background: #fff; color: #5a4a2e; border-radius: 999px; padding: .4rem .9rem;
-        font-size: .88rem; margin: 0 .4rem .5rem 0; transition: all .15s; }
-    .rag-examples .chip:hover { background: var(--pw-maroon); color: #fff; border-color: var(--pw-maroon); }
+    /* ── Rozwijana lista przykładowych pytań ── */
+    .rag-examples { max-width: 720px; margin: 0 auto; }
+    .rag-ex-toggle {
+        width: 100%; display: flex; align-items: center; gap: .55rem;
+        background: #fff; border: 1px solid var(--pw-gold); border-radius: 14px;
+        padding: .8rem 1.1rem; color: var(--pw-maroon); font-weight: 700; font-size: .95rem;
+        cursor: pointer; box-shadow: 0 2px 14px rgba(60,50,30,.05); transition: background .15s; }
+    .rag-ex-toggle:hover { background: var(--pw-cream); }
+    .rag-ex-toggle span { flex: 1 1 auto; text-align: left; }
+    .rag-ex-toggle .ti-chevron-down { transition: transform .2s; }
+    .rag-ex-toggle[aria-expanded="true"] .ti-chevron-down { transform: rotate(180deg); }
+    .rag-ex-panel { display: none; margin-top: .6rem; }
+    .rag-ex-panel.open { display: block; animation: ragExIn .18s ease-out; }
+    @keyframes ragExIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+    .rag-ex-group { margin-bottom: 1rem; }
+    .rag-ex-cat {
+        font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; font-weight: 700;
+        color: #9a7b3c; margin: 0 .15rem .4rem; }
+    .rag-ex-q {
+        display: block; width: 100%; text-align: left; cursor: pointer;
+        background: #fff; border: 1px solid #ece5d8; border-radius: 10px;
+        padding: .6rem .85rem; margin-bottom: .4rem; color: #2b2620; font-size: .92rem;
+        line-height: 1.4; transition: all .12s; }
+    .rag-ex-q:hover { border-color: var(--pw-gold); background: var(--pw-cream); color: var(--pw-maroon); transform: translateX(2px); }
 
     .rag-composer {
         position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
@@ -159,7 +190,7 @@
     @keyframes ragModalIn { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
     .rag-modal-head {
         display: flex; align-items: flex-start; gap: 1rem; padding: 1rem 1.25rem;
-        background: linear-gradient(135deg, var(--pw-maroon), #5C2630); color: #fff; }
+        background: linear-gradient(135deg, var(--pw-maroon), var(--pw-maroon-dark)); color: #fff; }
     .rag-modal-eyebrow { font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; opacity: .75; }
     .rag-modal-title { font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; margin: .1rem 0 0; line-height: 1.25; }
     .rag-modal-ref { font-size: .82rem; opacity: .85; margin-top: .15rem; }
@@ -193,7 +224,7 @@
 {% endblock %}
 
 {% block body %}
-{% include 'partials/_topbar.html.twig' %}
+{% include 'partials/_navbar.html.twig' %}
 <div class="rag-page">
 <div class="rag-wrap">
     <div class="rag-hero">
@@ -234,10 +265,48 @@
     <div id="rag-thread"></div>
 
     <div class="rag-examples" id="rag-examples">
-        <span class="chip">Czego dotyczył memoriał Episkopatu do Rządu?</span>
-        <span class="chip">Co Prymas pisał o nauczaniu religii w szkołach?</span>
-        <span class="chip">Jak Wyszyński oceniał dekret o obsadzaniu stanowisk kościelnych?</span>
-        <span class="chip">Co mówił o roli rodziny katolickiej?</span>
+        <button type="button" class="rag-ex-toggle" id="rag-ex-toggle" aria-expanded="false">
+            <i class="ti ti-bulb"></i>
+            <span>Przykładowe pytania do asystenta</span>
+            <i class="ti ti-chevron-down" id="rag-ex-chevron"></i>
+        </button>
+        <div class="rag-ex-panel" id="rag-ex-panel">
+            <div class="rag-ex-group">
+                <div class="rag-ex-cat">Kościół i Sobór Watykański II</div>
+                <button class="rag-ex-q">Co Kardynał Wyszyński mówił o głównych nurtach Soboru Watykańskiego II?</button>
+                <button class="rag-ex-q">Jak Prymas rozumiał Kościół jako „Rodzinę Bożą"?</button>
+                <button class="rag-ex-q">Co mówił o odnowie liturgii i konstytucji o liturgii świętej?</button>
+                <button class="rag-ex-q">Jak odniósł się do encykliki „Pacem in terris" i sprawy pokoju?</button>
+            </div>
+            <div class="rag-ex-group">
+                <div class="rag-ex-cat">Maryja i pobożność</div>
+                <button class="rag-ex-q">Czym było oddanie się w „słodką niewolę" Matki Najświętszej?</button>
+                <button class="rag-ex-q">Co Kardynał Wyszyński mówił o Maryi jako Matce Kościoła?</button>
+                <button class="rag-ex-q">Jakie znaczenie nadawał Apelowi Jasnogórskiemu?</button>
+                <button class="rag-ex-q">Co mówił o Tysiącleciu Chrztu Polski?</button>
+            </div>
+            <div class="rag-ex-group">
+                <div class="rag-ex-cat">Rodzina, młodzież, powołanie</div>
+                <button class="rag-ex-q">Co Prymas mówił o rodzinie katolickiej?</button>
+                <button class="rag-ex-q">Jakie przesłanie kierował do młodzieży akademickiej?</button>
+                <button class="rag-ex-q">Co mówił dziewczętom o godności i powołaniu kobiety?</button>
+                <button class="rag-ex-q">Jak rozumiał powołanie i odpowiedzialność mężczyzn katolickich?</button>
+            </div>
+            <div class="rag-ex-group">
+                <div class="rag-ex-cat">Kapłaństwo i naród</div>
+                <button class="rag-ex-q">Co Kardynał Wyszyński mówił do neoprezbiterów w dniu święceń?</button>
+                <button class="rag-ex-q">Jakie zadania stawiał duchowieństwu polskiemu wobec potrzeb współczesnych?</button>
+                <button class="rag-ex-q">Co mówił o miłości Ojczyzny i wolności narodu?</button>
+                <button class="rag-ex-q">Jak ujmował chrześcijański sens pracy?</button>
+            </div>
+            <div class="rag-ex-group">
+                <div class="rag-ex-cat">Życie i posługa Prymasa</div>
+                <button class="rag-ex-q">Co Kardynał Wyszyński napisał po nominacji na arcybiskupa Gniezna i Warszawy?</button>
+                <button class="rag-ex-q">Jak mówił o odbudowie katedry gnieźnieńskiej?</button>
+                <button class="rag-ex-q">Co przekazał w odezwie na 950-lecie kanonizacji świętego Wojciecha?</button>
+                <button class="rag-ex-q">Jakie słowa skierował do Polaków za granicą?</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -519,7 +588,7 @@
     function ask(question) {
         if (activeES) return; // one stream at a time
         if (!canAsk()) { renderAskability(); return; }
-        examples.style.display = 'none';
+        collapseExamples(); // zwiń panel, ale zostaw przycisk z przykładami dostępny
         const refs = createMsg(question, true);
         refs.msg.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
@@ -685,7 +754,8 @@
     function restoreHistory() {
         const list = loadHistory();
         if (!list.length) return;
-        examples.style.display = 'none';
+        // Przykłady zostają dostępne (zwinięte) nawet gdy jest historia.
+        collapseExamples();
         for (const e of list) {
             const refs = createMsg(e.q, false);
             finalize(refs, e.q, e.a || '', Array.isArray(e.citations) ? e.citations : []);
@@ -707,8 +777,20 @@
     q.addEventListener('keydown', e => {
         if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit(); }
     });
-    examples.querySelectorAll('.chip').forEach(c =>
-        c.addEventListener('click', () => ask(c.textContent.trim())));
+    const exToggle = document.getElementById('rag-ex-toggle');
+    const exPanel = document.getElementById('rag-ex-panel');
+    if (exToggle) exToggle.addEventListener('click', () => {
+        const open = exPanel.classList.toggle('open');
+        exToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    // Zwija rozwijany panel przykładów, ale zostawia sam przycisk widoczny —
+    // dzięki temu przykładowe pytania są dostępne także przy aktywnej rozmowie/historii.
+    function collapseExamples() {
+        if (exPanel) exPanel.classList.remove('open');
+        if (exToggle) exToggle.setAttribute('aria-expanded', 'false');
+    }
+    examples.querySelectorAll('.rag-ex-q').forEach(b =>
+        b.addEventListener('click', () => ask(b.textContent.trim())));
 
     restoreHistory();
     renderAskability();
