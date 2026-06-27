@@ -63,7 +63,8 @@ class DocumentRepository extends ServiceEntityRepository
         $params = [];
 
         if ($query && trim($query) !== '') {
-            $where[] = "d.search_vector @@ websearch_to_tsquery('polish', :query)";
+            // Diacritic-insensitive: 'polish' (lematyzacja) OR 'polish_unaccent' (bez ogonków → "milosc" znajdzie "miłość").
+            $where[] = "d.search_vector @@ (websearch_to_tsquery('polish', :query) || websearch_to_tsquery('polish_unaccent', :query))";
             $params['query'] = trim($query);
         }
 
@@ -106,7 +107,7 @@ class DocumentRepository extends ServiceEntityRepository
                 SELECT d.id, d.title, d.subtitle, d.location, d.event_date,
                        d.document_type, d.addressee, d.words_count, d.volume_id, d.slug,
                        LEFT(d.content, 250) AS snippet,
-                       ts_rank(d.search_vector, websearch_to_tsquery('polish', :query)) AS rank
+                       ts_rank(d.search_vector, websearch_to_tsquery('polish', :query) || websearch_to_tsquery('polish_unaccent', :query)) AS rank
                 FROM documents d
                 {$whereClause}
                 ORDER BY rank DESC, d.event_date DESC NULLS LAST

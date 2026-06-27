@@ -66,10 +66,10 @@ class ChunkRetriever
         $sql = "
             WITH fts AS (
                 SELECT c.id, ROW_NUMBER() OVER (
-                           ORDER BY ts_rank(c.search_vector, websearch_to_tsquery('polish', :q)) DESC
+                           ORDER BY ts_rank(c.search_vector, websearch_to_tsquery('polish', :q) || websearch_to_tsquery('polish_unaccent', :q)) DESC
                        ) AS rn
                 FROM document_chunks c
-                WHERE c.search_vector @@ websearch_to_tsquery('polish', :q)
+                WHERE c.search_vector @@ (websearch_to_tsquery('polish', :q) || websearch_to_tsquery('polish_unaccent', :q))
                       {$volFilter}
                 ORDER BY rn
                 LIMIT :cand
@@ -119,11 +119,11 @@ class ChunkRetriever
         $sql = "
             SELECT c.id, c.document_id, c.content, c.page_start, c.page_end, c.chunk_index,
                    d.title, d.slug, v.number AS volume_number,
-                   ts_rank(c.search_vector, websearch_to_tsquery('polish', :q)) AS score
+                   ts_rank(c.search_vector, websearch_to_tsquery('polish', :q) || websearch_to_tsquery('polish_unaccent', :q)) AS score
             FROM document_chunks c
             JOIN documents d ON d.id = c.document_id
             JOIN volumes   v ON v.id = c.volume_id
-            WHERE c.search_vector @@ websearch_to_tsquery('polish', :q) {$volFilter}
+            WHERE c.search_vector @@ (websearch_to_tsquery('polish', :q) || websearch_to_tsquery('polish_unaccent', :q)) {$volFilter}
             ORDER BY score DESC
             LIMIT :k
         ";

@@ -143,8 +143,12 @@ class SearchController extends AbstractController
         $limit = $canPaginate ? 20 : 10;
         $page = $canPaginate ? max(1, $request->query->getInt('page', 1)) : 1;
 
-        // Detect if query looks like a natural language question
-        $useSemanticSearch = $query && $this->isSemanticQuery($query);
+        // Wyszukiwanie semantyczne tymczasowo wyłączone: gałąź hybridSearch odwołuje
+        // się do nieistniejącej kolumny documents.embedding i zwracała HTTP 500 na
+        // pytaniach w języku naturalnym. Zostaje pełnotekstowe FTS (polish).
+        // TODO: przywrócić, kierując semantykę na document_chunks.embedding (bge-m3, 1024-d),
+        //       spójnie z asystentem RAG (ChunkRetriever).
+        $useSemanticSearch = false;
 
         if ($useSemanticSearch) {
             $embedding = $this->embeddingService->getEmbedding($query);
