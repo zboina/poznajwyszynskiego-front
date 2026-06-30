@@ -46,6 +46,35 @@ class DocumentRepository extends ServiceEntityRepository
         return "JOIN volumes v ON v.id = d.volume_id AND v.status = 'opublikowany'";
     }
 
+    /**
+     * Buduje wyrażenie tsquery łączące trzy tryby dopasowania i ustawia parametry
+     * (:query oraz — gdy są tokeny — :prefixQuery) w przekazanej tablicy $params:
+     *  - websearch 'polish'          — lematyzacja (jezuici/jezuitów → jezuita),
+     *  - websearch 'polish_unaccent' — bez polskich znaków ("milosc" → miłość),
+     *  - prefiks 'simple' (token:*)  — wyszukiwanie po rdzeniu ("jezui" → jezuici,
+     *    jezuita, jezuicki). Działa na zapisanych leksemach, więc obejmuje też formy,
+     *    których lematyzacja nie scala (przymiotnik "jezuicki" vs rzeczownik "jezuita").
+     */
+    private function searchTsquerySql(string $query, array &$params): string
+    {
+        $params['query'] = $query;
+
+        $expr = "websearch_to_tsquery('polish', :query) "
+              . "|| websearch_to_tsquery('polish_unaccent', :query)";
+
+        // Tokeny do dopasowania prefiksowego: tylko litery/cyfry, min. 2 znaki
+        // (krótsze rdzenie pomijamy, by uniknąć dopasowania pół bazy).
+        $tokens = preg_split('/[^\p{L}\p{N}]+/u', mb_strtolower($query), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $tokens = array_values(array_filter($tokens, static fn (string $t): bool => mb_strlen($t) >= 2));
+        if ($tokens) {
+            // Sanityzacja gwarantuje brak operatorów tsquery → bezpieczne dla to_tsquery.
+            $params['prefixQuery'] = implode(' & ', array_map(static fn (string $t): string => $t . ':*', $tokens));
+            $expr .= " || to_tsquery('simple', :prefixQuery)";
+        }
+
+        return $expr;
+    }
+
     public function search(
         ?string $query = null,
         ?int $volumeId = null,
@@ -62,10 +91,10 @@ class DocumentRepository extends ServiceEntityRepository
         $where = [$pf];
         $params = [];
 
+        $matchExpr = null;
         if ($query && trim($query) !== '') {
-            // Diacritic-insensitive: 'polish' (lematyzacja) OR 'polish_unaccent' (bez ogonków → "milosc" znajdzie "miłość").
-            $where[] = "d.search_vector @@ (websearch_to_tsquery('polish', :query) || websearch_to_tsquery('polish_unaccent', :query))";
-            $params['query'] = trim($query);
+            $matchExpr = $this->searchTsquerySql(trim($query), $params);
+            $where[] = "d.search_vector @@ ({$matchExpr})";
         }
 
         if ($volumeId) {
@@ -107,7 +136,7 @@ class DocumentRepository extends ServiceEntityRepository
                 SELECT d.id, d.title, d.subtitle, d.location, d.event_date,
                        d.document_type, d.addressee, d.words_count, d.volume_id, d.slug,
                        LEFT(d.content, 250) AS snippet,
-                       ts_rank(d.search_vector, websearch_to_tsquery('polish', :query) || websearch_to_tsquery('polish_unaccent', :query)) AS rank
+                       ts_rank(d.search_vector, {$matchExpr}) AS rank
                 FROM documents d
                 {$whereClause}
                 ORDER BY rank DESC, d.event_date DESC NULLS LAST
