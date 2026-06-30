@@ -1,0 +1,265 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Moja historia — Asystent AI — Dzieła Zebrane Kardynała Wyszyńskiego{% endblock %}
+
+{% block stylesheets %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css">
+<style>
+    :root { --pw-maroon: #722F37; --pw-maroon-dark: #5C2630; --pw-gold: #c8b78d; --pw-cream: #f8f4ec; }
+    body.layout-v3, body.layout-v4 { --pw-maroon: #1A365D; --pw-maroon-dark: #12243f; }
+    body.layout-v5 { --pw-maroon: #5C2630; --pw-maroon-dark: #481d26; }
+
+    .rag-page { background: radial-gradient(1200px 400px at 50% -120px, #faf6ee 0%, transparent 70%); min-height: 100vh; }
+    body.layout-v6 .rag-page { background: var(--pw-cream); }
+    .rag-wrap { max-width: 860px; margin: 0 auto; padding: 2.5rem 1rem 4rem; }
+
+    .rag-hist-hero { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.75rem; }
+    .rag-hist-hero h1 { font-family: var(--font-heading); color: var(--pw-maroon); font-weight: 700; font-size: 2rem; margin: 0; }
+    .rag-hist-hero p { color: #6b6256; margin: .35rem 0 0; font-size: .98rem; }
+    .rag-hist-hero .back {
+        display: inline-flex; align-items: center; gap: .4rem; text-decoration: none;
+        background: var(--pw-maroon); color: #fff; border-radius: 999px; padding: .5rem 1.1rem;
+        font-weight: 600; font-size: .9rem; box-shadow: 0 4px 16px rgba(114,47,55,.25); white-space: nowrap; }
+    .rag-hist-hero .back:hover { background: var(--pw-maroon-dark); color: #fff; }
+
+    .rag-hist-tools { display: flex; justify-content: flex-end; margin-bottom: 1rem; }
+    .rag-hist-clearall {
+        border: 1px solid #e3d9c4; background: #fff; color: #8a3b3b; border-radius: 999px;
+        padding: .3rem .85rem; font-size: .82rem; cursor: pointer; display: inline-flex; align-items: center; gap: .35rem; }
+    .rag-hist-clearall:hover { background: #8a3b3b; color: #fff; border-color: #8a3b3b; }
+
+    .rag-sec-label { font-size: .74rem; text-transform: uppercase; letter-spacing: .07em; font-weight: 700;
+        color: #9a7b3c; margin: 1.4rem .15rem .7rem; display: flex; align-items: center; gap: .4rem; }
+
+    .rag-hist-item { background: #fff; border: 1px solid #ece5d8; border-radius: 16px; padding: 1.1rem 1.3rem 1rem;
+        margin-bottom: 1.1rem; box-shadow: 0 4px 22px rgba(60,50,30,.06); transition: box-shadow .15s, opacity .2s; }
+    .rag-hist-item.pinned { border-color: var(--pw-gold); box-shadow: 0 4px 22px rgba(160,120,40,.14); }
+    .rag-hist-item.removing { opacity: 0; transform: translateY(-6px); }
+    .rag-hist-head { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; margin-bottom: .7rem; font-size: .8rem; }
+    .rag-hist-head .scope { background: var(--pw-cream); border: 1px solid var(--pw-gold); color: #5a4a2e;
+        border-radius: 999px; padding: .1rem .6rem; font-weight: 600; }
+    .rag-hist-head .date { color: #9a917f; }
+    .rag-hist-head .pin-flag { color: #9a7b3c; font-weight: 700; display: inline-flex; align-items: center; gap: .25rem; }
+
+    .rag-q { display: flex; justify-content: flex-end; margin-bottom: .85rem; }
+    .rag-q .bubble { background: var(--pw-maroon); color: #fff; padding: .6rem 1rem; border-radius: 16px 16px 4px 16px;
+        font-weight: 500; max-width: 85%; box-shadow: 0 2px 10px rgba(114,47,55,.18); }
+    .rag-a { display: flex; gap: .8rem; align-items: flex-start; }
+    .rag-a .avatar { flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%; background: var(--pw-cream);
+        border: 1px solid var(--pw-gold); color: var(--pw-maroon); display: flex; align-items: center; justify-content: center; margin-top: 2px; }
+    .rag-a .panel { flex: 1 1 auto; min-width: 0; }
+
+    .rag-answer { font-family: var(--font-body); line-height: 1.72; font-size: 1.02rem; color: #2b2620; }
+    .rag-answer h1, .rag-answer h2, .rag-answer h3 { font-family: var(--font-heading); color: var(--pw-maroon); margin: 1rem 0 .5rem; font-size: 1.2rem; }
+    .rag-answer p { margin: 0 0 .8rem; }
+    .rag-answer ul, .rag-answer ol { margin: 0 0 .85rem; padding-left: 1.4rem; }
+    .rag-answer strong { color: #1c1813; }
+    .rag-answer blockquote { border-left: 3px solid var(--pw-gold); margin: .6rem 0; padding: .15rem 0 .15rem 1rem; color: #5a5246; font-style: italic; }
+    .rag-answer a.rag-cite { font-size: .72em; vertical-align: super; color: var(--pw-maroon); font-weight: 700; text-decoration: none; padding: 0 1px; }
+    .rag-answer a.rag-cite:hover { text-decoration: underline; }
+
+    .rag-sources { border-top: 1px solid #efe9dd; margin-top: 1rem; padding-top: .8rem; }
+    .rag-sources .ttl { color: #8a7d68; font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; margin-bottom: .5rem; }
+    .rag-source { display: flex; gap: .55rem; padding: .25rem 0; font-size: .92rem; align-items: baseline; }
+    .rag-source .num { flex: 0 0 auto; min-width: 1.5rem; height: 1.5rem; border-radius: 50%; background: var(--pw-cream);
+        border: 1px solid var(--pw-gold); color: var(--pw-maroon); font-weight: 700; font-size: .78rem; display: inline-flex; align-items: center; justify-content: center; }
+    .rag-source a { color: #2b2620; text-decoration: none; font-weight: 500; }
+    .rag-source a:hover { color: var(--pw-maroon); text-decoration: underline; }
+    .rag-source .lbl { color: #9a7b3c; white-space: nowrap; font-size: .86rem; }
+
+    .rag-hist-toolbar { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: 1rem; }
+    .rag-hist-toolbar .btn { font-size: .82rem; }
+    .rag-hist-toolbar .btn-pin.on { background: var(--pw-gold); border-color: var(--pw-gold); color: #4a3a14; }
+
+    .rag-empty { text-align: center; padding: 4rem 1rem; color: #6b6256; }
+    .rag-empty .ic { font-size: 3rem; color: var(--pw-gold); }
+    .rag-empty h2 { font-family: var(--font-heading); color: var(--pw-maroon); margin: .8rem 0 .3rem; }
+    .rag-empty a { display: inline-flex; align-items: center; gap: .4rem; margin-top: 1.2rem; text-decoration: none;
+        background: var(--pw-maroon); color: #fff; border-radius: 999px; padding: .6rem 1.3rem; font-weight: 600; }
+    .rag-empty a:hover { background: var(--pw-maroon-dark); color: #fff; }
+</style>
+{% endblock %}
+
+{% block body %}
+{% include 'partials/_navbar.html.twig' %}
+<div class="rag-page">
+<div class="rag-wrap">
+
+    <div class="rag-hist-hero">
+        <div>
+            <h1>Moja historia</h1>
+            <p>Zapisane rozmowy z asystentem — wracaj do odpowiedzi, za które zapłaciłeś.
+               {% if items is not empty %}Przypięte zostają na górze.{% endif %}</p>
+        </div>
+        <a href="{{ path('app_rag') }}" class="back"><i class="ti ti-arrow-left"></i> Wróć do asystenta</a>
+    </div>
+
+    {% if items is empty %}
+        <div class="rag-empty">
+            <div class="ic"><i class="ti ti-message-circle-search"></i></div>
+            <h2>Brak zapisanych rozmów</h2>
+            <p>Twoje pytania i odpowiedzi asystenta pojawią się tutaj automatycznie —<br>
+               i będą czekać, gdy zechcesz do nich wrócić.</p>
+            <a href="{{ path('app_rag') }}"><i class="ti ti-feather"></i> Zadaj pierwsze pytanie</a>
+        </div>
+    {% else %}
+        {% set pinned = items|filter(i => i.pinned) %}
+        {% set rest = items|filter(i => not i.pinned) %}
+
+        <div class="rag-hist-tools">
+            <button type="button" class="rag-hist-clearall" id="rag-hist-clearall">
+                <i class="ti ti-trash"></i> Wyczyść całą historię
+            </button>
+        </div>
+
+        {% if pinned is not empty %}
+            <div class="rag-sec-label"><i class="ti ti-pin-filled"></i> Przypięte</div>
+            {% for item in pinned %}{{ _self.card(item) }}{% endfor %}
+        {% endif %}
+        {% if rest is not empty %}
+            {% if pinned is not empty %}<div class="rag-sec-label"><i class="ti ti-clock"></i> Pozostałe</div>{% endif %}
+            {% for item in rest %}{{ _self.card(item) }}{% endfor %}
+        {% endif %}
+
+        <script>window.__RAG_HIST__ = {{ items|map(i => {'id': i.id, 'answer': i.answer, 'citations': i.citations})|json_encode|raw }};</script>
+    {% endif %}
+</div>
+</div>
+
+{# ===== makro karty pojedynczej rozmowy ===== #}
+{% macro card(item) %}
+    <div class="rag-hist-item {{ item.pinned ? 'pinned' }}" data-id="{{ item.id }}"
+         data-question="{{ item.question }}">
+        <div class="rag-hist-head">
+            <span class="scope"><i class="ti ti-books"></i> {{ item.scope_label }}</span>
+            <span class="date">{{ item.created_at|date('j.m.Y, H:i') }}</span>
+            {% if item.pinned %}<span class="pin-flag"><i class="ti ti-pin-filled"></i> przypięte</span>{% endif %}
+        </div>
+        <div class="rag-q"><div class="bubble">{{ item.question }}</div></div>
+        <div class="rag-a">
+            <div class="avatar"><i class="ti ti-feather"></i></div>
+            <div class="panel">
+                <div class="rag-answer"></div>
+                <div class="rag-srcbox"></div>
+                <div class="rag-hist-toolbar">
+                    <button class="btn btn-sm btn-outline-secondary btn-pin {{ item.pinned ? 'on' }}" data-act="pin">
+                        <i class="ti {{ item.pinned ? 'ti-pin-filled' : 'ti-pin' }} me-1"></i>{{ item.pinned ? 'Odepnij' : 'Przypnij' }}
+                    </button>
+                    <a class="btn btn-sm btn-outline-secondary" href="{{ path('app_rag') }}?q={{ item.question|url_encode }}">
+                        <i class="ti ti-message-reply me-1"></i> Zapytaj ponownie
+                    </a>
+                    <button class="btn btn-sm btn-outline-secondary" data-act="docx">
+                        <i class="ti ti-file-type-docx me-1"></i> DOCX
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary text-danger" data-act="del">
+                        <i class="ti ti-trash me-1"></i> Usuń
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endmacro %}
+
+<script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+<script>
+(function() {
+    const data = window.__RAG_HIST__ || [];
+    if (window.marked) marked.setOptions({ breaks: true, gfm: true });
+    const esc = (s) => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+    function sourceLink(c) {
+        let href = '/tekst/' + c.document_id;
+        if (c.chunk_id) href += '?frag=' + c.chunk_id;
+        if (c.page_start) href += '#strona-' + c.page_start;
+        return href;
+    }
+    function renderAnswer(rawMd, blockId) {
+        let html = window.marked ? marked.parse(rawMd) : esc(rawMd).replace(/\n/g, '<br>');
+        if (window.DOMPurify) html = DOMPurify.sanitize(html);
+        return html.replace(/\[(\d+)\]/g, (m, n) => `<a href="#${blockId}-src-${n}" class="rag-cite">[${n}]</a>`);
+    }
+    function isNoAnswer(t) { return /nie ma odpowiedzi|nie zawieraj|brak (informacji|odpowiedzi)/i.test(t); }
+    function finalSources(answer, citations) {
+        if (!answer.trim() || isNoAnswer(answer)) return [];
+        const used = new Set();
+        (answer.match(/\[(\d+)\]/g) || []).forEach(m => used.add(parseInt(m.replace(/\D/g, ''), 10)));
+        if (used.size) return citations.filter(c => used.has(c.n));
+        return citations;
+    }
+    function sourcesHtml(citations, blockId) {
+        if (!citations || !citations.length) return '';
+        let s = '<div class="rag-sources"><div class="ttl">Źródła</div>';
+        for (const c of citations) {
+            s += `<div class="rag-source" id="${blockId}-src-${c.n}">
+                <span class="num">${c.n}</span>
+                <span><a href="${sourceLink(c)}">${esc(c.title)}</a></span>
+                <span class="lbl">— ${esc(c.label)}</span>
+            </div>`;
+        }
+        return s + '</div>';
+    }
+
+    // Wypełnij każdą kartę treścią (markdown) + źródłami.
+    document.querySelectorAll('.rag-hist-item').forEach(el => {
+        const d = data.find(x => String(x.id) === el.dataset.id);
+        if (!d) return;
+        const blockId = 'h' + d.id;
+        const shown = finalSources(d.answer || '', Array.isArray(d.citations) ? d.citations : []);
+        el.querySelector('.rag-answer').innerHTML = renderAnswer(d.answer || '', blockId);
+        el.querySelector('.rag-srcbox').innerHTML = sourcesHtml(shown, blockId);
+        el._data = { ...d, shown };
+    });
+
+    function post(url) {
+        return fetch(url, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(r => r.ok ? r.json() : Promise.reject(new Error('err')));
+    }
+
+    document.querySelectorAll('.rag-hist-item').forEach(el => {
+        const id = el.dataset.id;
+        el.querySelectorAll('[data-act]').forEach(btn => btn.addEventListener('click', () => {
+            const act = btn.dataset.act;
+            if (act === 'pin') {
+                btn.disabled = true;
+                post(`/asystent/historia/${id}/pin`).then(() => location.reload())
+                    .catch(() => { btn.disabled = false; alert('Nie udało się zmienić przypięcia.'); });
+            } else if (act === 'del') {
+                if (!confirm('Usunąć tę rozmowę z historii?')) return;
+                post(`/asystent/historia/${id}/usun`).then(() => {
+                    el.classList.add('removing');
+                    setTimeout(() => { el.remove(); if (!document.querySelector('.rag-hist-item')) location.reload(); }, 220);
+                }).catch(() => alert('Nie udało się usunąć wpisu.'));
+            } else if (act === 'docx') {
+                downloadDocx(el.dataset.question, el._data.answer, el._data.shown, btn);
+            }
+        }));
+    });
+
+    const clearAll = document.getElementById('rag-hist-clearall');
+    if (clearAll) clearAll.addEventListener('click', () => {
+        if (!confirm('Usunąć całą zapisaną historię rozmów? Tej operacji nie można cofnąć.')) return;
+        post('/asystent/historia/wyczysc').then(() => location.reload())
+            .catch(() => alert('Nie udało się wyczyścić historii.'));
+    });
+
+    function downloadDocx(question, answer, citations, btn) {
+        const old = btn.innerHTML; btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Tworzę…';
+        fetch('/asystent/docx', {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ question, answer, citations })
+        })
+        .then(r => r.ok ? r.blob() : Promise.reject(new Error('err')))
+        .then(blob => {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'odpowiedz-wyszynski.docx';
+            document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+        })
+        .catch(() => alert('Nie udało się zapisać pliku DOCX.'))
+        .finally(() => { btn.disabled = false; btn.innerHTML = old; });
+    }
+})();
+</script>
+{% endblock %}

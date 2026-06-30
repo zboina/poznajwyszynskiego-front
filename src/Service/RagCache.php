@@ -50,6 +50,16 @@ class RagCache
         return $this->epoch = is_string($sig) ? $sig : '0';
     }
 
+    /**
+     * Publiczny klucz treści dla pary (pytanie, zakres) — ten sam, którym posługuje
+     * się cache. Używany przez historię (RagHistory) do deduplikacji odpowiedzi:
+     * identyczne pytanie w tej samej epoce korpusu → ten sam wiersz rag_answer.
+     */
+    public function keyFor(string $question, ?int $volumeId): string
+    {
+        return $this->key($this->normalize($question), $volumeId);
+    }
+
     private function key(string $norm, ?int $volumeId): string
     {
         // Zakres „wszystkie tomy” zależy od zestawu opublikowanych tomów → wplatamy

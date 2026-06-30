@@ -251,16 +251,14 @@
         {% endif %}
     </div>
 
-    <div class="rag-histbar" id="rag-histbar" style="display:none;">
-        <button type="button" class="rag-histbar-toggle" id="rag-histtoggle" aria-expanded="false">
-            <i class="ti ti-history"></i> <span id="rag-histcount"></span>
-            <i class="ti ti-chevron-down" id="rag-histchevron"></i>
-        </button>
-        <button type="button" id="rag-histclear" class="rag-histbar-clear">
-            <i class="ti ti-trash"></i> Wyczyść historię
-        </button>
-        <div class="rag-histlist" id="rag-histlist"></div>
+    {% if app.user %}
+    <div class="rag-histbar" id="rag-histbar">
+        <span class="rag-histbar-label"><i class="ti ti-cloud-check"></i> Twoje rozmowy zapisują się na koncie</span>
+        <a class="rag-histbar-toggle" href="{{ path('app_rag_history') }}">
+            <i class="ti ti-folder"></i> Moja historia <i class="ti ti-chevron-right"></i>
+        </a>
     </div>
+    {% endif %}
 
     <div id="rag-thread"></div>
 
@@ -602,11 +600,10 @@
         setBusy(true);
 
         const finish = () => { es.close(); activeES = null; setBusy(false); };
-        // Persist the completed exchange so it survives a page refresh.
+        // Odpowiedź jest utrwalana po stronie serwera (historia konta) — patrz „Moja historia".
         const complete = () => {
             const shown = finalSources(acc, citations);
             finalize(refs, question, acc, shown);
-            if (acc.trim()) saveExchange({ q: question, a: acc, citations: shown });
         };
 
         es.addEventListener('citations', e => {
@@ -687,90 +684,12 @@
     }
     function autosize() { q.style.height = 'auto'; q.style.height = Math.min(q.scrollHeight, 160) + 'px'; }
 
-    // ── History archive (localStorage; survives refresh, stays on this device) ──
-    // Scoped per user so a different account on the same browser never sees
-    // another user's conversations.
-    const HKEY = 'rag-history-v1:' + ({{ app.user ? app.user.id : 0 }});
-    try { localStorage.removeItem('rag-history-v1'); } catch (_) {} // drop legacy shared key
-    const HMAX = 50;
-    const histbar = document.getElementById('rag-histbar');
-    const histcount = document.getElementById('rag-histcount');
-    const histclear = document.getElementById('rag-histclear');
-    const histtoggle = document.getElementById('rag-histtoggle');
-    const histchevron = document.getElementById('rag-histchevron');
-    const histlist = document.getElementById('rag-histlist');
-
-    function loadHistory() {
-        try { const v = JSON.parse(localStorage.getItem(HKEY)); return Array.isArray(v) ? v : []; }
-        catch (_) { return []; }
-    }
-    function persistHistory(list) {
-        try { localStorage.setItem(HKEY, JSON.stringify(list.slice(-HMAX))); } catch (_) {}
-    }
-    function saveExchange(entry) {
-        const list = loadHistory();
-        list.push(entry);
-        persistHistory(list);
-        updateHistBar();
-    }
-    function updateHistBar() {
-        const n = loadHistory().length;
-        if (n > 0) {
-            histbar.style.display = '';
-            histcount.textContent = n === 1 ? '1 zapisana rozmowa' : n + ' zapisanych rozmów';
-            rebuildHistList();
-        } else {
-            histbar.style.display = 'none';
-            histlist.classList.remove('open');
-            histtoggle.setAttribute('aria-expanded', 'false');
-        }
-    }
-
-    // Quick-jump list built from what is currently shown in the thread.
-    function rebuildHistList() {
-        const msgs = Array.from(thread.querySelectorAll('.rag-msg'));
-        histlist.innerHTML = '';
-        msgs.forEach((m, i) => {
-            const qt = (m.querySelector('.rag-q .bubble')?.textContent || '').trim();
-            const item = document.createElement('button');
-            item.type = 'button';
-            item.className = 'rag-histitem';
-            item.innerHTML = `<span class="qn">${i + 1}.</span><span class="qt"></span>`;
-            item.querySelector('.qt').textContent = qt;
-            item.addEventListener('click', () => {
-                m.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                histlist.classList.remove('open');
-                histtoggle.setAttribute('aria-expanded', 'false');
-            });
-            histlist.appendChild(item);
-        });
-    }
-
-    histtoggle.addEventListener('click', () => {
-        const open = histlist.classList.toggle('open');
-        histtoggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-        if (histchevron) histchevron.className = open ? 'ti ti-chevron-up' : 'ti ti-chevron-down';
-    });
-    function restoreHistory() {
-        const list = loadHistory();
-        if (!list.length) return;
-        // Przykłady zostają dostępne (zwinięte) nawet gdy jest historia.
-        collapseExamples();
-        for (const e of list) {
-            const refs = createMsg(e.q, false);
-            finalize(refs, e.q, e.a || '', Array.isArray(e.citations) ? e.citations : []);
-        }
-        updateHistBar();
-    }
-
-    histclear.addEventListener('click', () => {
-        if (!confirm('Usunąć całą zapisaną historię rozmów z tej przeglądarki?')) return;
-        try { localStorage.removeItem(HKEY); } catch (_) {}
-        thread.innerHTML = '';
-        seq = 0;
-        examples.style.display = '';
-        updateHistBar();
-    });
+    // Historia rozmów żyje teraz po stronie konta (route „Moja historia"),
+    // nie w localStorage — patrz pasek nad wątkiem. Stary klucz sprzątamy.
+    try {
+        localStorage.removeItem('rag-history-v1');
+        localStorage.removeItem('rag-history-v1:' + ({{ app.user ? app.user.id : 0 }}));
+    } catch (_) {}
 
     send.addEventListener('click', submit);
     q.addEventListener('input', autosize);
@@ -792,7 +711,18 @@
     examples.querySelectorAll('.rag-ex-q').forEach(b =>
         b.addEventListener('click', () => ask(b.textContent.trim())));
 
-    restoreHistory();
+    // Prefill z parametru ?q= (np. „Zapytaj ponownie" z Mojej historii) — bez auto-wysyłki,
+    // żeby użytkownik świadomie zdecydował o zużyciu pytania z puli.
+    try {
+        const pq = new URLSearchParams(location.search).get('q');
+        if (pq && pq.trim()) {
+            q.value = pq.trim();
+            autosize();
+            collapseExamples();
+            q.focus();
+        }
+    } catch (_) {}
+
     renderAskability();
 })();
 </script>

@@ -55,6 +55,18 @@ class RagQuery
     #[ORM\Column(name: 'created_at', type: 'datetime_immutable')]
     private \DateTimeInterface $createdAt;
 
+    /** Wskaźnik na trwałą treść odpowiedzi (historia per konto). NULL = usunięta z historii. */
+    #[ORM\ManyToOne(targetEntity: RagAnswer::class)]
+    #[ORM\JoinColumn(name: 'answer_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
+    private ?RagAnswer $answer = null;
+
+    /** Przypięcie „wartościowej” odpowiedzi przez użytkownika. */
+    #[ORM\Column(options: ['default' => false])]
+    private bool $pinned = false;
+
+    #[ORM\Column(name: 'pinned_at', type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeInterface $pinnedAt = null;
+
     public function __construct(
         int $userId,
         ?int $volumeId = null,
@@ -91,4 +103,15 @@ class RagQuery
     public function getOutputTokens(): int { return $this->outputTokens; }
     public function getCostUsd(): float { return (float) $this->costUsd; }
     public function getCreatedAt(): \DateTimeInterface { return $this->createdAt; }
+
+    public function getAnswer(): ?RagAnswer { return $this->answer; }
+    public function setAnswer(?RagAnswer $answer): static { $this->answer = $answer; return $this; }
+    public function isPinned(): bool { return $this->pinned; }
+    public function setPinned(bool $pinned): static
+    {
+        $this->pinned = $pinned;
+        $this->pinnedAt = $pinned ? new \DateTimeImmutable() : null;
+        return $this;
+    }
+    public function getPinnedAt(): ?\DateTimeInterface { return $this->pinnedAt; }
 }

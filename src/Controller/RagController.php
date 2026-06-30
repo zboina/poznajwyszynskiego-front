@@ -8,6 +8,7 @@ use App\Service\ChunkRetriever;
 use App\Service\DocxBuilder;
 use App\Service\RagAnswerer;
 use App\Service\RagCache;
+use App\Service\RagHistory;
 use App\Service\SettingsService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -26,6 +27,7 @@ class RagController extends AbstractController
         private ChunkRetriever $retriever,
         private EntityManagerInterface $em,
         private RagCache $cache,
+        private RagHistory $history,
     ) {}
 
     /**
@@ -119,7 +121,10 @@ class RagController extends AbstractController
 
         // Cache hit: serve stored answer, skip the paid model.
         if ($hit = $this->cache->get($question, $volumeId)) {
-            $this->spend($user, $unlimited, $volumeId, $question, true);
+            $rq = $this->spend($user, $unlimited, $volumeId, $question, true);
+            if ($rq) {
+                $this->history->attach($rq, $question, $volumeId, $hit['answer'], $hit['citations']);
+            }
             return new JsonResponse([
                 'answer' => $hit['answer'],
                 'citations' => $hit['citations'],
@@ -134,6 +139,9 @@ class RagController extends AbstractController
             $rq = $this->spend($user, $unlimited, $volumeId, $question, false);
             $this->recordUsage($rq, $result['usage'] ?? []);
             $this->cache->put($question, $volumeId, (string) $result['answer'], $result['citations'] ?? []);
+            if ($rq) {
+                $this->history->attach($rq, $question, $volumeId, (string) $result['answer'], $result['citations'] ?? []);
+            }
         }
 
         return new JsonResponse($result);
@@ -176,7 +184,10 @@ class RagController extends AbstractController
             // Cache hit → serve the stored answer instantly, skip the paid model.
             if ($hit = $this->cache->get($question, $volumeId)) {
                 $emit('citations', ['citations' => $hit['citations']]);
-                $this->spend($user, $unlimited, $volumeId, $question, true);
+                $rq = $this->spend($user, $unlimited, $volumeId, $question, true);
+                if ($rq) {
+                    $this->history->attach($rq, $question, $volumeId, $hit['answer'], $hit['citations']);
+                }
                 $emit('token', ['t' => $hit['answer']]);
                 $emit('done', ['cached' => true]);
                 return;
@@ -204,9 +215,12 @@ class RagController extends AbstractController
             // Uzupełnij wpis o realne zużycie (tokeny + koszt USD z OpenRouter).
             $this->recordUsage($rq, $usage);
 
-            // Persist for next time (first write wins).
+            // Persist for next time (first write wins) + zapisz w historii konta.
             if (trim($full) !== '') {
                 $this->cache->put($question, $volumeId, $full, $prep['citations']);
+                if ($rq) {
+                    $this->history->attach($rq, $question, $volumeId, $full, $prep['citations']);
+                }
             }
         });
 
@@ -243,6 +257,64 @@ class RagController extends AbstractController
         $response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
         $response->headers->set('Content-Disposition', 'attachment; filename="wyszynski-' . $slug . '.docx"');
         return $response;
+    }
+
+    #[Route('/asystent/historia', name: 'app_rag_history', methods: ['GET'])]
+    public function history(): Response
+    {
+        /** @var User|null $user */
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->redirectToRoute('app_login');
+        }
+
+        return $this->render('rag/history.html.twig', [
+            'items' => $this->history->forUser($user->getId()),
+        ]);
+    }
+
+    #[Route('/asystent/historia/wyczysc', name: 'app_rag_history_clear', methods: ['POST'])]
+    public function historyClear(): JsonResponse
+    {
+        /** @var User|null $user */
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return new JsonResponse(['error' => 'Wymagane logowanie.'], 403);
+        }
+        $n = $this->history->clearForUser($user->getId());
+
+        return new JsonResponse(['ok' => true, 'cleared' => $n]);
+    }
+
+    #[Route('/asystent/historia/{id}/pin', name: 'app_rag_history_pin', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function historyPin(int $id): JsonResponse
+    {
+        /** @var User|null $user */
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return new JsonResponse(['error' => 'Wymagane logowanie.'], 403);
+        }
+        $pinned = $this->history->togglePin($id, $user->getId());
+        if ($pinned === null) {
+            return new JsonResponse(['error' => 'Nie znaleziono wpisu.'], 404);
+        }
+
+        return new JsonResponse(['ok' => true, 'pinned' => $pinned]);
+    }
+
+    #[Route('/asystent/historia/{id}/usun', name: 'app_rag_history_delete', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function historyDelete(int $id): JsonResponse
+    {
+        /** @var User|null $user */
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return new JsonResponse(['error' => 'Wymagane logowanie.'], 403);
+        }
+        if (!$this->history->deleteForUser($id, $user->getId())) {
+            return new JsonResponse(['error' => 'Nie znaleziono wpisu.'], 404);
+        }
+
+        return new JsonResponse(['ok' => true]);
     }
 
     private function roman(int $n): string
