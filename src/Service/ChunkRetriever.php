@@ -17,6 +17,9 @@ class ChunkRetriever
     private const RRF_K = 60;
     private const CANDIDATES = 50; // per-arm candidate pool before fusion
 
+    /** Ogranicza kandydatów do chunków z tomów opublikowanych (alias chunków: c). */
+    private const PUBLISHED_FILTER = "AND c.volume_id IN (SELECT vp.id FROM volumes vp WHERE vp.status = 'opublikowany')";
+
     public function __construct(private Connection $db) {}
 
     /**
@@ -31,6 +34,7 @@ class ChunkRetriever
             SELECT v.number, v.title, COUNT(c.id) AS chunks
             FROM document_chunks c
             JOIN volumes v ON v.id = c.volume_id
+            WHERE v.status = 'opublikowany'
             GROUP BY v.number, v.title
             ORDER BY v.number
         ";
@@ -61,7 +65,12 @@ class ChunkRetriever
             return $this->ftsOnly($query, $k, $volumeId);
         }
 
-        $volFilter = $volumeId ? 'AND c.volume_id = :vol' : '';
+        // Tylko tomy opublikowane są odpytywalne — zembedowany tom w korekcie nie
+        // może trafić do odpowiedzi/cytatów, dopóki nie zmieni statusu na 'opublikowany'.
+        $volFilter = self::PUBLISHED_FILTER;
+        if ($volumeId) {
+            $volFilter .= ' AND c.volume_id = :vol';
+        }
 
         $sql = "
             WITH fts AS (
@@ -115,7 +124,10 @@ class ChunkRetriever
 
     private function ftsOnly(string $query, int $k, ?int $volumeId): array
     {
-        $volFilter = $volumeId ? 'AND c.volume_id = :vol' : '';
+        $volFilter = self::PUBLISHED_FILTER;
+        if ($volumeId) {
+            $volFilter .= ' AND c.volume_id = :vol';
+        }
         $sql = "
             SELECT c.id, c.document_id, c.content, c.page_start, c.page_end, c.chunk_index,
                    d.title, d.slug, v.number AS volume_number,
