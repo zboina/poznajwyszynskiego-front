@@ -12,6 +12,9 @@ use Doctrine\DBAL\Connection;
  */
 class RagCache
 {
+    /** Memoizacja sygnatury korpusu w obrębie jednego żądania. */
+    private ?string $epoch = null;
+
     public function __construct(private Connection $db) {}
 
     /** Lowercase, collapse whitespace, drop trailing punctuation. */
@@ -22,9 +25,40 @@ class RagCache
         return rtrim($q, " \t\n\r?!.…");
     }
 
+    /**
+     * Sygnatura „epoki korpusu”: md5 z posortowanych id tomów OPUBLIKOWANYCH,
+     * które mają chunki (czyli realnie odpowiadalnych przez asystenta). Zmienia
+     * się przy publikacji / cofnięciu publikacji tomu, więc odpowiedzi o zakresie
+     * „wszystkie tomy” trafiają automatycznie do nowej przestrzeni cache — bez
+     * ręcznego czyszczenia. Zmiana treści już opublikowanego tomu (re-chunking)
+     * idzie osobną ścieżką: BuildChunksCommand czyści cały cache.
+     */
+    private function corpusEpoch(): string
+    {
+        if ($this->epoch !== null) {
+            return $this->epoch;
+        }
+        $sig = $this->db->fetchOne(
+            "SELECT coalesce(md5(string_agg(id::text, ',' ORDER BY id)), '0')
+             FROM (
+                 SELECT DISTINCT v.id
+                 FROM volumes v
+                 JOIN document_chunks c ON c.volume_id = v.id
+                 WHERE v.status = 'opublikowany'
+             ) t"
+        );
+        return $this->epoch = is_string($sig) ? $sig : '0';
+    }
+
     private function key(string $norm, ?int $volumeId): string
     {
-        return hash('sha256', ($volumeId ?? 0) . '|' . $norm);
+        // Zakres „wszystkie tomy” zależy od zestawu opublikowanych tomów → wplatamy
+        // epokę korpusu. Zakres „konkretny tom” jest od reszty niezależny → klucz
+        // stabilny (zgodny ze starym schematem, więc cache per-tom przeżywa publikacje).
+        $scope = $volumeId !== null
+            ? (string) $volumeId
+            : '0:' . $this->corpusEpoch();
+        return hash('sha256', $scope . '|' . $norm);
     }
 
     /**
