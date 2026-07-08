@@ -133,6 +133,18 @@
         </div>
     </div>
 {% else %}
+    {% if audioUrl is defined and audioUrl %}
+        <div class="doc-audio" data-doc-id="{{ doc.id }}" data-user="{{ app.user ? app.user.id : 'guest' }}">
+            <div class="doc-audio-head">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 8a5 5 0 0 1 0 8"/><path d="M17.7 5a9 9 0 0 1 0 14"/><path d="M6 15h-2a1 1 0 0 1 -1 -1v-4a1 1 0 0 1 1 -1h2l3.5 -4.5a.8 .8 0 0 1 1.5 .5v14a.8 .8 0 0 1 -1.5 .5l-3.5 -4.5"/></svg>
+                <span>Nagranie audio tego tekstu</span>
+            </div>
+            <audio class="doc-audio-el" controls preload="metadata">
+                <source src="{{ audioUrl }}"{% if audioMime %} type="{{ audioMime }}"{% endif %}>
+                Twoja przeglądarka nie obsługuje odtwarzania audio.
+            </audio>
+        </div>
+    {% endif %}
     <div class="p-4 doc-body">
         {{ content|raw }}
     </div>

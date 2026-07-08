@@ -400,6 +400,19 @@ class SearchController extends AbstractController
             }
         }
 
+        // Nagranie audio dokumentu — konwencja plikowa public/media/audio/{id}.{ext}.
+        // Gdy plik istnieje, front pokazuje odtwarzacz; brak pliku = brak playera.
+        $audioUrl = null;
+        $audioMime = null;
+        $publicDir = $this->getParameter('kernel.project_dir') . '/public';
+        foreach (['mp3' => 'audio/mpeg', 'm4a' => 'audio/mp4', 'ogg' => 'audio/ogg', 'wav' => 'audio/wav'] as $ext => $mime) {
+            if (is_file($publicDir . '/media/audio/' . $id . '.' . $ext)) {
+                $audioUrl = '/media/audio/' . $id . '.' . $ext;
+                $audioMime = $mime;
+                break;
+            }
+        }
+
         $response = $this->render('search/_document_view.html.twig', [
             'doc' => $doc,
             'tags' => $tags,
@@ -409,6 +422,8 @@ class SearchController extends AbstractController
             'limitReached' => $limitReached,
             'aiCredits' => $user?->getAiCredits() ?? 0,
             'pdfCost' => self::PDF_CREDIT_COST,
+            'audioUrl' => $audioUrl,
+            'audioMime' => $audioMime,
         ]);
 
         $response->headers->set('Cache-Control', 'no-store, no-cache, must-revalidate, private');

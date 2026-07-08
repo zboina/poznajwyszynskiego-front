@@ -62,6 +62,12 @@ export default class extends Controller {
         this._onKeyDown = this._handleKeyDown.bind(this);
         window.addEventListener('keydown', this._onKeyDown);
 
+        // Zapisz pozycję nagrania, gdy użytkownik zamyka/odświeża stronę.
+        this.activeAudio = null;
+        this._audioKey = null;
+        this._onPageHide = this._saveAudioPosition.bind(this);
+        window.addEventListener('pagehide', this._onPageHide);
+
         // Auto-open document if URL is /tekst/{id}-{slug}
         if (this.openDocValue) {
             // Save search URL so we can go back
@@ -349,6 +355,9 @@ export default class extends Controller {
         }
         this.docAbortController = new AbortController();
 
+        // Zapisz pozycję poprzedniego nagrania, zanim podmienimy treść.
+        this._saveAudioPosition();
+
         try {
             const response = await fetch(url, {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' },
@@ -358,6 +367,7 @@ export default class extends Controller {
             if (response.ok) {
                 this.documentContentTarget.innerHTML = await response.text();
                 this._scrollToHighlight();
+                this._initAudioPlayer();
             } else {
                 this.documentContentTarget.innerHTML = ERROR_HTML;
             }
@@ -366,6 +376,55 @@ export default class extends Controller {
                 this.documentContentTarget.innerHTML = ERROR_HTML;
             }
         }
+    }
+
+    // Odtwarzacz nagrania dokumentu: wznawia od zapamiętanej pozycji (per użytkownik+dokument)
+    // i zapisuje postęp w localStorage. Fragment jest wstrzykiwany przez innerHTML, więc
+    // inline <script> by się nie wykonał — inicjalizujemy stąd, po wstawieniu treści.
+    _initAudioPlayer() {
+        this.activeAudio = null;
+        this._audioKey = null;
+        const wrap = this.documentContentTarget.querySelector('.doc-audio');
+        if (!wrap) return;
+        const audio = wrap.querySelector('audio.doc-audio-el');
+        if (!audio) return;
+
+        const key = 'pw_audio:' + (wrap.dataset.user || 'guest') + ':' + (wrap.dataset.docId || '0');
+        this.activeAudio = audio;
+        this._audioKey = key;
+
+        const restore = () => {
+            try {
+                const saved = parseFloat(localStorage.getItem(key) || '');
+                if (saved > 0 && (!audio.duration || saved < audio.duration - 1)) {
+                    audio.currentTime = saved;
+                }
+            } catch (e) { /* localStorage niedostępny */ }
+        };
+        if (audio.readyState >= 1) restore();
+        else audio.addEventListener('loadedmetadata', restore, { once: true });
+
+        let lastSaved = 0;
+        audio.addEventListener('timeupdate', () => {
+            if (Math.abs(audio.currentTime - lastSaved) >= 5) {
+                lastSaved = audio.currentTime;
+                this._saveAudioPosition();
+            }
+        });
+        audio.addEventListener('pause', () => this._saveAudioPosition());
+        audio.addEventListener('ended', () => {
+            try { localStorage.removeItem(key); } catch (e) { /* noop */ }
+        });
+    }
+
+    _saveAudioPosition() {
+        const audio = this.activeAudio;
+        if (!audio || !this._audioKey) return;
+        try {
+            if (audio.currentTime > 0 && (!audio.duration || audio.currentTime < audio.duration - 1)) {
+                localStorage.setItem(this._audioKey, String(audio.currentTime));
+            }
+        } catch (e) { /* localStorage niedostępny */ }
     }
 
     // Scroll the cited passage (server-rendered <mark class="rag-hl">) into view.
@@ -619,5 +678,7 @@ export default class extends Controller {
         }
         window.removeEventListener('popstate', this._onPopState);
         window.removeEventListener('keydown', this._onKeyDown);
+        this._saveAudioPosition();
+        window.removeEventListener('pagehide', this._onPageHide);
     }
 }
