@@ -84,6 +84,12 @@
         {% if doc.volume_number %}
             <span><strong>Tom {{ doc.volume_number }}{% if doc.volume_title %}: {{ doc.volume_title }}{% endif %}</strong></span>
         {% endif %}
+        {% if doc.volume_publisher %}
+            <span><strong>Wydawnictwo:</strong> {{ doc.volume_publisher }}</span>
+        {% endif %}
+        {% if doc.volume_year %}
+            <span><strong>Rok wydania:</strong> {{ doc.volume_year }}</span>
+        {% endif %}
     </div>
 </div>
 

@@ -447,7 +447,8 @@ class SearchController extends AbstractController
         $pj = $this->documentRepository->publishedJoin();
         $doc = $this->connection->executeQuery(
             "SELECT d.title, d.subtitle, d.content, d.event_date, d.location, d.document_type,
-                    v.number AS volume_number, v.title AS volume_title
+                    v.number AS volume_number, v.title AS volume_title,
+                    v.publisher AS volume_publisher, v.publication_year AS volume_year
              FROM documents d {$pj}
              WHERE d.id = :id",
             ['id' => $id]
