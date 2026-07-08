@@ -1,0 +1,34 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Biblioteka — Czytelnia VIP{% endblock %}
+{% block body_class %}lib-shell{% endblock %}
+
+{% block stylesheets %}{{ include('library/_theme.html.twig') }}{% endblock %}
+
+{% block body %}
+{% include 'partials/_navbar.html.twig' %}
+<div class="biblioteka">
+    <div class="lib-wrap">
+        <div class="lib-locked">
+            <div class="seal">
+                <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                    <rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/><circle cx="12" cy="16" r="1.4"/>
+                </svg>
+            </div>
+            <h1>Czytelnia dostępna dla Czytelników VIP</h1>
+            <p>
+                Biblioteka to spokojne miejsce do lektury całych tomów Dzieł Zebranych —
+                tekst po tekście, z możliwością wysłuchania wybranych z nagrania.
+                Ta sala otwiera się przed Czytelnikami&nbsp;VIP.
+            </p>
+            <a class="lib-cta" href="{{ path('app_donate') }}">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.5-9.5-9A5 5 0 0 1 12 6a5 5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z"/></svg>
+                Zostań Czytelnikiem VIP
+            </a>
+            <div>
+                <a class="lib-cta-2" href="{{ path('app_search') }}">Wróć do wyszukiwarki</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

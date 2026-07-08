@@ -23,6 +23,11 @@ services:
     App\:
         resource: '../src/'
 
+    # Czytelnia (Biblioteka) — katalog audio jak w SearchController.
+    App\Service\DocumentReader:
+        arguments:
+            $audioDir: '%app.audio_dir%'
+
     # RAG answer generation: provider/model/key from env (embeddings stay local).
     App\Service\RagAnswerer:
         arguments:

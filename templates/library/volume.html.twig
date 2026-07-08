@@ -1,0 +1,53 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ volume.title ?? 'Tom' }} — Biblioteka{% endblock %}
+{% block body_class %}lib-shell lib-fixed{% endblock %}
+
+{% block stylesheets %}{{ include('library/_theme.html.twig') }}{% endblock %}
+
+{% block body %}
+{% include 'partials/_navbar.html.twig' %}
+<div class="biblioteka">
+    <div class="lib-wrap" style="max-width: 860px;">
+        <a class="lib-back" href="{{ path('app_library') }}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>
+            Regał z tomami
+        </a>
+
+        <div class="parchment" style="margin-top: 1rem;">
+            <div class="toc-vol">
+                <div class="toc-vol-num">{% if volume.number %}Tom {{ volume.number }}{% else %}Dzieła zebrane{% endif %}</div>
+                <h1 class="toc-vol-title">{{ volume.title ?? 'Bez tytułu' }}</h1>
+                {% if volume.year_from or volume.year_to %}
+                    <div class="toc-vol-years">{{ volume.year_from }}{% if volume.year_to and volume.year_to != volume.year_from %}–{{ volume.year_to }}{% endif %}</div>
+                {% endif %}
+            </div>
+
+            {% if documents is empty %}
+                <p class="lib-empty" style="color: var(--lib-ink-soft);">Ten tom nie zawiera jeszcze tekstów.</p>
+            {% else %}
+                <ol class="toc-list">
+                    {% for d in documents %}
+                        <li class="toc-item">
+                            <a class="toc-link" href="{{ path('app_library_read', {id: d.id}) }}">
+                                <span class="toc-num">{{ d.number_in_volume }}.</span>
+                                <span class="toc-name">{{ d.title }}</span>
+                                <span class="toc-dots"></span>
+                                <span class="toc-meta">
+                                    {% if d.has_audio %}
+                                        <span class="toc-audio" title="Dostępne nagranie audio">
+                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                                        </span>
+                                    {% endif %}
+                                    {% if d.document_type %}{{ d.document_type|capitalize }}{% endif %}
+                                </span>
+                            </a>
+                            {% if not loop.last %}<hr class="toc-sep">{% endif %}
+                        </li>
+                    {% endfor %}
+                </ol>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

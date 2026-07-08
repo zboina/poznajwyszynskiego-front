@@ -13,6 +13,7 @@
 {% set _route = app.request.attributes.get('_route') %}
 {% set _isSearch = _route starts with 'app_search' or _route starts with 'app_document' %}
 {% set _isRag = _route starts with 'app_rag' %}
+{% set _isLibrary = _route starts with 'app_library' %}
 
 <style>
     .app-navbar { background: #722F37; box-shadow: 0 2px 8px rgba(0,0,0,.15); position: relative; z-index: 200; }
@@ -120,6 +121,10 @@
             <a href="{{ path('app_rag') }}" class="pwnav-link {{ _isRag ? 'active' }}">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9h8M8 13h6"/><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                 <span class="t">Asystent AI</span>
+            </a>
+            <a href="{{ path('app_library') }}" class="pwnav-link {{ _isLibrary ? 'active' }}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5a1 1 0 0 1 1-1h4v16H5a1 1 0 0 1-1-1z"/><path d="M9 4h5v16H9z"/><path d="m14 5 4 .8 2.5 13.5-4 .7"/></svg>
+                <span class="t">Biblioteka</span>
             </a>
             {% endif %}
         </div>

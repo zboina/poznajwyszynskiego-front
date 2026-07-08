@@ -1,0 +1,53 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Biblioteka — Dzieła Zebrane Kardynała Wyszyńskiego{% endblock %}
+{% block body_class %}lib-shell{% endblock %}
+
+{% block stylesheets %}{{ include('library/_theme.html.twig') }}{% endblock %}
+
+{% block body %}
+{% include 'partials/_navbar.html.twig' %}
+<div class="biblioteka">
+    <div class="lib-wrap">
+        <div class="lib-head">
+            <span class="lib-eyebrow">Czytelnia VIP</span>
+            <h1 class="lib-title">Biblioteka</h1>
+            <p class="lib-sub">Wejdź między półki Dzieł Zebranych. Każdy tom kryje teksty, które możesz czytać — a wybrane także wysłuchać z nagrania.</p>
+            <div class="lib-rule"></div>
+        </div>
+
+        {% if volumes is empty %}
+            <p class="lib-empty">Na półkach nie ma jeszcze opublikowanych tomów.</p>
+        {% else %}
+            {# Zrównoważony podział na półki: rzędy równe, mało tomów = jeden dopasowany rząd. #}
+            {% set _n = volumes|length %}
+            {% set _rows = max(1, (_n / 8)|round(0, 'ceil')) %}
+            {% set _perRow = (_n / _rows)|round(0, 'ceil') %}
+            {% for shelf in volumes|batch(_perRow) %}
+                <div class="shelf">
+                    <div class="shelf-books">
+                        {% for v in shelf %}
+                            <a class="book book-c{{ loop.index0 % 6 }}" href="{{ path('app_library_volume', {id: v.id}) }}"
+                               title="{{ v.title ?? 'Tom' }}{{ v.number ? ' — tom ' ~ v.number }}">
+                                {% if v.audio_count > 0 %}
+                                    <span class="book-audio" title="{{ v.audio_count }} nagrań audio">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                                    </span>
+                                {% endif %}
+                                <span class="book-band"></span>
+                                {% set _yrs = v.year_from ? (v.year_to and v.year_to != v.year_from ? v.year_from ~ '–' ~ v.year_to : v.year_from) : null %}
+                                <span class="book-plate">
+                                    <span class="book-vol-name">Dzieła zebrane</span>
+                                    {% if _yrs %}<span class="book-vol-years">{{ _yrs }}</span>{% endif %}
+                                </span>
+                                <span class="book-num">{{ v.number ? 'Tom ' ~ v.number : '—' }}</span>
+                            </a>
+                        {% endfor %}
+                    </div>
+                    <div class="shelf-plank"></div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
