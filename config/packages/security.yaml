@@ -45,6 +45,7 @@ security:
         - { path: ^/tekst/, roles: PUBLIC_ACCESS }
         - { path: ^/asystent, roles: PUBLIC_ACCESS }
         - { path: ^/dokument/\d+/podglad$, roles: PUBLIC_ACCESS }
+        - { path: ^/dokument/\d+/audio$, roles: PUBLIC_ACCESS }
         - { path: ^/webhook/stripe$, roles: PUBLIC_ACCESS }
         - { path: ^/, roles: ROLE_USER }
 

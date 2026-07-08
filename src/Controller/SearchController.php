@@ -8,6 +8,7 @@ use App\Service\EmbeddingService;
 use App\Service\SettingsService;
 use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -400,17 +401,16 @@ class SearchController extends AbstractController
             }
         }
 
-        // Nagranie audio dokumentu — konwencja plikowa public/media/audio/{id}.{ext}.
-        // Gdy plik istnieje, front pokazuje odtwarzacz; brak pliku = brak playera.
+        // Nagranie audio dokumentu — brane z bazy (audio_recordings, tylko opublikowane),
+        // plik streamowany trasą app_document_audio z katalogu uploadów admina.
+        $audio = $this->resolvePublishedAudio($id);
         $audioUrl = null;
         $audioMime = null;
-        $publicDir = $this->getParameter('kernel.project_dir') . '/public';
-        foreach (['mp3' => 'audio/mpeg', 'm4a' => 'audio/mp4', 'ogg' => 'audio/ogg', 'wav' => 'audio/wav'] as $ext => $mime) {
-            if (is_file($publicDir . '/media/audio/' . $id . '.' . $ext)) {
-                $audioUrl = '/media/audio/' . $id . '.' . $ext;
-                $audioMime = $mime;
-                break;
-            }
+        $audioTitle = null;
+        if ($audio !== null) {
+            $audioUrl = $this->generateUrl('app_document_audio', ['id' => $id]);
+            $audioMime = $audio['mime'];
+            $audioTitle = $audio['title'];
         }
 
         $response = $this->render('search/_document_view.html.twig', [
@@ -424,12 +424,76 @@ class SearchController extends AbstractController
             'pdfCost' => self::PDF_CREDIT_COST,
             'audioUrl' => $audioUrl,
             'audioMime' => $audioMime,
+            'audioTitle' => $audioTitle,
         ]);
 
         $response->headers->set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
         $response->headers->set('X-Robots-Tag', 'noindex, nofollow');
 
         return $response;
+    }
+
+    #[Route('/dokument/{id}/audio', name: 'app_document_audio', requirements: ['id' => '\d+'], methods: ['GET'])]
+    public function documentAudio(int $id): Response
+    {
+        // Dostęp jak do podglądu tekstu: zalogowany albo włączone demo.
+        if (!$this->getUser() && !$this->settingsService->isDemoEnabled()) {
+            return new Response('', 403);
+        }
+
+        $audio = $this->resolvePublishedAudio($id);
+        if ($audio === null) {
+            return new Response('Nie znaleziono nagrania.', 404);
+        }
+
+        $response = new BinaryFileResponse($audio['file']);
+        $response->headers->set('Content-Type', $audio['mime']);
+        $response->headers->set('Accept-Ranges', 'bytes'); // przewijanie (Range) w odtwarzaczu
+        $response->headers->set('Cache-Control', 'private, max-age=3600');
+        $response->headers->set('X-Robots-Tag', 'noindex, nofollow');
+        $response->setContentDisposition('inline', basename($audio['file']));
+
+        return $response;
+    }
+
+    /**
+     * Zwraca opublikowane nagranie audio dokumentu (najstarsze, gdy jest kilka) wraz z
+     * bezpieczną ścieżką do pliku w katalogu uploadów admina, albo null.
+     *
+     * @return array{file:string,mime:string,title:?string}|null
+     */
+    private function resolvePublishedAudio(int $id): ?array
+    {
+        $row = $this->connection->executeQuery(
+            "SELECT audio_file_name, mime_type, title
+             FROM audio_recordings
+             WHERE document_id = :id
+               AND is_published = true
+               AND audio_file_name IS NOT NULL AND audio_file_name <> ''
+             ORDER BY created_at ASC, id ASC
+             LIMIT 1",
+            ['id' => $id]
+        )->fetchAssociative();
+
+        if (!$row) {
+            return null;
+        }
+
+        // basename() ucina ewentualne ../ — plik może być tylko wewnątrz katalogu audio.
+        $dir = rtrim((string) $this->getParameter('app.audio_dir'), '/');
+        $file = $dir . '/' . basename((string) $row['audio_file_name']);
+        if (!is_file($file) || !is_readable($file)) {
+            return null;
+        }
+
+        $mime = $row['mime_type'] ?: match (strtolower(pathinfo($file, PATHINFO_EXTENSION))) {
+            'm4a', 'mp4' => 'audio/mp4',
+            'ogg' => 'audio/ogg',
+            'wav' => 'audio/wav',
+            default => 'audio/mpeg',
+        };
+
+        return ['file' => $file, 'mime' => $mime, 'title' => $row['title'] ?: null];
     }
 
     public const PDF_CREDIT_COST = 10;

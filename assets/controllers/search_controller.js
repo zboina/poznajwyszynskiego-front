@@ -415,6 +415,93 @@ export default class extends Controller {
         audio.addEventListener('ended', () => {
             try { localStorage.removeItem(key); } catch (e) { /* noop */ }
         });
+
+        this._buildAudioUI(wrap, audio);
+    }
+
+    // Własny odtwarzacz: przycisk play/pauza, czasy i pasek postępu z WYRAŹNYM
+    // uchwytem (natywny <audio> ma słabo widoczny/niestyowalny punkt postępu).
+    // Natywne kontrolki chowamy (CSS .pw-ready); sterujemy tym samym elementem <audio>,
+    // więc zapamiętywanie pozycji działa dalej. Bez JS zostaje natywny fallback.
+    _buildAudioUI(wrap, audio) {
+        const playIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13 -8z"/></svg>';
+        const pauseIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14h-4z"/><path d="M14 5h4v14h-4z"/></svg>';
+        const fmt = (t) => {
+            if (!isFinite(t) || t < 0) t = 0;
+            const m = Math.floor(t / 60);
+            const s = Math.floor(t % 60);
+            return m + ':' + String(s).padStart(2, '0');
+        };
+
+        const ui = document.createElement('div');
+        ui.className = 'pw-audio';
+        ui.innerHTML =
+            '<button type="button" class="pw-audio-btn" aria-label="Odtwórz">' + playIcon + '</button>' +
+            '<span class="pw-audio-time pw-audio-cur">0:00</span>' +
+            '<div class="pw-audio-track" role="slider" tabindex="0" aria-label="Pasek postępu nagrania" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">' +
+                '<div class="pw-audio-fill"></div><div class="pw-audio-thumb"></div>' +
+            '</div>' +
+            '<span class="pw-audio-time pw-audio-dur">0:00</span>';
+        audio.insertAdjacentElement('afterend', ui);
+        wrap.classList.add('pw-ready');
+
+        const btn = ui.querySelector('.pw-audio-btn');
+        const track = ui.querySelector('.pw-audio-track');
+        const fill = ui.querySelector('.pw-audio-fill');
+        const thumb = ui.querySelector('.pw-audio-thumb');
+        const curEl = ui.querySelector('.pw-audio-cur');
+        const durEl = ui.querySelector('.pw-audio-dur');
+
+        const setProgress = (ratio) => {
+            ratio = Math.min(1, Math.max(0, ratio || 0));
+            const pct = (ratio * 100) + '%';
+            fill.style.width = pct;
+            thumb.style.left = pct;
+            track.setAttribute('aria-valuenow', String(Math.round(ratio * 100)));
+        };
+        const refresh = () => {
+            const d = audio.duration || 0;
+            setProgress(d ? audio.currentTime / d : 0);
+            curEl.textContent = fmt(audio.currentTime);
+        };
+        const setIcon = () => {
+            btn.innerHTML = audio.paused ? playIcon : pauseIcon;
+            btn.setAttribute('aria-label', audio.paused ? 'Odtwórz' : 'Pauza');
+        };
+        const showDuration = () => { durEl.textContent = fmt(audio.duration); refresh(); };
+
+        btn.addEventListener('click', () => { audio.paused ? audio.play() : audio.pause(); });
+        audio.addEventListener('play', setIcon);
+        audio.addEventListener('pause', setIcon);
+        audio.addEventListener('timeupdate', refresh);
+        audio.addEventListener('loadedmetadata', showDuration);
+        if (audio.readyState >= 1) showDuration();
+        setIcon();
+
+        // Przewijanie: klik i przeciąganie po pasku.
+        const seekTo = (clientX) => {
+            const r = track.getBoundingClientRect();
+            const ratio = r.width ? (clientX - r.left) / r.width : 0;
+            setProgress(ratio);
+            if (audio.duration) audio.currentTime = Math.min(1, Math.max(0, ratio)) * audio.duration;
+            curEl.textContent = fmt(audio.currentTime);
+        };
+        let dragging = false;
+        track.addEventListener('pointerdown', (e) => {
+            dragging = true;
+            ui.classList.add('pw-dragging');
+            try { track.setPointerCapture(e.pointerId); } catch (_) { /* noop */ }
+            seekTo(e.clientX);
+        });
+        track.addEventListener('pointermove', (e) => { if (dragging) seekTo(e.clientX); });
+        const endDrag = () => { dragging = false; ui.classList.remove('pw-dragging'); };
+        track.addEventListener('pointerup', endDrag);
+        track.addEventListener('pointercancel', endDrag);
+        track.addEventListener('keydown', (e) => {
+            if (!audio.duration) return;
+            if (e.key === 'ArrowRight') { audio.currentTime = Math.min(audio.duration, audio.currentTime + 5); e.preventDefault(); }
+            else if (e.key === 'ArrowLeft') { audio.currentTime = Math.max(0, audio.currentTime - 5); e.preventDefault(); }
+        });
     }
 
     _saveAudioPosition() {

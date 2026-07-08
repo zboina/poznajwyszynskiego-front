@@ -7,6 +7,10 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    # Katalog z plikami audio wgranymi w panelu admina (Vich → admin/public/uploads/audio).
+    # Front streamuje je trasą app_document_audio. Można nadpisać zmienną AUDIO_DIR (np. na prod).
+    app.audio_dir: '%env(default:app.audio_dir.default:AUDIO_DIR)%'
+    app.audio_dir.default: '%kernel.project_dir%/../admin/public/uploads/audio'
 
 services:
     # default configuration for services in *this* file
