@@ -23,6 +23,7 @@
             {% set _n = volumes|length %}
             {% set _rows = max(1, (_n / 8)|round(0, 'ceil')) %}
             {% set _perRow = (_n / _rows)|round(0, 'ceil') %}
+            <div class="shelves">
             {% for shelf in volumes|batch(_perRow) %}
                 <div class="shelf">
                     <div class="shelf-books">
@@ -31,22 +32,22 @@
                                title="{{ v.title ?? 'Tom' }}{{ v.number ? ' — tom ' ~ v.number }}">
                                 {% if v.audio_count > 0 %}
                                     <span class="book-audio" title="{{ v.audio_count }} nagrań audio">
-                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a9 9 0 0 1 0 14"/></svg>
                                     </span>
                                 {% endif %}
                                 <span class="book-band"></span>
-                                {% set _yrs = v.year_from ? (v.year_to and v.year_to != v.year_from ? v.year_from ~ '–' ~ v.year_to : v.year_from) : null %}
                                 <span class="book-plate">
                                     <span class="book-vol-name">Dzieła zebrane</span>
-                                    {% if _yrs %}<span class="book-vol-years">{{ _yrs }}</span>{% endif %}
+                                    {% if v.year_from %}<span class="book-vol-years"><span class="yr">{{ v.year_from }}</span>{% if v.year_to and v.year_to != v.year_from %}<span class="yr-sep">–</span><span class="yr">{{ v.year_to }}</span>{% endif %}</span>{% endif %}
                                 </span>
-                                <span class="book-num">{{ v.number ? 'Tom ' ~ v.number : '—' }}</span>
+                                <span class="book-num">{% if v.number %}<span class="tom-word">Tom </span>{{ v.number }}{% else %}—{% endif %}</span>
                             </a>
                         {% endfor %}
                     </div>
                     <div class="shelf-plank"></div>
                 </div>
             {% endfor %}
+            </div>
         {% endif %}
     </div>
 </div>

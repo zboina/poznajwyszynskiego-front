@@ -1,0 +1,119 @@
+{#
+  Jedyne źródło wyglądu treści pojedynczego dokumentu.
+
+  HTML tej treści produkuje App\Service\DocumentReader (akapity, [s. N], przypisy,
+  <mark class="rag-hl"> dla cytatu asystenta). Każdy widok czytania nakłada klasę
+  .pw-doc na kontener z tą treścią i dołącza ten arkusz — dzięki temu Biblioteka,
+  wyszukiwarka i asystent AI czytają dokument dokładnie tak samo.
+
+  Sterowanie z panelu ustawień (partials/_reader_tools.html.twig):
+    --rd-font, --rd-size          — czcionka i rozmiar
+    [data-reader-root][data-bg]   — paleta tekstu (zmienne --pwd-*)
+
+  Widok może dostroić:
+    --pwd-measure  — szerokość kolumny tekstu (domyślnie 46rem; `none` = bez limitu)
+#}
+<style>
+    .pw-doc {
+        font-family: var(--rd-font, 'Lora', Georgia, serif);
+        font-size: var(--rd-size, 1.16rem);
+        line-height: 1.95;
+        color: var(--pwd-ink, #2c2214);
+        max-width: var(--pwd-measure, 46rem);
+        margin: 0 auto;
+    }
+    .pw-doc p { margin: 0 0 1.15em; text-indent: 1.6em; text-align: justify; }
+    .pw-doc p:first-of-type { text-indent: 0; }
+    .pw-doc p:first-of-type::first-letter {
+        font-family: 'Playfair Display', serif; font-size: 3.2em; line-height: .82;
+        float: left; margin: .06em .12em 0 0; color: var(--pwd-accent, #7A2F37);
+    }
+    .pw-doc h2, .pw-doc h3 { color: var(--pwd-accent, #7A2F37); margin: 1.5em 0 .5em; text-indent: 0; }
+
+    /* Znaczniki stron wydania drukowanego. text-indent: 0 jest tu konieczne —
+       wcięcie akapitu dziedziczy się do pudełek inline-block i wypycha ich treść. */
+    .pw-doc .page-marker {
+        display: inline-block; text-indent: 0;
+        font-family: 'Inter', sans-serif; font-size: .7em; font-weight: 600;
+        color: var(--pwd-accent, #7A2F37);
+        background: var(--pwd-marker-bg, #f5ecd9);
+        border: 1px solid var(--pwd-marker-edge, #c8b78d);
+        border-radius: 3px; padding: 0 .35em; margin: 0 .25em;
+        white-space: nowrap; vertical-align: baseline; line-height: 1.2; cursor: help;
+        scroll-margin-top: 90px;
+    }
+    .pw-doc .page-marker:hover { background: var(--pwd-marker-bg-hover, #ede0bb); }
+    /* Wejście z linku #strona-N — mignięcie, żeby oko trafiło we właściwe miejsce. */
+    .pw-doc .page-marker:target { animation: pwdMarkerPulse 2.2s ease-out; }
+    @keyframes pwdMarkerPulse {
+        0%, 55% { box-shadow: 0 0 0 4px rgba(114,47,55,.35); }
+        100%    { box-shadow: 0 0 0 0 rgba(114,47,55,0); }
+    }
+
+    /* Odnośnik przypisu — pigułka z cyfrą i dymkiem treści przypisu. */
+    .pw-doc .footnote-ref { position: relative; }
+    .pw-doc .footnote-ref a {
+        display: inline-flex; align-items: center; justify-content: center;
+        min-width: 1.3em; height: 1.3em; padding: 0 .24em; text-indent: 0;
+        font-family: 'Inter', sans-serif; font-size: .62em; font-weight: 700; line-height: 1;
+        vertical-align: super; text-decoration: none;
+        color: var(--pwd-accent, #7A2F37); background: var(--pwd-ref-bg, rgba(122,47,55,.10));
+        border-radius: 3px; transition: background .15s, color .15s;
+    }
+    .pw-doc .footnote-ref a:hover { background: var(--pwd-accent, #7A2F37); color: var(--pwd-ref-ink-hover, #fff8e6); }
+    .pw-doc .footnote-ref a[data-tooltip] { cursor: help; }
+    .pw-doc .footnote-ref a[data-tooltip]::after {
+        content: attr(data-tooltip);
+        position: absolute; bottom: 130%; left: 50%; transform: translateX(-50%);
+        width: max-content; max-width: min(350px, 80vw);
+        padding: .5em .75em; border-radius: 6px;
+        background: #2d2419; color: #f3e7cd; border: 1px solid rgba(201,162,39,.35);
+        font-family: 'Inter', sans-serif; font-size: 11.5px; font-weight: 400; line-height: 1.5;
+        white-space: normal; text-align: left; text-indent: 0;
+        box-shadow: 0 6px 20px rgba(0,0,0,.35);
+        opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 200;
+    }
+    .pw-doc .footnote-ref a[data-tooltip]:hover::after { opacity: 1; }
+
+    .pw-doc .footnotes { margin-top: 2.4rem; font-size: .92rem; color: var(--pwd-muted, #4a3a22); }
+    .pw-doc .footnotes hr { border: 0; border-top: 1px solid var(--pwd-rule, rgba(150,110,50,.35)); margin-bottom: 1rem; }
+    .pw-doc .footnotes ol { padding-left: 1.4rem; }
+    .pw-doc .footnotes li { margin-bottom: .5em; text-indent: 0; text-align: left; line-height: 1.6; }
+    .pw-doc .footnotes li:target { background: var(--pwd-target, #fef9e7); border-radius: 4px; }
+    .pw-doc .footnote-back { text-decoration: none; color: var(--pwd-accent, #7A2F37); margin-left: .3em; }
+
+    /* Cytat wskazany przez asystenta AI. */
+    .pw-doc mark.rag-hl {
+        background: linear-gradient(180deg, #fff6c2 0%, #ffe98a 100%);
+        color: #2c2214; padding: .08em .05em; border-radius: 2px;
+        box-shadow: 0 0 0 1px rgba(200,167,39,.45);
+        scroll-margin-top: 90px; animation: pwdHlPulse 2.4s ease-out 1;
+    }
+    @keyframes pwdHlPulse {
+        0%   { box-shadow: 0 0 0 6px rgba(200,167,39,.45); }
+        60%  { box-shadow: 0 0 0 6px rgba(200,167,39,.18); }
+        100% { box-shadow: 0 0 0 1px rgba(200,167,39,.45); }
+    }
+
+    /* ── Palety tekstu sterowane panelem ustawień ── */
+    [data-reader-root][data-bg="biel"] { --pwd-ink: #24201a; }
+    [data-reader-root][data-bg="sepia"] { --pwd-ink: #4a3a24; }
+    [data-reader-root][data-bg="noc"] {
+        --pwd-ink: #dccdb0;
+        --pwd-accent: #e6cd78;
+        --pwd-muted: #b3a17f;
+        --pwd-rule: rgba(201,162,39,.3);
+        --pwd-marker-bg: rgba(201,162,39,.12);
+        --pwd-marker-bg-hover: rgba(201,162,39,.22);
+        --pwd-marker-edge: rgba(201,162,39,.35);
+        --pwd-ref-bg: rgba(201,162,39,.14);
+        --pwd-ref-ink-hover: #2a1a06;
+        --pwd-target: rgba(201,162,39,.16);
+    }
+
+    @media (max-width: 640px) {
+        .pw-doc { line-height: 1.85; }
+        .pw-doc p { text-align: left; }
+        .pw-doc p:first-of-type::first-letter { font-size: 2.8em; }
+    }
+</style>

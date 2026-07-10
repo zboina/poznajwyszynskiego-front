@@ -102,17 +102,7 @@
     .reader-sub { text-align: center; color: var(--lib-ink-soft); font-style: italic; margin-bottom: .2rem; }
     .reader-meta { text-align: center; color: var(--lib-ink-soft); font-size: .9rem; margin-bottom: 1.4rem; }
     .reader-orn { text-align: center; color: var(--lib-wine); font-size: 1.3rem; letter-spacing: .4em; margin: 1rem 0 1.6rem; opacity: .7; }
-    .reader-body { font-family: 'Lora', Georgia, serif; font-size: 1.16rem; line-height: 1.95; color: #2c2214; max-width: 46rem; margin: 0 auto; }
-    .reader-body p { margin: 0 0 1.15em; text-indent: 1.6em; text-align: justify; }
-    .reader-body p:first-of-type { text-indent: 0; }
-    .reader-body p:first-of-type::first-letter { font-family: 'Playfair Display', serif; font-size: 3.2em; line-height: .82; float: left; margin: .06em .12em 0 0; color: var(--lib-wine); }
-    .reader-body .page-marker { display: inline-block; color: var(--lib-wine); opacity: .6; font-size: .78em; font-style: italic; margin: 0 .2em; vertical-align: super; }
-    .reader-body .footnote-ref a { color: var(--lib-wine); text-decoration: none; font-weight: 600; }
-    .reader-body .footnotes { margin-top: 2.4rem; font-size: .92rem; color: #4a3a22; }
-    .reader-body .footnotes hr { border: 0; border-top: 1px solid rgba(150,110,50,.35); margin-bottom: 1rem; }
-    .reader-body .footnotes ol { padding-left: 1.4rem; }
-    .reader-body .footnotes li { margin-bottom: .5em; text-indent: 0; }
-    .reader-body .footnote-back { text-decoration: none; color: var(--lib-wine); }
+    {# Typografia samej treści (.pw-doc: akapity, [s. N], przypisy) — partials/_document_text.html.twig #}
 
     /* ── Nawigacja poprzedni/następny ── */
     .reader-nav { display: flex; justify-content: space-between; gap: 1rem; max-width: 46rem; margin: 2.6rem auto 0; }
@@ -140,6 +130,36 @@
     .pw-audio-thumb { position: absolute; top: 50%; left: 0; width: 16px; height: 16px; border-radius: 50%; background: #fff8e6; border: 3px solid var(--lib-gold); box-shadow: 0 1px 5px rgba(0,0,0,.5); transform: translate(-50%,-50%); pointer-events: none; }
     .pw-audio-track:hover .pw-audio-thumb, .pw-audio.pw-dragging .pw-audio-thumb { box-shadow: 0 0 0 4px rgba(201,162,39,.28), 0 1px 5px rgba(0,0,0,.5); }
     .pw-audio-track:focus-visible { outline: 2px solid var(--lib-gold-lt); outline-offset: 4px; }
+
+    /* ── Panel ustawień czytania (czcionka / rozmiar / tło / szerokość) ── */
+    #readerRoot { max-width: 940px; }
+    #readerRoot[data-width="szeroka"] { max-width: 1120px; }
+    #readerRoot[data-width="pelna"]   { max-width: 1320px; }
+    #readerRoot[data-width="szeroka"] { --pwd-measure: 62rem; }
+    #readerRoot[data-width="pelna"]   { --pwd-measure: 100%; }
+    /* Szerokość steruje też marginesami tekstu — kluczowe na telefonie, gdzie
+       max-width jest większe od ekranu i sam nie daje żadnej zmiany. */
+    #readerRoot[data-width="szeroka"] .reader { padding-left: clamp(.85rem, 3vw, 2.4rem); padding-right: clamp(.85rem, 3vw, 2.4rem); }
+    #readerRoot[data-width="pelna"]   .reader { padding-left: clamp(.4rem, 2vw, 1.4rem);  padding-right: clamp(.4rem, 2vw, 1.4rem); }
+
+    .reader-topbar { display: flex; align-items: center; justify-content: space-between; gap: .8rem; flex-wrap: wrap; }
+    {# Sam panel ustawień (przycisk „Aa", dolny pasek, .rt-*) mieszka w partials/_reader_tools.html.twig. #}
+
+    /* Tła i „rama" czytelni (data-bg na #readerRoot). Kolory samego tekstu ustawiają
+       zmienne --pwd-* z partials/_document_text.html.twig — tu tylko otoczenie. */
+    #readerRoot[data-bg="biel"] .parchment { background: #fdfdfb; border-color: #e7e2d6; }
+    #readerRoot[data-bg="sepia"] .parchment { background: radial-gradient(140% 120% at 50% 0, #f6ecd2, #efe3c4 70%, #e6d7b0 100%); }
+
+    #readerRoot[data-bg="noc"] .parchment { background: linear-gradient(180deg, #241d16, #1b140d);
+        border-color: rgba(201,162,39,.22); box-shadow: inset 0 0 0 6px rgba(0,0,0,.22), 0 18px 44px rgba(0,0,0,.55); }
+    #readerRoot[data-bg="noc"] .parchment::before { border-color: rgba(201,162,39,.16); }
+    #readerRoot[data-bg="noc"] .reader-title { color: #f2e4c4; }
+    #readerRoot[data-bg="noc"] .reader-kicker { color: #e6cd78; }
+    #readerRoot[data-bg="noc"] .reader-sub, #readerRoot[data-bg="noc"] .reader-meta { color: #b3a17f; }
+    #readerRoot[data-bg="noc"] .reader-orn { color: #b98f4a; }
+    #readerRoot[data-bg="noc"] .rnav { color: #dccdb0; background: rgba(255,255,255,.04); border-color: rgba(201,162,39,.3); }
+    #readerRoot[data-bg="noc"] .rnav:hover { background: rgba(201,162,39,.12); border-color: var(--lib-gold); }
+    #readerRoot[data-bg="noc"] .rnav-label { color: #e6cd78; }
 
     /* ── Strona „zamknięta" (nie-VIP) ── */
     .lib-locked { max-width: 620px; margin: 0 auto; text-align: center; padding: 3rem 1.5rem; }
@@ -169,13 +189,43 @@
     body.lib-shell .app-navbar .admin-link:hover { color: #fff8e6; background: rgba(201,162,39,.12); border-color: rgba(201,162,39,.4); }
     body.lib-shell .app-navbar .btn-ghost-light { color: rgba(240,226,192,.72); }
     body.lib-shell .app-navbar .btn-ghost-light:hover { color: #fff8e6; }
+    /* Tytuł mobilny „Poznaj Wyszyńskiego" — zawsze jasny na drewnianym pasku. */
+    body.lib-shell .nav-mobile-title { color: #f6ead0 !important; }
 
     /* Widok tomu i czytania: menu przypięte (tło i tak jest już nieruchome globalnie). */
     body.lib-fixed .app-navbar { position: fixed; top: 0; left: 0; right: 0; z-index: 250; }
     body.lib-fixed .biblioteka { padding-top: 56px; }
 
     @media (max-width: 640px) {
-        .book { width: 54px; height: 200px; }
+        .lib-wrap { padding: 1.6rem .9rem 3rem; }
+
+        /* Telefon: WSZYSTKIE tomy w jednym wspólnym regale. Serwer dzieli je na
+           kilka <div.shelf>, ale tu je „rozpuszczamy" (display:contents), więc
+           książki zawijają się równo i są wyśrodkowane — koniec absurdu 5/1/5.
+           Każda książka stoi na własnym segmencie deski (::before), segmenty
+           stykają się bokami → wrażenie ciągłej półki, bez „wiszących" książek. */
+        .shelves { display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-end;
+            gap: 26px 6px; }
+        .shelf, .shelf-books { display: contents; }
+        .shelf-plank { display: none; }
+
+        .book { width: 46px; height: 198px; }
+        .book::before { content: ""; position: absolute; left: -4px; right: -4px; bottom: -3px; height: 12px;
+            background: linear-gradient(180deg, #6b4523, #3c2413 60%, #24140a); border-radius: 2px;
+            box-shadow: 0 8px 14px rgba(0,0,0,.5), inset 0 2px 0 rgba(255,220,150,.12); }
+        /* Napis serii PIONOWO wzdłuż grzbietu (obrót 90° w lewo — czyta się od dołu). */
+        .book-plate { flex: 1 1 auto; justify-content: center; gap: 7px; }
+        .book-vol-name { writing-mode: vertical-rl; transform: rotate(180deg); text-orientation: mixed;
+            white-space: nowrap; font-size: .62rem; letter-spacing: .03em; line-height: 1;
+            max-height: 142px; overflow: hidden; margin: 2px 0; }
+        /* Rok podwójny → 2 linijki (bez myślnika); pojedynczy → 1 linijka. */
+        .book-vol-years { display: flex; flex-direction: column; align-items: center; line-height: 1.05; font-size: .76rem; }
+        .book-vol-years .yr-sep { display: none; }
+        /* Numer tomu — same cyfry (bez słowa „Tom"). */
+        .book-num .tom-word { display: none; }
+
+        .reader { padding: 2rem 1.1rem 2.4rem; }
         .reader-nav { flex-direction: column; }
+        .lib-audio { padding: .8rem .85rem .9rem; }
     }
 </style>

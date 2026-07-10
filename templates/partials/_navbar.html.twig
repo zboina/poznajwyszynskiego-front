@@ -97,10 +97,47 @@
     .layout-v6 .app-navbar .btn-ghost-light { color: #999; }
     .layout-v6 .app-navbar .btn-ghost-light:hover { color: #722F37; }
 
-    @media (max-width: 760px) { .nav-links-c .t { display: none; } }
-    @media (max-width: 640px) {
+    /* ── Menu responsywne: hamburger na wąskich ekranach ── */
+    .nav-menu { display: flex; align-items: center; flex: 1 1 auto; gap: .5rem; }
+    .nav-menu .nav-links-c { margin-inline: auto; }
+    /* Złoty przycisk — mocny kontrast na KAŻDYM motywie (ciemnym i jasnym). */
+    .nav-toggle { display: none; align-items: center; justify-content: center; width: 46px; height: 40px;
+        padding: 0; color: #2a1a06; background: #C9A227; border: 1px solid rgba(0,0,0,.2);
+        border-radius: 8px; cursor: pointer; box-shadow: 0 1px 5px rgba(0,0,0,.35); transition: background .15s; }
+    .nav-toggle:hover { background: #dab63c; }
+    .nav-mobile-title { display: none; }
+
+    @media (max-width: 860px) {
+        /* Hamburger po LEWEJ, zgrupowany z logo; menu rozwija się pod paskiem. */
+        .app-navbar .container-xl { flex-wrap: wrap; justify-content: flex-start; gap: .55rem .7rem; }
+        /* Układ mobilny paska: ☰ lewo · „Poznaj Wyszyńskiego" środek · logo prawo. */
+        .nav-toggle { display: inline-flex; order: 0; }
+        .nav-mobile-title { display: block; order: 1; flex: 1 1 auto; min-width: 0; text-align: center;
+            color: #fff; font-family: 'Playfair Display', Georgia, serif; font-weight: 700;
+            font-size: clamp(.95rem, 4.2vw, 1.15rem); white-space: nowrap; overflow: hidden;
+            text-overflow: ellipsis; letter-spacing: .01em; text-shadow: 0 1px 2px rgba(0,0,0,.4); }
+        .layout-v2 .nav-mobile-title, .layout-v6 .nav-mobile-title { color: #1a1a1a; text-shadow: none; }
+        .brand-mark { order: 2; margin: 0; }
         .brand-mark span { display: none; }
-        .user-pill { font-size: .7rem; }
+        /* Zwinięte menu = display:none → NIE zajmuje wysokości, więc rząd
+           ☰/tytuł/logo jest wyśrodkowany w pionie belki. */
+        .nav-menu { order: 3; flex-basis: 100%; display: none; flex-direction: column; align-items: stretch;
+            gap: .3rem; margin-top: .5rem; padding-top: .55rem; border-top: 1px solid rgba(255,255,255,.16); }
+        .nav-menu.open { display: flex; max-height: 78vh; overflow-y: auto; }
+        .layout-v2 .nav-menu, .layout-v6 .nav-menu { border-top-color: rgba(0,0,0,.1); }
+        .nav-menu .nav-links-c { flex-direction: column; align-items: stretch; margin: 0; gap: .2rem; }
+        .nav-menu .nav-links-c .t { display: inline !important; }
+        /* Każda pozycja jako wyraźny, kontrastowy wiersz — czytelne na ciemnym pasku. */
+        .app-navbar .pwnav-link { padding: .68rem .8rem; font-size: .96rem; border-radius: 8px;
+            background: rgba(255,255,255,.06); }
+        .app-navbar .pwnav-link.active { background: rgba(255,255,255,.2); }
+        .layout-v2 .app-navbar .pwnav-link, .layout-v6 .app-navbar .pwnav-link { background: rgba(0,0,0,.04); }
+        .nav-actions { flex-direction: column; align-items: stretch; gap: .4rem; width: 100%; }
+        .nav-actions > * { width: 100%; justify-content: center; }
+        .user-pill { justify-content: center; padding: .5rem .7rem; }
+    }
+    @media (max-width: 640px) {
+        .user-pill { font-size: .78rem; }
     }
 </style>
 
@@ -110,6 +147,11 @@
             <img src="{{ asset('logo_PW_bez_obramowania.png') }}" alt="" width="30" height="30" class="rounded-circle">
             <span>Dzieła Zebrane</span>
         </a>
+        <span class="nav-mobile-title" aria-hidden="true">Poznaj Wyszyńskiego</span>
+        <button type="button" class="nav-toggle" id="appNavToggle" aria-label="Menu" aria-expanded="false" aria-controls="appNavMenu">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <div class="nav-menu" id="appNavMenu">
         <div class="nav-links-c">
             {# Bez logowania dostępna jest tylko wyszukiwarka — pojedynczy link nie ma
                sensu. Przełącznik Wyszukiwarka/Asystent pokazujemy dopiero zalogowanym. #}
@@ -128,7 +170,7 @@
             </a>
             {% endif %}
         </div>
-        <div class="d-flex align-items-center gap-2">
+        <div class="nav-actions d-flex align-items-center gap-2">
             {% if app.user %}
                 <a href="{{ path('app_account') }}" class="user-pill" style="text-decoration:none;color:inherit;" title="Moje konto">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" style="opacity:.6;"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><circle cx="12" cy="7" r="4"/><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"/></svg>
@@ -184,6 +226,7 @@
                 {% endif %}
             {% endif %}
         </div>
+        </div>
     </div>
 </nav>
 
@@ -199,5 +242,24 @@
         b.classList.remove('layout-v2', 'layout-v3', 'layout-v4', 'layout-v5', 'layout-v6');
         if (v !== 'v1') b.classList.add('layout-' + v);
     } catch (e) {}
+})();
+
+// Hamburger — zwijane menu na mobilnych
+(function () {
+    var t = document.getElementById('appNavToggle');
+    var m = document.getElementById('appNavMenu');
+    if (!t || !m) return;
+    t.addEventListener('click', function () {
+        var open = m.classList.toggle('open');
+        t.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    m.addEventListener('click', function (e) {
+        if (e.target.closest('a')) { m.classList.remove('open'); t.setAttribute('aria-expanded', 'false'); }
+    });
+    window.addEventListener('resize', function () {
+        if (window.innerWidth > 860 && m.classList.contains('open')) {
+            m.classList.remove('open'); t.setAttribute('aria-expanded', 'false');
+        }
+    });
 })();
 </script>

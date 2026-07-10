@@ -1,0 +1,201 @@
+{#
+  Uniwersalny panel ustawień czytania (czcionka, rozmiar, tło, szerokość).
+
+  Użycie w dowolnym widoku z tekstem:
+    1. na kontenerze tekstu dodaj atrybut  data-reader-root
+    2. wstaw  {{ include('partials/_reader_tools.html.twig') }}
+    3. w CSS widoku użyj tego, co panel ustawia:
+         --rd-font, --rd-size            (zmienne na kontenerze)
+         [data-reader-root][data-bg="biel|sepia|noc"]      (tło tekstu)
+         [data-reader-root][data-width="szeroka|pelna"]    (szerokość kolumny)
+
+  Parametry (opcjonalne):
+    show_width   — pokaż grupę „Szerokość" (domyślnie true)
+    default_size — rozmiar tekstu widoku w rem, od którego startuje A+/A− (domyślnie 1.16)
+
+  Dopóki czytelnik niczego nie wybierze, panel NIE ustawia --rd-font ani --rd-size —
+  każdy widok zachowuje swoją własną typografię. Wybór zapisuje się w localStorage
+  (pw_rd_*), więc wędruje za czytelnikiem między czytelnią, wyszukiwarką i RAG-iem.
+#}
+{% set show_width = show_width ?? true %}
+{% set default_size = default_size ?? 1.16 %}
+
+<button type="button" class="rt-toggle" id="rtToggle" aria-expanded="false" aria-controls="readerTools"
+        title="Ustawienia czytania" aria-label="Ustawienia czytania">
+    <span class="rt-aa">Aa</span>
+</button>
+
+<div class="reader-tools" id="readerTools" role="dialog" aria-label="Ustawienia czytania" data-default-size="{{ default_size }}">
+    <div class="rt-group rt-group-font">
+        <span class="rt-label">Czcionka</span>
+        <button type="button" class="rt-btn rt-font-cycle" id="rtFontCycle" aria-label="Zmień czcionkę" title="Zmień czcionkę">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg>
+            <span class="rt-font-name">Domyślna</span>
+        </button>
+    </div>
+    <div class="rt-group">
+        <span class="rt-label">Rozmiar</span>
+        <button type="button" class="rt-btn rt-size" data-size="-1" aria-label="Mniejsza czcionka">A−</button>
+        <button type="button" class="rt-btn rt-size" data-size="1" aria-label="Większa czcionka">A+</button>
+    </div>
+    <div class="rt-group">
+        <span class="rt-label">Tło</span>
+        <button type="button" class="rt-swatch sw-pergamin" data-bg="pergamin" title="Pergamin" aria-label="Tło pergamin"></button>
+        <button type="button" class="rt-swatch sw-biel" data-bg="biel" title="Biel" aria-label="Tło białe"></button>
+        <button type="button" class="rt-swatch sw-sepia" data-bg="sepia" title="Sepia" aria-label="Tło sepia"></button>
+        <button type="button" class="rt-swatch sw-noc" data-bg="noc" title="Ciemne" aria-label="Tło ciemne"></button>
+    </div>
+    {% if show_width %}
+        <div class="rt-group">
+            <span class="rt-label">Szerokość</span>
+            <button type="button" class="rt-btn" data-width="normalna">Normalna</button>
+            <button type="button" class="rt-btn" data-width="szeroka">Szeroka</button>
+            <button type="button" class="rt-btn" data-width="pelna">Pełna</button>
+        </div>
+    {% endif %}
+    <button type="button" class="rt-close" id="rtClose" aria-label="Zamknij ustawienia">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+</div>
+
+<style>
+    /* Kolory z motywu biblioteki, z fallbackiem dla widoków bez tego motywu. */
+    .rt-toggle { position: fixed; right: 16px; bottom: 16px; z-index: 260;
+        display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+        width: 46px; height: 46px; padding: 0; color: #2a1a06;
+        background: linear-gradient(180deg, var(--lib-gold-lt, #E3C561), var(--lib-gold, #C9A227)); border: 0;
+        border-radius: 50%; box-shadow: 0 6px 18px rgba(0,0,0,.4); transition: filter .15s; }
+    .rt-toggle:hover { filter: brightness(1.06); }
+    .rt-toggle .rt-aa { font-family: 'Playfair Display', serif; font-weight: 800; font-size: 1.2rem; line-height: 1; }
+    /* Otwarty panel chowa przycisk — niezależnie od miejsca, w którym wstawiono partial. */
+    body.rt-open .rt-toggle { display: none; }
+
+    /* Panel przypięty do dołu ekranu — wysuwany dolny pasek. */
+    .reader-tools { position: fixed; left: 0; right: 0; bottom: 0; z-index: 300;
+        margin: 0; padding: .9rem 2.6rem calc(.9rem + env(safe-area-inset-bottom, 0px));
+        border-radius: 16px 16px 0 0;
+        background: linear-gradient(180deg, rgba(58,36,20,.98), rgba(24,15,8,.99));
+        border-top: 1px solid rgba(201,162,39,.35); box-shadow: 0 -12px 32px rgba(0,0,0,.5);
+        display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: .7rem 1.5rem;
+        transform: translateY(112%); transition: transform .28s cubic-bezier(.4,0,.2,1); }
+    .reader-tools.rt-shown { transform: translateY(0); }
+    .rt-close { position: absolute; top: 8px; right: 10px; width: 30px; height: 30px; padding: 0;
+        display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+        color: #e9d9b3; background: rgba(255,255,255,.06); border: 1px solid rgba(201,162,39,.28); border-radius: 8px; }
+    .rt-close:hover { background: rgba(201,162,39,.16); color: #fff8e6; }
+    .rt-font-cycle { gap: .45rem; }
+    .rt-font-name { font-size: .82rem; font-weight: 600; }
+    .rt-group { display: inline-flex; align-items: center; gap: .4rem; flex-wrap: wrap; }
+    .rt-label { font-family: 'Inter', sans-serif; font-size: .62rem; font-weight: 700; text-transform: uppercase;
+        letter-spacing: .1em; color: var(--lib-gold-lt, #E3C561); opacity: .85; margin-right: .15rem; }
+    .rt-btn { cursor: pointer; font-family: 'Inter', sans-serif; font-size: .8rem; font-weight: 600;
+        color: #e9d9b3; background: rgba(255,255,255,.06); border: 1px solid rgba(201,162,39,.28);
+        padding: .34rem .62rem; border-radius: 8px; transition: background .15s, color .15s, border-color .15s;
+        display: inline-flex; align-items: center; }
+    .rt-btn:hover { background: rgba(201,162,39,.16); color: #fff8e6; }
+    .rt-btn.active { background: var(--lib-gold, #C9A227); border-color: var(--lib-gold, #C9A227); color: #2a1a06; }
+    .rt-size { min-width: 2.3rem; justify-content: center; font-weight: 700; }
+    .rt-swatch { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; padding: 0;
+        border: 2px solid rgba(255,255,255,.28); transition: transform .12s, border-color .12s, box-shadow .12s; }
+    .rt-swatch:hover { transform: scale(1.08); }
+    .rt-swatch.active { border-color: var(--lib-gold-lt, #E3C561); box-shadow: 0 0 0 3px rgba(201,162,39,.32); }
+    .sw-pergamin { background: radial-gradient(circle at 35% 30%, #f7efd8, #e2d3ac); }
+    .sw-biel { background: #fdfdfb; }
+    .sw-sepia { background: #f2e5c8; }
+    .sw-noc { background: #241d16; }
+
+    @media (max-width: 640px) {
+        /* Grupy w osobnych rzędach; miejsce na „×" u góry. */
+        .reader-tools { gap: .55rem .8rem; padding: 2.4rem .9rem calc(.9rem + env(safe-area-inset-bottom, 0px)); }
+        .rt-group { width: 100%; }
+        .rt-toggle { right: 12px; bottom: 12px; }
+    }
+</style>
+
+<script>
+// Ustawienia czytania — działają na dowolnym elemencie z atrybutem data-reader-root.
+(function () {
+    var root = document.querySelector('[data-reader-root]');
+    var tools = document.getElementById('readerTools');
+    if (!root || !tools) return;
+    // Strażnik musi siedzieć na węźle, nie na window: Turbo Drive podmienia <body>
+    // przy nawigacji, ale window zostaje. Flaga na window zablokowałaby podpięcie
+    // listenerów do świeżych węzłów i panel przestałby się otwierać aż do F5.
+    // Właściwość, nie data-atrybut — atrybut trafiłby do snapshotu Turbo i wróciłby
+    // razem z nim przy nawigacji „wstecz", znowu blokując init.
+    if (tools.__rtInit) return;
+    tools.__rtInit = true;
+
+    var toggle = document.getElementById('rtToggle');
+    var closeBtn = document.getElementById('rtClose');
+    var fontBtn = document.getElementById('rtFontCycle');
+    var fontName = fontBtn ? fontBtn.querySelector('.rt-font-name') : null;
+    var LS = { font: 'pw_rd_font', size: 'pw_rd_size', bg: 'pw_rd_bg', width: 'pw_rd_width' };
+    // css: '' → zdejmij --rd-font, czyli zostaw typografię widoku.
+    var FONTS = [
+        { css: '', name: 'Domyślna' },
+        { css: "'Lora', Georgia, serif", name: 'Lora' },
+        { css: "'EB Garamond', Georgia, serif", name: 'Garamond' },
+        { css: "'Merriweather', Georgia, serif", name: 'Merriweather' },
+        { css: "'Source Sans 3', system-ui, sans-serif", name: 'Bezszeryfowa' }
+    ];
+    var DEF_SIZE = parseFloat(tools && tools.getAttribute('data-default-size')) || 1.16;
+    var MIN = 0.95, MAX = 1.62, STEP = 0.07;
+    var size = DEF_SIZE, fontIdx = 0;
+
+    function gStr(k, d) { try { var v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } }
+    function gNum(k, d) { try { var v = parseFloat(localStorage.getItem(k)); return isNaN(v) ? d : v; } catch (e) { return d; } }
+    function set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+    function mark(attr, val) {
+        if (!tools) return;
+        tools.querySelectorAll('[data-' + attr + ']').forEach(function (b) {
+            b.classList.toggle('active', b.getAttribute('data-' + attr) === val);
+        });
+    }
+
+    function applyFont(i) {
+        fontIdx = (i % FONTS.length + FONTS.length) % FONTS.length;
+        var f = FONTS[fontIdx];
+        if (f.css) root.style.setProperty('--rd-font', f.css); else root.style.removeProperty('--rd-font');
+        if (fontName) { fontName.textContent = f.name; fontName.style.fontFamily = f.css || ''; }
+    }
+    function applySize(s) { size = Math.min(MAX, Math.max(MIN, s)); root.style.setProperty('--rd-size', size.toFixed(3) + 'rem'); }
+    function applyBg(b) { if (b === 'pergamin') root.removeAttribute('data-bg'); else root.setAttribute('data-bg', b); mark('bg', b); }
+    function applyWidth(w) { if (w === 'normalna') root.removeAttribute('data-width'); else root.setAttribute('data-width', w); mark('width', w); }
+
+    var savedFont = gStr(LS.font, ''), idx = 0;
+    for (var i = 0; i < FONTS.length; i++) { if (FONTS[i].css === savedFont) { idx = i; break; } }
+    applyFont(idx);
+    // Rozmiar ustawiamy tylko wtedy, gdy czytelnik go kiedyś zmienił — inaczej
+    // każdy widok zostaje przy swoim (--rd-size pozostaje nieustawione).
+    var savedSize = gNum(LS.size, 0);
+    if (savedSize) applySize(savedSize); else size = DEF_SIZE;
+    applyBg(gStr(LS.bg, 'pergamin'));
+    applyWidth(gStr(LS.width, 'normalna'));
+
+    function open() {
+        tools.classList.add('rt-shown'); root.classList.add('rt-open'); document.body.classList.add('rt-open');
+        root.style.paddingBottom = (tools.offsetHeight + 24) + 'px';
+        if (toggle) toggle.setAttribute('aria-expanded', 'true');
+    }
+    function close() {
+        tools.classList.remove('rt-shown'); root.classList.remove('rt-open'); document.body.classList.remove('rt-open');
+        root.style.paddingBottom = '';
+        if (toggle) toggle.setAttribute('aria-expanded', 'false');
+    }
+
+    // Nie zapisuj do snapshotu Turbo strony z otwartym panelem — po powrocie „wstecz"
+    // wyglądałby na otwarty, a przycisk byłby schowany.
+    document.addEventListener('turbo:before-cache', close, { once: true });
+
+    if (toggle) toggle.addEventListener('click', function () { tools.classList.contains('rt-shown') ? close() : open(); });
+    if (closeBtn) closeBtn.addEventListener('click', close);
+    if (fontBtn) fontBtn.addEventListener('click', function () { applyFont(fontIdx + 1); set(LS.font, FONTS[fontIdx].css); });
+    if (tools) tools.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) return;
+        if (b.hasAttribute('data-size')) { applySize(size + parseFloat(b.getAttribute('data-size')) * STEP); set(LS.size, size); }
+        else if (b.hasAttribute('data-bg')) { var bg = b.getAttribute('data-bg'); applyBg(bg); set(LS.bg, bg); }
+        else if (b.hasAttribute('data-width')) { var w = b.getAttribute('data-width'); applyWidth(w); set(LS.width, w); }
+    });
+})();
+</script>

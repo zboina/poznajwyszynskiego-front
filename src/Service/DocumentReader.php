@@ -5,34 +5,54 @@ namespace App\Service;
 use Doctrine\DBAL\Connection;
 
 /**
- * Renderowanie treści dokumentu do czytania: akapity, znaczniki stron [s. N]
- * i przypisy — używane przez widok Biblioteki (VIP). Logika akapitów/stron/
- * przypisów jest odpowiednikiem tej z SearchController; docelowo warto zunifikować
- * oba miejsca na tym serwisie (na razie kopia, by nie ruszać krytycznej ścieżki
- * wyszukiwarki). Wersja czytelni nie zawiera podświetleń wyszukiwania.
+ * Jedyne źródło HTML-a treści dokumentu: akapity, znaczniki stron [s. N],
+ * przypisy i (opcjonalnie) podświetlenie cytowanego fragmentu z asystenta AI.
+ *
+ * Używają go wszystkie widoki czytania pojedynczego dokumentu: Biblioteka (VIP),
+ * wyszukiwarka (podgląd i pełny tekst), modal asystenta AI oraz eksport PDF.
+ * Wygląd tego HTML-a definiuje jeden arkusz: templates/partials/_document_text.html.twig.
  */
 class DocumentReader
 {
     private const PAGE_MARKER_OPEN = "\u{E000}PB:";
     private const PAGE_MARKER_CLOSE = "\u{E001}";
+    private const HL_OPEN = "\u{E002}";
+    private const HL_CLOSE = "\u{E003}";
 
     public function __construct(
         private Connection $connection,
         private string $audioDir,
     ) {}
 
-    /** Treść dokumentu jako HTML: akapity + znaczniki stron wydania + przypisy. */
-    public function render(int $documentId): string
+    /**
+     * Treść dokumentu jako HTML: akapity + znaczniki stron wydania + przypisy.
+     *
+     * @param string|null $frag Id fragmentu (document_chunks) do podświetlenia jako cytat.
+     */
+    public function render(int $documentId, ?string $frag = null): string
     {
         $raw = (string) ($this->connection->executeQuery(
             'SELECT content FROM documents WHERE id = :id',
             ['id' => $documentId]
         )->fetchOne() ?: '');
+
+        return $this->renderHtml($raw, $documentId, $frag);
+    }
+
+    /**
+     * Wariant dla wywołań, które treść mają już wczytaną (kontrola dostępu,
+     * publishedJoin, eksport PDF) — żeby nie odpytywać bazy drugi raz.
+     *
+     * @param string|null $frag Id fragmentu (document_chunks) do podświetlenia jako cytat.
+     */
+    public function renderHtml(string $raw, int $documentId, ?string $frag = null): string
+    {
         if ($raw === '') {
             return '';
         }
 
-        $html = $this->formatContent($raw, $this->pageBreaks($documentId));
+        $html = $this->formatContent($raw, $this->pageBreaks($documentId), $this->chunkHighlight($frag, $documentId, $raw));
+
         return $this->applyFootnotes($html, $this->footnotes($documentId));
     }
 
@@ -77,14 +97,18 @@ class DocumentReader
     /**
      * @param array<int, array{paragraph?:int,char_in_para?:int,page?:int}>|null $pageBreaks
      */
-    private function formatContent(string $text, ?array $pageBreaks): string
+    /**
+     * @param array<int, array{paragraph?:int,char_in_para?:int,page?:int}>|null $pageBreaks
+     * @param array{start:int,end:int}|null $highlight Zakres bajtowy w $text do opakowania jako cytat.
+     */
+    private function formatContent(string $text, ?array $pageBreaks = null, ?array $highlight = null): string
     {
         if (str_contains($text, '<p>') || str_contains($text, '<div>')) {
             return $text;
         }
 
-        if (!empty($pageBreaks)) {
-            $text = $this->injectSentinels($text, $pageBreaks);
+        if (!empty($pageBreaks) || $highlight !== null) {
+            $text = $this->injectSentinels($text, $pageBreaks ?? [], $highlight);
         }
 
         $text = htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
@@ -105,18 +129,29 @@ class DocumentReader
             ) ?? $html;
         }
 
+        if ($highlight !== null) {
+            $html = str_replace(
+                [self::HL_OPEN, self::HL_CLOSE],
+                ['<mark class="rag-hl">', '</mark>'],
+                $html
+            );
+        }
+
         return $html;
     }
 
     /**
-     * Wstawia znaczniki stron (sentinel PUA) w tekst po bezwzględnych offsetach
-     * bajtowych, wewnątrz właściwych akapitów.
+     * Wstawia znaczniki stron i (opcjonalnie) podświetlenia (sentinele PUA) w tekst
+     * po bezwzględnych offsetach bajtowych, w jednym przebiegu — dzięki czemu jedne
+     * nie przesuwają drugich. Podświetlenie jest cięte na granicach akapitów, więc
+     * żaden <mark> nie przechodzi przez </p>.
      *
      * @param array<int, array{paragraph?:int,char_in_para?:int,page?:int}> $pageBreaks
+     * @param array{start:int,end:int}|null $highlight
      */
-    private function injectSentinels(string $content, array $pageBreaks): string
+    private function injectSentinels(string $content, array $pageBreaks, ?array $highlight = null): string
     {
-        $ins = []; // [offset, text]
+        $ins = []; // [offset, order, text] — order rozstrzyga remisy na tym samym offsecie
 
         $byPara = [];
         foreach ($pageBreaks as $b) {
@@ -134,7 +169,7 @@ class DocumentReader
                     if (!$isSeparator && isset($byPara[$paraIdx])) {
                         foreach ($byPara[$paraIdx] as $b) {
                             $off = max(0, min(strlen($segment), (int) ($b['char_in_para'] ?? 0)));
-                            $ins[] = [$abs + $off, self::PAGE_MARKER_OPEN . (int) $b['page'] . self::PAGE_MARKER_CLOSE];
+                            $ins[] = [$abs + $off, 1, self::PAGE_MARKER_OPEN . (int) $b['page'] . self::PAGE_MARKER_CLOSE];
                         }
                     }
                     $abs += strlen($segment);
@@ -145,16 +180,76 @@ class DocumentReader
             }
         }
 
+        if ($highlight !== null) {
+            $s = max(0, (int) $highlight['start']);
+            $e = min(strlen($content), (int) $highlight['end']);
+            if ($e > $s) {
+                $ins[] = [$s, 0, self::HL_OPEN];   // order 0 → na lewo od znacznika strony na tym samym offsecie
+                $ins[] = [$e, 2, self::HL_CLOSE];  // order 2 → na prawo
+                if (preg_match_all('/\n{2,}/', $content, $m, PREG_OFFSET_CAPTURE)) {
+                    foreach ($m[0] as [$sepStr, $sepOff]) {
+                        $sepEnd = $sepOff + strlen($sepStr);
+                        if ($sepOff > $s && $sepEnd < $e) {
+                            $ins[] = [$sepOff, 2, self::HL_CLOSE]; // zamknij przed pustą linią
+                            $ins[] = [$sepEnd, 0, self::HL_OPEN];  // otwórz ponownie w następnym akapicie
+                        }
+                    }
+                }
+            }
+        }
+
         if (!$ins) {
             return $content;
         }
 
-        usort($ins, fn($a, $b) => $a[0] <=> $b[0]);
+        usort($ins, fn($a, $b) => ($a[0] <=> $b[0]) ?: ($a[1] <=> $b[1]));
         for ($i = count($ins) - 1; $i >= 0; $i--) {
-            [$off, $txt] = $ins[$i];
+            [$off, , $txt] = $ins[$i];
             $content = substr($content, 0, $off) . $txt . substr($content, $off);
         }
         return $content;
+    }
+
+    /**
+     * Zamienia id fragmentu na zakres bajtowy w surowej treści dokumentu.
+     * Tekst fragmentu to te same słowa co w źródle (białe znaki znormalizowano
+     * przy chunkowaniu), więc kotwiczymy się na kilku pierwszych i ostatnich
+     * tokenach wzorcem tolerancyjnym na białe znaki i bierzemy zakres pomiędzy.
+     *
+     * @return array{start:int,end:int}|null
+     */
+    private function chunkHighlight(?string $frag, int $documentId, string $content): ?array
+    {
+        if ($frag === null || $frag === '' || !ctype_digit($frag) || $content === '') {
+            return null;
+        }
+        $chunkText = $this->connection->executeQuery(
+            'SELECT content FROM document_chunks WHERE id = :cid AND document_id = :did',
+            ['cid' => (int) $frag, 'did' => $documentId]
+        )->fetchOne();
+        if ($chunkText === false) {
+            return null;
+        }
+
+        $toks = preg_split('/\s+/u', trim((string) $chunkText), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        if (!$toks) {
+            return null;
+        }
+        $pat = fn(array $t) => '/' . implode('\s+', array_map(fn($x) => preg_quote($x, '/'), $t)) . '/su';
+
+        $head = array_slice($toks, 0, 12);
+        if (@preg_match($pat($head), $content, $mh, PREG_OFFSET_CAPTURE) !== 1) {
+            return null;
+        }
+        $start = $mh[0][1];
+
+        $tail = array_slice($toks, -12);
+        if (@preg_match($pat($tail), $content, $mt, PREG_OFFSET_CAPTURE, $start) === 1) {
+            $end = $mt[0][1] + strlen($mt[0][0]);
+        } else {
+            $end = $start + strlen($mh[0][0]);
+        }
+        return ['start' => $start, 'end' => $end];
     }
 
     /** @return array<int, array{paragraph?:int,char_in_para?:int,page?:int}>|null */

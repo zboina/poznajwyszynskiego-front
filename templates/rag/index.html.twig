@@ -128,22 +128,49 @@
 
     .rag-composer {
         position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
-        background: linear-gradient(to top, #fff 70%, rgba(255,255,255,0));
-        padding: 1.5rem 1rem 1.1rem; }
-    .rag-composer .inner { max-width: 860px; margin: 0 auto; }
+        /* Dłuższy, gęstszy zanik u dołu — tekst wątku „wtapia się" pod paskiem,
+           a sam blok nie ginie, bo dolne 60% jest w pełni kryjące. */
+        background: linear-gradient(to top, #fff 60%, rgba(255,255,255,.9) 80%, rgba(255,255,255,0) 100%);
+        padding: 2rem 1rem 1.15rem;
+        /* Strefa zaniku przepuszcza kliknięcia do wątku pod spodem; treść paska je odzyskuje. */
+        pointer-events: none; }
+    .rag-composer .inner { max-width: 860px; margin: 0 auto; pointer-events: auto; }
     .rag-composer .box {
         display: flex; gap: .5rem; align-items: flex-end; background: #fff;
-        border: 1px solid var(--pw-gold); border-radius: 16px; padding: .5rem .5rem .5rem 1rem;
-        box-shadow: 0 6px 28px rgba(60,50,30,.12); }
+        border: 1.5px solid var(--pw-gold); border-radius: 18px; padding: .55rem .55rem .55rem 1.15rem;
+        /* Warstwowy cień unosi blok nad stroną → nie zlewa się z tłem. */
+        box-shadow: 0 12px 36px rgba(60,50,30,.16), 0 2px 8px rgba(60,50,30,.09);
+        transition: border-color .18s, box-shadow .18s, transform .18s; }
+    /* Wyraźne podświetlenie w trakcie pisania — blok „ożywa" i przyciąga wzrok. */
+    .rag-composer .box:focus-within {
+        border-color: var(--pw-maroon);
+        box-shadow: 0 14px 44px rgba(114,47,55,.22), 0 0 0 4px rgba(114,47,55,.10);
+        transform: translateY(-1px); }
     .rag-composer textarea {
-        flex: 1; border: 0; outline: 0; resize: none; font-size: 1.02rem; line-height: 1.5;
-        max-height: 160px; background: transparent; font-family: var(--font-body); }
+        flex: 1; border: 0; outline: 0; resize: none; font-size: 1.05rem; line-height: 1.5;
+        max-height: 160px; background: transparent; font-family: var(--font-body); color: #2b2620;
+        /* Pionowy padding zrównuje wysokość jednoliniowego pola z przyciskiem (46px),
+           więc placeholder/tekst jest wyśrodkowany w pionie. box-sizing, by autosize
+           (scrollHeight) uwzględniał padding i nie „rósł" przy każdym wpisaniu. */
+        padding: .62rem 0; box-sizing: border-box; }
+    .rag-composer textarea::placeholder { color: #a99f8c; }
     .rag-composer .send {
-        flex: 0 0 auto; width: 42px; height: 42px; border-radius: 12px; border: 0;
-        background: var(--pw-maroon); color: #fff; font-size: 1.1rem; cursor: pointer;
-        display: flex; align-items: center; justify-content: center; transition: opacity .15s; }
-    .rag-composer .send:disabled { opacity: .45; cursor: default; }
-    .rag-composer .send.stop { background: #8a3b3b; }
+        flex: 0 0 auto; width: 46px; height: 46px; border-radius: 14px; border: 0;
+        background: linear-gradient(135deg, var(--pw-maroon), var(--pw-maroon-dark));
+        color: #fff; font-size: 1.2rem; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 4px 12px rgba(114,47,55,.30);
+        transition: transform .12s, box-shadow .15s, opacity .15s; }
+    .rag-composer .send:hover:not(:disabled) {
+        transform: translateY(-1px); box-shadow: 0 7px 18px rgba(114,47,55,.40); }
+    .rag-composer .send:active:not(:disabled) { transform: translateY(0); box-shadow: 0 3px 9px rgba(114,47,55,.32); }
+    .rag-composer .send:disabled { opacity: .4; cursor: default; box-shadow: none; }
+    .rag-composer .send.stop { background: linear-gradient(135deg, #a34141, #8a3b3b); box-shadow: 0 4px 12px rgba(138,59,59,.34); }
+    /* Dopasowanie paska do ciepłych/zimnych motywów, by nie był białym slabem na tle. */
+    body.layout-v6 .rag-composer {
+        background: linear-gradient(to top, var(--pw-cream) 60%, rgba(248,244,236,.9) 80%, rgba(248,244,236,0) 100%); }
+    body.layout-v3 .rag-composer, body.layout-v4 .rag-composer {
+        background: linear-gradient(to top, #fbfcfe 60%, rgba(251,252,254,.9) 80%, rgba(251,252,254,0) 100%); }
     .rag-scope {
         display: flex; align-items: center; gap: .4rem; margin: 0 auto .55rem;
         width: fit-content; color: #8a7d68; font-size: .82rem; background: #fff;
@@ -204,23 +231,20 @@
     .rag-modal-body { overflow-y: auto; padding: 1.5rem 1.75rem; background: #fdfbf6; }
     .rag-modal-body.loading { text-align: center; color: #8a7d68; padding: 3rem; }
 
-    /* doc content inside the modal */
-    .rag-modal-body.doc-body { font-size: 1.02rem; line-height: 1.85; color: #2b2620; }
-    .rag-modal-body p { margin: 0 0 1em; }
-    .rag-modal-body .page-marker {
-        display: inline-block; font-size: .76rem; font-weight: 600; color: var(--pw-maroon);
-        background: #f5ecd9; border: 1px solid #c8b78d; border-radius: 3px; padding: 0 .35em;
-        margin: 0 .25em; white-space: nowrap; vertical-align: baseline; line-height: 1.2; }
-    .rag-modal-body mark.rag-hl {
-        background: linear-gradient(180deg, #fff6c2 0%, #ffe98a 100%); color: inherit;
-        padding: .08em .05em; border-radius: 2px; box-shadow: 0 0 0 1px rgba(200,167,39,.45);
-        scroll-margin-top: 1.5rem; animation: ragHlPulse 2.4s ease-out 1; }
-    @keyframes ragHlPulse {
-        0% { box-shadow: 0 0 0 6px rgba(200,167,39,.45); }
-        60% { box-shadow: 0 0 0 6px rgba(200,167,39,.18); }
-        100% { box-shadow: 0 0 0 1px rgba(200,167,39,.45); } }
-    .rag-modal-body .footnotes { margin-top: 2em; padding-top: 1em; border-top: 1px solid #e6ddca; font-size: .85rem; color: #6b6256; }
+    {# Typografia treści dokumentu (.pw-doc) — partials/_document_text.html.twig #}
+    /* W wąskim modalu kolumna tekstu bierze całą dostępną szerokość. */
+    .rag-modal-dialog { --pwd-measure: none; }
+    .rag-modal-body.pw-doc mark.rag-hl { scroll-margin-top: 1.5rem; }
+
+    /* ── Tła tekstu z panelu ustawień czytania (data-bg na .rag-modal-dialog) ── */
+    .rag-modal-dialog[data-bg="biel"] .rag-modal-body { background: #fff; color: #24201a; }
+    .rag-modal-dialog[data-bg="sepia"] .rag-modal-body { background: #f4e9cf; color: #4a3a24; }
+    .rag-modal-dialog[data-bg="noc"] .rag-modal-body { background: #241d16; color: #dccdb0; }
+    .rag-modal-dialog[data-bg="noc"] .rag-modal-body .page-marker {
+        color: #e6cd78; background: rgba(201,162,39,.12); border-color: rgba(201,162,39,.35); }
+    .rag-modal-dialog[data-bg="noc"] .rag-modal-body .footnotes { color: #b3a17f; border-top-color: rgba(201,162,39,.3); }
 </style>
+{{ include('partials/_document_text.html.twig') }}
 {% endblock %}
 
 {% block body %}
@@ -339,7 +363,8 @@
 {# ===== Source preview modal ===== #}
 <div class="rag-modal" id="rag-modal" aria-hidden="true">
     <div class="rag-modal-backdrop" data-rag-modal-close></div>
-    <div class="rag-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="rag-modal-title">
+    {# data-reader-root na dialogu, nie na .rag-modal-body — JS modala nadpisuje tam className. #}
+    <div class="rag-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="rag-modal-title" data-reader-root>
         <div class="rag-modal-head">
             <div class="rag-modal-titles">
                 <div class="rag-modal-eyebrow">Źródło</div>
@@ -355,8 +380,11 @@
                 </button>
             </div>
         </div>
-        <div class="rag-modal-body doc-body" id="rag-modal-body"></div>
+        <div class="rag-modal-body doc-body pw-doc" id="rag-modal-body"></div>
     </div>
+
+    {# Wewnątrz .rag-modal, więc panel i przycisk znikają razem z zamkniętym modalem. #}
+    {{ include('partials/_reader_tools.html.twig', {show_width: false, default_size: 1.02}, with_context: false) }}
 </div>
 </div>
 
@@ -477,7 +505,7 @@
         modalTitle.textContent = data.title || 'Dokument';
         modalRef.textContent = data.label || '';
         modalOpen.href = data.href;
-        modalBody.className = 'rag-modal-body doc-body loading';
+        modalBody.className = 'rag-modal-body doc-body pw-doc loading';
         modalBody.innerHTML = '<div class="spinner-border" role="status" style="color:var(--pw-maroon);"></div>'
             + '<div class="mt-2">Wczytuję fragment…</div>';
         modal.classList.add('open');
@@ -492,7 +520,7 @@
         fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, signal: modalAbort.signal })
             .then(r => r.ok ? r.text() : Promise.reject(new Error(r.status === 403 ? 'limit' : 'err')))
             .then(html => {
-                modalBody.className = 'rag-modal-body doc-body';
+                modalBody.className = 'rag-modal-body doc-body pw-doc';
                 modalBody.innerHTML = html;
                 const mark = modalBody.querySelector('mark.rag-hl')
                     || (data.page ? modalBody.querySelector('#strona-' + data.page) : null);
@@ -500,7 +528,7 @@
             })
             .catch(err => {
                 if (err.name === 'AbortError') return;
-                modalBody.className = 'rag-modal-body doc-body loading';
+                modalBody.className = 'rag-modal-body doc-body pw-doc loading';
                 modalBody.innerHTML = err.message === 'limit'
                     ? '<p class="text-danger">Wyczerpano dzienny limit podglądów dokumentów.</p>'
                     : '<p class="text-danger">Nie udało się wczytać treści źródła.</p>';

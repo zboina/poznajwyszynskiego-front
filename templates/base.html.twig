@@ -433,29 +433,9 @@
     })();
     </script>
 
-    {# ── Font switcher (temporary testing panel) ── #}
-    <div class="font-switcher collapsed" id="fontSwitcher">
-        <button class="fs-toggle-float" onclick="toggleFontPanel()" title="Font switcher">Aa</button>
-
-        <div class="fs-header">
-            <span class="fs-title">Wybierz font</span>
-            <button class="fs-close" onclick="toggleFontPanel()" title="Zwiń">&times;</button>
-        </div>
-
-        <div class="fs-body" id="fsFontList">
-            <div class="fs-section">
-                <div class="fs-section-title">Szeryfowe (Serif)</div>
-            </div>
-            <div class="fs-section">
-                <div class="fs-section-title">Bezszeryfowe (Sans-serif)</div>
-            </div>
-            <div class="fs-section">
-                <div class="fs-section-title">Popularne (Top 10)</div>
-            </div>
-        </div>
-
-        <div class="fs-footer">Kliknij font, aby zobaczyć efekt na żywo &bull; Wybór zapisuje się automatycznie</div>
-    </div>
+    {# Panel „Wybierz font" (tymczasowy testowy) WYŁĄCZONY — font czytelni ustawia się
+       teraz w widoku tekstu. Poniższy skrypt utrzymuje tylko globalny --font-body/
+       --font-heading (zapamiętany wybór lub domyślny), by nie zmieniać reszty stron. #}
 
     <script>
     (function() {
@@ -492,29 +472,24 @@
             { id: 'quicksand',    name: 'Quicksand',           type: 'popular', css: "'Quicksand', -apple-system, sans-serif",              desc: 'Zaokrąglony, zabawny, lekki' }
         ];
 
-        // Build buttons
+        // Panel UI usunięty — przyciski budujemy tylko jeśli kontener istnieje.
         var list = document.getElementById('fsFontList');
-        var sections = list.querySelectorAll('.fs-section');
-        var serifSection = sections[0];
-        var sansSection = sections[1];
-        var popularSection = sections[2];
-
-        allFonts.forEach(function(f) {
-            var btn = document.createElement('button');
-            btn.className = 'fs-btn';
-            btn.setAttribute('data-font-id', f.id);
-            btn.onclick = function() { pickFont(f.id); };
-            btn.innerHTML =
-                '<span class="fs-font-name" style="font-family:' + f.css + ';">' + f.name + '</span>' +
-                '<span class="fs-font-sample">' + f.desc + '</span>';
-            if (f.type === 'serif') {
-                serifSection.appendChild(btn);
-            } else if (f.type === 'popular') {
-                popularSection.appendChild(btn);
-            } else {
-                sansSection.appendChild(btn);
-            }
-        });
+        if (list) {
+            var sections = list.querySelectorAll('.fs-section');
+            var serifSection = sections[0], sansSection = sections[1], popularSection = sections[2];
+            allFonts.forEach(function(f) {
+                var btn = document.createElement('button');
+                btn.className = 'fs-btn';
+                btn.setAttribute('data-font-id', f.id);
+                btn.onclick = function() { pickFont(f.id); };
+                btn.innerHTML =
+                    '<span class="fs-font-name" style="font-family:' + f.css + ';">' + f.name + '</span>' +
+                    '<span class="fs-font-sample">' + f.desc + '</span>';
+                if (f.type === 'serif') serifSection.appendChild(btn);
+                else if (f.type === 'popular') popularSection.appendChild(btn);
+                else sansSection.appendChild(btn);
+            });
+        }
 
         // Font logic
         var serverDefault = (window.__pwDefaults && window.__pwDefaults.font) || 'cormorant';

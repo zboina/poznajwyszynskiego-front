@@ -3,16 +3,20 @@
 {% block title %}{{ doc.title }} — Biblioteka{% endblock %}
 {% block body_class %}lib-shell lib-fixed{% endblock %}
 
-{% block stylesheets %}{{ include('library/_theme.html.twig') }}{% endblock %}
+{% block stylesheets %}{{ include('library/_theme.html.twig') }}{{ include('partials/_document_text.html.twig') }}{% endblock %}
 
 {% block body %}
 {% include 'partials/_navbar.html.twig' %}
 <div class="biblioteka">
-    <div class="lib-wrap" style="max-width: 940px;">
-        <a class="lib-back" href="{{ path('app_library_volume', {id: doc.volume_id}) }}">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>
-            {% if doc.volume_number %}Tom {{ doc.volume_number }}{% else %}Spis tekstów{% endif %}{% if doc.volume_title %} — {{ doc.volume_title }}{% endif %}
-        </a>
+    <div class="lib-wrap" id="readerRoot" data-reader-root>
+        <div class="reader-topbar">
+            <a class="lib-back" href="{{ path('app_library_volume', {id: doc.volume_id}) }}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>
+                {% if doc.volume_number %}Tom {{ doc.volume_number }}{% else %}Spis tekstów{% endif %}{% if doc.volume_title %} — {{ doc.volume_title }}{% endif %}
+            </a>
+        </div>
+
+        {{ include('partials/_reader_tools.html.twig', {}, with_context: false) }}
 
         <div class="parchment" style="margin-top: 1rem;">
             <div class="reader">
@@ -28,7 +32,7 @@
                 {% if audioUrl %}
                     <div class="lib-audio" id="lib-audio" data-doc-id="{{ doc.id }}" data-user="{{ app.user ? app.user.id : 'guest' }}">
                         <div class="lib-audio-head">
-                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a9 9 0 0 1 0 14"/></svg>
                             {{ audio.title ?? 'Posłuchaj lektury tego tekstu' }}
                         </div>
                         <audio class="lib-audio-el" id="lib-audio-el" controls preload="metadata">
@@ -40,7 +44,7 @@
 
                 <div class="reader-orn">❧</div>
 
-                <div class="reader-body">
+                <div class="reader-body pw-doc">
                     {{ content|raw }}
                 </div>
 

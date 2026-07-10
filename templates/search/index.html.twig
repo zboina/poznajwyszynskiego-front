@@ -462,75 +462,21 @@
     .pw-audio-thumb { position: absolute; top: 50%; left: 0; width: 16px; height: 16px; border-radius: 50%; background: #fff; border: 3px solid var(--brand); box-shadow: 0 1px 4px rgba(60,40,20,.35); transform: translate(-50%,-50%); pointer-events: none; }
     .pw-audio-track:hover .pw-audio-thumb, .pw-audio.pw-dragging .pw-audio-thumb { box-shadow: 0 0 0 4px rgba(114,47,55,.18), 0 1px 4px rgba(60,40,20,.35); }
     .pw-audio-track:focus-visible { outline: 2px solid var(--brand); outline-offset: 4px; }
-    .doc-body { font-size: 1.05rem; line-height: 1.9; color: #2D2D2D; font-family: var(--font-body) !important; }
-    .doc-body p { margin-bottom: 1em; text-indent: 1.5em; }
-    .doc-body p:first-child { text-indent: 0; }
-    .doc-body h2, .doc-body h3 { color: var(--brand); margin-top: 1.5em; margin-bottom: .5em; text-indent: 0; }
-    .doc-body .page-marker {
-        display: inline-block;
-        font-size: 0.78rem;
-        font-weight: 600;
-        color: var(--brand);
-        background-color: #f5ecd9;
-        border: 1px solid #c8b78d;
-        border-radius: 3px;
-        padding: 0 .35em;
-        margin: 0 .25em;
-        font-family: var(--font-body) !important;
-        text-indent: 0;
-        white-space: nowrap;
-        vertical-align: baseline;
-        cursor: help;
-        line-height: 1.2;
-    }
-    .doc-body .page-marker:hover { background-color: #ede0bb; }
+    {# Typografia treści dokumentu (.pw-doc) — partials/_document_text.html.twig #}
+    /* Kolumna tekstu w wyszukiwarce ma własną, przeciąganą szerokość. */
+    #document-viewer { --pwd-measure: none; }
 
-    /* ── Cited passage (from the AI assistant) ── */
-    .doc-body mark.rag-hl {
-        background: linear-gradient(180deg, #fff6c2 0%, #ffe98a 100%);
-        color: inherit;
-        padding: .08em .05em;
-        border-radius: 2px;
-        box-shadow: 0 0 0 1px rgba(200,167,39,.45);
-        scroll-margin-top: 90px;
-        animation: ragHlPulse 2.4s ease-out 1;
-    }
-    @keyframes ragHlPulse {
-        0%   { box-shadow: 0 0 0 6px rgba(200,167,39,.45); }
-        60%  { box-shadow: 0 0 0 6px rgba(200,167,39,.18); }
-        100% { box-shadow: 0 0 0 1px rgba(200,167,39,.45); }
-    }
+    /* ── Tła tekstu z panelu ustawień czytania (data-bg na #document-viewer) ──
+       Selektor z id bije warianty .layout-v3…v6, więc tło działa w każdym układzie. */
+    #document-viewer[data-bg="biel"] .doc-reader-outer { background: #f3f2ef !important; }
+    #document-viewer[data-bg="biel"] .doc-reader-card { background: #fff; }
 
-    /* ── Footnotes ── */
-    .footnotes { margin-top: 2.5em; padding-top: 1.5em; font-size: .88rem; color: #555; border-top: 1px solid #ddd; }
-    .footnotes ol { padding-left: 1.5em; }
-    .footnotes li { margin-bottom: .6em; line-height: 1.6; }
-    .footnotes li:target { background: #fef9e7; border-radius: 4px; padding: 2px 4px; }
-    .footnote-ref { position: relative; }
-    .footnote-ref a {
-        display: inline-flex; align-items: center; justify-content: center;
-        min-width: 1.3em; height: 1.3em; padding: 0 .25em;
-        font-size: .7em; font-weight: 700; line-height: 1;
-        color: var(--brand); background: rgba(114,47,55,.08); border-radius: 3px;
-        text-decoration: none; vertical-align: super;
-        transition: background .15s, color .15s;
-    }
-    .footnote-ref a:hover { background: var(--brand); color: #fff; }
-    .footnote-ref a[data-tooltip] { cursor: help; }
-    .footnote-ref a[data-tooltip]::after {
-        content: attr(data-tooltip);
-        position: absolute; bottom: 130%; left: 50%; transform: translateX(-50%);
-        width: max-content; max-width: 350px;
-        padding: .5em .75em; border-radius: 6px;
-        background: #2D2D2D; color: #f5f5f5;
-        font-size: 11.5px; font-weight: 400; line-height: 1.5;
-        white-space: normal; text-align: left;
-        box-shadow: 0 4px 16px rgba(0,0,0,.2);
-        opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 1000;
-    }
-    .footnote-ref a[data-tooltip]:hover::after { opacity: 1; }
-    .footnote-back { color: #999; text-decoration: none; font-size: .85em; margin-left: .3em; }
-    .footnote-back:hover { color: var(--brand); }
+    #document-viewer[data-bg="sepia"] .doc-reader-outer { background: #e8dbba !important; }
+    #document-viewer[data-bg="sepia"] .doc-reader-card { background: #f4e9cf; }
+
+    #document-viewer[data-bg="noc"] .doc-reader-outer { background: #17120c !important; }
+    #document-viewer[data-bg="noc"] .doc-reader-card { background: #241d16; box-shadow: 0 2px 16px rgba(0,0,0,.5); }
+
 
     /* ═══════ DOCUMENT VIEWER ═══════ */
     #document-viewer { display: none; }
@@ -1190,13 +1136,7 @@
         border: 1px solid #eee;
     }
     .layout-v3 .doc-body {
-        font-size: 1.08rem;
-        line-height: 2;
-        color: #2a2a2a;
         padding: 2rem 2.5rem !important;
-    }
-    .layout-v3 .doc-body p {
-        margin-bottom: 1.1em;
     }
 
     /* ── Footer V3 ── */
@@ -1221,7 +1161,7 @@
         .layout-v3 .filter-strip.filters-open .filter-grid { display: flex; }
         .layout-v3 .filter-strip .container-xl > .d-flex { justify-content: start !important; }
         .layout-v3 .brand-mark span { display: none; }
-        .layout-v3 .doc-body { padding: 1.25rem 1rem !important; font-size: 1rem; }
+        .layout-v3 .doc-body { padding: 1.25rem 1rem !important; }
         .layout-v3 .doc-reader-wrap { padding: 1rem .5rem 2rem; }
     }
     @media (max-width: 575.98px) {
@@ -1478,7 +1418,7 @@
     /* doc-navbar uses unified white style */
     .layout-v4 .doc-reader-wrap { max-width: 720px; padding: 2rem 1.5rem 4rem; }
     .layout-v4 .doc-reader-card { box-shadow: 0 1px 8px rgba(0,0,0,.04); border: 1px solid #eee; }
-    .layout-v4 .doc-body { font-size: 1.08rem; line-height: 2; color: #2a2a2a; padding: 2rem 2.5rem !important; }
+    .layout-v4 .doc-body { padding: 2rem 2.5rem !important; }
 
     /* Footer V4 */
     .layout-v4 footer.bg-navy { background: var(--brand-navy) !important; border-top: none; }
@@ -1504,7 +1444,7 @@
         .layout-v4 .filter-strip.filters-open .filter-grid { display: flex; }
         .layout-v4 .filter-strip .container-xl > .d-flex { justify-content: start !important; }
         .layout-v4 .brand-mark span { display: none; }
-        .layout-v4 .doc-body { padding: 1.25rem 1rem !important; font-size: 1rem; }
+        .layout-v4 .doc-body { padding: 1.25rem 1rem !important; }
         .layout-v4 .doc-reader-wrap { padding: 1rem .5rem 2rem; }
     }
     @media (max-width: 575.98px) {
@@ -1688,7 +1628,7 @@
     /* doc-navbar uses unified white style */
     .layout-v5 .doc-reader-wrap { max-width: 720px; padding: 2rem 1.5rem 4rem; }
     .layout-v5 .doc-reader-card { box-shadow: 0 1px 8px rgba(0,0,0,.04); border: 1px solid #eee; }
-    .layout-v5 .doc-body { font-size: 1.08rem; line-height: 2; color: #2a2a2a; padding: 2rem 2.5rem !important; }
+    .layout-v5 .doc-body { padding: 2rem 2.5rem !important; }
 
     /* Footer V5 */
     .layout-v5 footer.bg-navy { background: #5C2630 !important; border-top: none; }
@@ -1714,7 +1654,7 @@
         .layout-v5 .filter-strip.filters-open .filter-grid { display: flex; }
         .layout-v5 .filter-strip .container-xl > .d-flex { justify-content: start !important; }
         .layout-v5 .brand-mark span { display: none; }
-        .layout-v5 .doc-body { padding: 1.25rem 1rem !important; font-size: 1rem; }
+        .layout-v5 .doc-body { padding: 1.25rem 1rem !important; }
         .layout-v5 .doc-reader-wrap { padding: 1rem .5rem 2rem; }
     }
     @media (max-width: 575.98px) {
@@ -1946,7 +1886,7 @@
     /* doc-navbar uses unified white style */
     .layout-v6 .doc-reader-wrap { max-width: 720px; padding: 2rem 1.5rem 4rem; }
     .layout-v6 .doc-reader-card { box-shadow: 0 1px 8px rgba(0,0,0,.04); border: 1px solid #eee; }
-    .layout-v6 .doc-body { font-size: 1.08rem; line-height: 2; color: #2a2a2a; padding: 2rem 2.5rem !important; }
+    .layout-v6 .doc-body { padding: 2rem 2.5rem !important; }
 
     /* Footer V6 */
     .layout-v6 footer.bg-navy { background: #fff !important; border-top: 1px solid #e8e0d4; }
@@ -1974,7 +1914,7 @@
         .layout-v6 .filter-strip.filters-open .filter-grid { display: flex; }
         .layout-v6 .filter-strip .container-xl > .d-flex { justify-content: start !important; }
         .layout-v6 .brand-mark span { display: none; }
-        .layout-v6 .doc-body { padding: 1.25rem 1rem !important; font-size: 1rem; }
+        .layout-v6 .doc-body { padding: 1.25rem 1rem !important; }
         .layout-v6 .doc-reader-wrap { padding: 1rem .5rem 2rem; }
     }
     @media (max-width: 575.98px) {
@@ -1986,6 +1926,7 @@
         .layout-v6 .user-pill { font-size: .7rem; }
     }
 </style>
+{{ include('partials/_document_text.html.twig') }}
 {% endblock %}
 
 {% block body %}
@@ -2200,7 +2141,7 @@
     </div>
 
     {# ═══════ DOCUMENT VIEWER ═══════ #}
-    <div id="document-viewer" data-search-target="documentViewer">
+    <div id="document-viewer" data-search-target="documentViewer" data-reader-root>
         <nav class="doc-navbar" id="docNavbar">
             <div class="container-xl d-flex align-items-center justify-content-between py-2">
                 <div class="d-flex align-items-center gap-2 flex-shrink-0">
@@ -2247,6 +2188,9 @@
         <div class="doc-resize-handle doc-resize-handle--right" data-resize="right">
             <div class="doc-resize-grip"></div>
         </div>
+
+        {# Szerokość kolumny ma tu własny mechanizm (uchwyty po bokach), więc grupa „Szerokość" wyłączona. #}
+        {{ include('partials/_reader_tools.html.twig', {show_width: false, default_size: 1.05}, with_context: false) }}
     </div>
 
     {# ── Footer ── #}

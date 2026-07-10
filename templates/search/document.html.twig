@@ -14,49 +14,9 @@
     }
     .text-gold { color: #C9A227; }
     .bg-navy { background-color: #1A365D; }
-    .doc-body { font-size: 1rem; line-height: 1.9; }
-    .doc-body p { margin-bottom: 1em; }
-    .doc-body h2, .doc-body h3 { color: #722F37; margin-top: 1.5em; margin-bottom: .5em; }
-    .doc-body .page-marker {
-        display: inline-block;
-        font-size: 0.78rem;
-        font-weight: 600;
-        color: #722F37;
-        background-color: #f5ecd9;
-        border: 1px solid #c8b78d;
-        border-radius: 3px;
-        padding: 0 .35em;
-        margin: 0 .25em;
-        white-space: nowrap;
-        vertical-align: baseline;
-        cursor: help;
-        line-height: 1.2;
-    }
-    .doc-body .page-marker:hover { background-color: #ede0bb; }
-    /* Anchor target from assistant citations: offset + brief highlight */
-    .doc-body .page-marker { scroll-margin-top: 90px; }
-    .doc-body .page-marker:target {
-        background-color: #722F37;
-        color: #fff;
-        animation: pageMarkerPulse 2.2s ease-out;
-    }
-    @keyframes pageMarkerPulse {
-        0%, 55% { box-shadow: 0 0 0 4px rgba(114,47,55,.35); }
-        100%    { box-shadow: 0 0 0 0 rgba(114,47,55,0); }
-    }
-    /* Cited passage from the AI assistant */
-    .doc-body mark.rag-hl {
-        background: linear-gradient(180deg, #fff6c2 0%, #ffe98a 100%);
-        color: inherit; padding: .08em .05em; border-radius: 2px;
-        box-shadow: 0 0 0 1px rgba(200,167,39,.45);
-        scroll-margin-top: 90px; animation: ragHlPulse 2.4s ease-out 1;
-    }
-    @keyframes ragHlPulse {
-        0%   { box-shadow: 0 0 0 6px rgba(200,167,39,.45); }
-        60%  { box-shadow: 0 0 0 6px rgba(200,167,39,.18); }
-        100% { box-shadow: 0 0 0 1px rgba(200,167,39,.45); }
-    }
+    {# Typografia treści dokumentu (.pw-doc) — partials/_document_text.html.twig #}
 </style>
+{{ include('partials/_document_text.html.twig') }}
 {% endblock %}
 
 {% block body %}
@@ -162,8 +122,9 @@
                 </div>
             {% else %}
                 {# === LOGGED IN: load content via AJAX === #}
-                <div class="card">
-                    <div class="card-body doc-body"
+                <div class="card" data-reader-root>
+                    {{ include('partials/_reader_tools.html.twig', {show_width: false}, with_context: false) }}
+                    <div class="card-body doc-body pw-doc"
                          data-controller="dynamic-content"
                          data-dynamic-content-url-value="{{ path('app_document_content', app.request.query.get('frag') ? {id: doc.id, frag: app.request.query.get('frag')} : {id: doc.id}) }}">
                         <div class="text-center py-5 text-muted">
