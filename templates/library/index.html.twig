@@ -19,9 +19,13 @@
         {% if volumes is empty %}
             <p class="lib-empty">Na półkach nie ma jeszcze opublikowanych tomów.</p>
         {% else %}
-            {# Zrównoważony podział na półki: rzędy równe, mało tomów = jeden dopasowany rząd. #}
+            {# Zrównoważony podział na półki: rzędy równe, mało tomów = jeden dopasowany rząd.
+               Próg 13, nie 8: książka ma 62px + 14px odstępu, więc w rzędzie o szerokości
+               1120px mieści się ich ~13. Przy 8 regał łamał się na dwa rzędy już przy 9 tomach
+               i drugi rząd (≈290px) wypychał stopkę poza ekran, choć tomy spokojnie mieściły
+               się w jednym. Rzędy zawijają się i tak (flex-wrap), gdy okno jest węższe. #}
             {% set _n = volumes|length %}
-            {% set _rows = max(1, (_n / 8)|round(0, 'ceil')) %}
+            {% set _rows = max(1, (_n / 13)|round(0, 'ceil')) %}
             {% set _perRow = (_n / _rows)|round(0, 'ceil') %}
             <div class="shelves">
             {% for shelf in volumes|batch(_perRow) %}

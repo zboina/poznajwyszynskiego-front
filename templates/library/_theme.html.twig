@@ -21,10 +21,12 @@
         color: #ecdcb8;
         font-family: 'EB Garamond', 'Cormorant Garamond', Georgia, serif;
     }
-    .lib-wrap { max-width: 1120px; margin: 0 auto; padding: 2.4rem 1.25rem 4rem; }
+    /* Pion regału jest ciasny: regał ma się zmieścić w oknie razem z nawigacją
+       i stopką, więc oddechu szukamy na bokach, nie u dołu. */
+    .lib-wrap { max-width: 1120px; margin: 0 auto; padding: 2rem 1.25rem 2.2rem; }
 
     /* ── Nagłówek działu ── */
-    .lib-head { text-align: center; margin-bottom: 2.2rem; }
+    .lib-head { text-align: center; margin-bottom: 1.5rem; }
     .lib-eyebrow { display: inline-flex; align-items: center; gap: .6rem; color: var(--lib-gold); letter-spacing: .32em; text-transform: uppercase; font-size: .72rem; font-family: 'Inter', sans-serif; font-weight: 600; }
     .lib-eyebrow::before, .lib-eyebrow::after { content: ""; width: 34px; height: 1px; background: linear-gradient(90deg, transparent, var(--lib-gold)); }
     .lib-eyebrow::after { background: linear-gradient(90deg, var(--lib-gold), transparent); }
@@ -38,7 +40,8 @@
 
     /* ── Regał ── */
     /* Półka docinana do zawartości — deska obejmuje dokładnie tyle, ile stoi książek. */
-    .shelf { position: relative; width: fit-content; max-width: 100%; margin: 0 auto 2.7rem; padding: 0 1rem 22px; }
+    .shelf { position: relative; width: fit-content; max-width: 100%; margin: 0 auto 1.6rem; padding: 0 1rem 22px; }
+    .shelf:last-child { margin-bottom: 0; }
     .shelf-books { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: center; gap: 14px; min-height: 232px; padding: 0 8px; }
     .shelf-plank { position: absolute; left: 0; right: 0; bottom: 0; height: 22px; border-radius: 3px;
         background: linear-gradient(180deg, #6b4523, #3c2413 60%, #24140a);

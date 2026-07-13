@@ -26,17 +26,33 @@
            Kolumna flex na <body> + margin-top:auto na stopce. Wrapperom stron
            trzeba oddać wolną przestrzeń (flex: 1 0 auto), inaczej ich tła
            kończyłyby się na wysokości treści. */
+        /* Domyślnie żadnego paska u dołu — wartość podnosi skrypt tylko tam, gdzie
+           pasek naprawdę jest przypięty. Dzięki temu pierwsza klatka każdej strony
+           jest już poprawna i stopka nie „przeskakuje”. */
+        :root { --pw-bottom-bar: 0px; }
         body { min-height: 100vh; display: flex; flex-direction: column; }
         body > .page,
         body > .rag-page,
-        body > .biblioteka { flex: 1 0 auto; }
+        body > .biblioteka,
+        body > .login-page,
+        body > .acc-page,
+        body > .don-page { flex: 1 0 auto; }
         .pw-footer { margin-top: auto; }
 
-        /* Tabler nadaje .page { min-height: 100% }. Gdy <body> jest kolumną flex
-           o min-height: 100vh, jego wysokość staje się określona i te 100% dają
-           pełne okno — a stopka dochodzi POD spodem, więc strona się przewija.
-           Wysokość .page ma wynikać z flex-grow, nie z procentu. */
-        body > .page { min-height: 0; }
+        /* Wrapper strony NIE MOŻE sam żądać pełnego okna. Tabler daje .page
+           { min-height: 100% }, a widoki lubią pisać min-height: 100vh — jedno
+           i drugie znaczy „cały ekran”, podczas gdy nad wrapperem jest jeszcze
+           nawigacja, a pod nim stopka. Te paski dokładają się do pełnego okna,
+           stopka ląduje POD krawędzią i pusta strona dostaje pionowy scroll.
+           Wysokość wrappera ma wynikać z flex-grow (wolna przestrzeń), nie z
+           procentu ani z vh — dlatego zerujemy tu każde takie żądanie.
+           Reguła jest bardziej szczegółowa niż `.rag-page` w widoku, więc wygrywa. */
+        body > .page,
+        body > .rag-page,
+        body > .biblioteka,
+        body > .login-page,
+        body > .acc-page,
+        body > .don-page { min-height: 0; }
 
         /* ── Font switcher panel (temporary) ── */
         .font-switcher {
@@ -448,16 +464,35 @@
     // Paski przypięte do dołu ekranu (composer asystenta) rosną wraz z treścią.
     // Mierzymy je raz i wystawiamy jako --pw-bottom-bar; korzystają z tego stopka
     // (odsuwa się, żeby nie chować się pod paskiem) i ikonka pomocy.
+
+    // Zmienna siedzi na <html>, które PRZEŻYWA nawigację Turbo. Bez zerowania przed
+    // renderem następny widok malował stopkę jeszcze ze starym marginesem asystenta,
+    // a skrypt poprawiał go dopiero po pierwszej klatce — stąd mignięcie stopki przy
+    // przełączaniu szukaj/asystent/biblioteka. Zerujemy ZANIM nowa strona się narysuje.
+    if (!window.__pwBottomBarHooked) {
+        window.__pwBottomBarHooked = true;
+        var pwZeroBar = function () {
+            document.documentElement.style.setProperty('--pw-bottom-bar', '0px');
+        };
+        document.addEventListener('turbo:visit', pwZeroBar);
+        document.addEventListener('turbo:before-render', pwZeroBar);
+        document.addEventListener('turbo:before-cache', pwZeroBar);
+    }
+
     (function () {
         var bar = document.querySelector('[data-bottom-bar]');
-        // Zmienna siedzi na <html>, które przeżywa nawigację Turbo — na stronie bez
-        // paska trzeba ją skasować, inaczej stopka zostałaby odsunięta bez powodu.
-        if (!bar) { document.documentElement.style.removeProperty('--pw-bottom-bar'); return; }
+        if (!bar) { document.documentElement.style.setProperty('--pw-bottom-bar', '0px'); return; }
         if (bar.__pwBottomBar) return;
         bar.__pwBottomBar = true;
         var apply = function () {
-            document.documentElement.style.setProperty('--pw-bottom-bar', bar.offsetHeight + 'px');
+            // Composer asystenta na pustym ekranie stoi w toku strony (wyśrodkowany),
+            // a nie przy dolnej krawędzi — wtedy niczego nie zasłania i nie ma go co omijać.
+            var docked = getComputedStyle(bar).position === 'fixed';
+            document.documentElement.style.setProperty('--pw-bottom-bar', docked ? bar.offsetHeight + 'px' : '0px');
         };
+        // Strona sama zgłasza zadokowanie paska (zmiana pozycji nie rusza wysokości,
+        // więc ResizeObserver by tego nie zauważył).
+        window.pwMeasureBottomBar = apply;
         apply();
         if (window.ResizeObserver) new ResizeObserver(apply).observe(bar);
         else window.addEventListener('resize', apply);
