@@ -184,6 +184,10 @@
 </style>
 {% endblock %}
 
+{# Ta strona to samodzielna makieta identyfikacji wizualnej z własną stopką autorską
+   (home/_content.html.twig), więc wspólna stopka serwisu jest tu wyłączona. #}
+{% block footer %}{% endblock %}
+
 {% block body %}
 <div data-controller="dynamic-content"
      data-dynamic-content-url-value="{{ path('app_home_content') }}">

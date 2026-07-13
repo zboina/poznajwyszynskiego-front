@@ -871,37 +871,6 @@
         .layout-v2 .hero-title { font-size: 1.2rem; }
     }
 
-    /* ═══════ LAYOUT SWITCHER ═══════ */
-    .layout-switcher {
-        position: fixed;
-        bottom: 1.25rem;
-        left: 1.25rem;
-        z-index: 9000;
-        display: flex;
-        gap: .25rem;
-        background: #fff;
-        border: 1px solid #e0dbd5;
-        border-radius: 8px;
-        padding: .25rem;
-        box-shadow: 0 2px 12px rgba(0,0,0,.1);
-        font-size: .75rem;
-    }
-    .layout-switcher button {
-        border: none;
-        background: transparent;
-        padding: .35rem .7rem;
-        border-radius: 6px;
-        color: #999;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all .15s;
-    }
-    .layout-switcher button:hover { color: #555; }
-    .layout-switcher button.active {
-        background: var(--brand);
-        color: #fff;
-    }
-
     /* ── Tag select (shared, hidden by default in V1/V2) ── */
     .tag-select-wrap { display: none; }
 
@@ -1695,13 +1664,25 @@
     .layout-v6 .btn-ghost-light { color: #999 !important; }
     .layout-v6 .btn-ghost-light:hover { color: var(--brand) !important; }
 
-    /* Hero V6: cream, full viewport, no scroll */
+    /* Hero V6: cream, full viewport, no scroll.
+       Bez calc(100vh - 52px): 52px było zgadywaną wysokością paska, który jej nie ma
+       (wynika z paddingu), a do rachunku doszła jeszcze stopka — stąd brał się scroll.
+       Zamiast liczyć, oddajemy hero całą wolną przestrzeń: <body> jest kolumną flex
+       o wysokości okna, .page rozpycha się w niej, a hero zabiera resztę po pasku.
+       Po wyszukaniu (.search-active) hero kurczy się do własnej treści. */
+    .page.layout-v6 { display: flex; flex-direction: column; }
+    /* Łańcuch musi być ciągły: .page → #search-area → .search-hero. */
+    .layout-v6 #search-area { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+    /* Otwarcie dokumentu chowa wyszukiwanie klasą .hidden. Reguła wyżej ma tę samą
+       specyficzność co #search-area.hidden, a stoi później — więc bez tego wiersza
+       nadpisywałaby ukrycie i podgląd lądował POD wynikami. */
+    .layout-v6 #search-area.hidden { display: none; }
     .layout-v6 .search-hero {
         background: var(--brand-cream);
         padding: 0; border-bottom: none;
-        min-height: calc(100vh - 52px);
+        min-height: 0; flex: 1 1 auto;
         display: flex; align-items: center;
-        transition: min-height .4s ease, padding .4s ease;
+        transition: padding .4s ease;
         overflow: hidden;
     }
     .layout-v6 .search-hero::before { display: none; }
@@ -1775,7 +1756,6 @@
     /* Landing: hide filters, results, footer */
     .layout-v6 .filter-strip { display: none; }
     .layout-v6 .results-outer { display: none; }
-    .layout-v6 footer { display: none; }
 
     /* Filters V6 */
     .layout-v6 [data-search-target="tagsContainer"] { display: none !important; }
@@ -1833,9 +1813,8 @@
     .layout-v6.search-active .filter-strip { display: block; }
     .layout-v6.search-active .results-outer { display: block; }
     .layout-v6.search-active .results-area { display: block; }
-    .layout-v6.search-active footer { display: block; }
     .layout-v6.search-active .search-hero {
-        min-height: 0; padding: .75rem 0 1.25rem; overflow: visible;
+        min-height: 0; flex: 0 0 auto; padding: .75rem 0 1.25rem; overflow: visible;
         background: #fff; border-bottom: 1px solid #e8e0d4;
     }
     .layout-v6.search-active .v4-landing { display: none; }
@@ -1930,7 +1909,9 @@
 {% endblock %}
 
 {% block body %}
-<div class="page"
+{# layout-v6 również tutaj, nie tylko na <body>: reguły .layout-v6.search-active
+   wymagają obu klas na tym samym elemencie, a .search-active nakłada Stimulus na .page. #}
+<div class="page layout-v6"
      data-controller="search session"
      data-session-lifetime-value="3600"
      data-session-login-url-value="{{ path('app_login') }}"
@@ -2014,7 +1995,8 @@
                                autocomplete="off"
                                autofocus>
                     </div>
-                    <p class="search-hint">Słowa kluczowe &bull; <strong>&quot;fraza w cudzysłowie&quot;</strong> &bull; pytania np. <em>co o rodzinie pisał prymas?</em></p>
+                    <p class="search-hint">Słowa kluczowe &bull; <strong>&quot;fraza w cudzysłowie&quot;</strong> &bull; pytania w języku naturalnym zadaj <a href="{{ path('app_rag') }}" style="color:inherit;">Asystentowi AI</a></p>
+
 
                     {# ── V4/V5/V6 Landing bottom (quote only) ── #}
                     <div class="v4-landing-bottom">
@@ -2193,52 +2175,11 @@
         {{ include('partials/_reader_tools.html.twig', {show_width: false, default_size: 1.05}, with_context: false) }}
     </div>
 
-    {# ── Footer ── #}
-    <footer class="bg-navy text-white py-3 mt-auto">
-        <div class="container-xl text-center">
-            <span style="font-size:.75rem; opacity:.5;">Dzieła Zebrane Kardynała Stefana Wyszyńskiego &mdash; <a href="https://poznajwyszynskiego.pl" class="text-gold text-decoration-none">poznajwyszynskiego.pl</a></span>
-        </div>
-    </footer>
-
 </div>
 
-{# ═══════ Layout switcher ═══════ #}
-<div class="layout-switcher" id="layoutSwitcher">
-    <button data-layout="v1" title="Klasyczny">V1</button>
-    <button data-layout="v2" title="Minimalistyczny">V2</button>
-    <button data-layout="v3" title="Navy">V3</button>
-    <button data-layout="v4" title="Landing Navy">V4</button>
-    <button data-layout="v5" title="Landing Bordo">V5</button>
-    <button data-layout="v6" title="Landing Jasny">V6</button>
-</div>
-
+{# Przełącznik motywów V1–V6 usunięty — serwis ma jeden motyw (layout-v6 na <body>). #}
 <script>
 (function(){
-    const KEY = 'pw_layout';
-    const page = document.querySelector('.page');
-    const switcher = document.getElementById('layoutSwitcher');
-    const saved = localStorage.getItem(KEY) || 'v1';
-
-    function applyLayout(v) {
-        page.classList.remove('layout-v2', 'layout-v3', 'layout-v4', 'layout-v5', 'layout-v6');
-        if (v === 'v2') page.classList.add('layout-v2');
-        if (v === 'v3') page.classList.add('layout-v3');
-        if (v === 'v4') page.classList.add('layout-v4');
-        if (v === 'v5') page.classList.add('layout-v5');
-        if (v === 'v6') page.classList.add('layout-v6');
-        switcher.querySelectorAll('button').forEach(function(btn){
-            btn.classList.toggle('active', btn.dataset.layout === v);
-        });
-        localStorage.setItem(KEY, v);
-    }
-
-    applyLayout(saved);
-
-    switcher.addEventListener('click', function(e){
-        var btn = e.target.closest('button[data-layout]');
-        if (btn) applyLayout(btn.dataset.layout);
-    });
-
     /* ── Sticky shadow for filter strip ── */
     var filterStrip = document.querySelector('.filter-strip');
     if (filterStrip && window.IntersectionObserver) {
@@ -2646,4 +2587,53 @@
     });
 })();
 </script>
+
+{# Pomoc kontekstowa — fixed w rogu, poza wyśrodkowanym hero. #}
+{% embed 'partials/_help.html.twig' with {title: 'Jak działa wyszukiwarka', help_key: 'szukaj'} %}
+    {% block help_body %}
+        <h3>Czego szuka wyszukiwarka</h3>
+        <p>Szuka <strong>słów i fraz</strong> w treści oraz metadanych tekstów — nie interpretuje pytań.
+           Wpisanie „co prymas pisał o rodzinie" znajdzie teksty zawierające te słowa,
+           ale odpowiedzi nie ułoży. Od zadawania pytań własnymi słowami jest <strong>Asystent AI</strong>.</p>
+        <ul>
+            <li>Kilka słów działa jak „wszystkie muszą wystąpić".</li>
+            <li><strong>„Fraza w cudzysłowie"</strong> szuka dokładnie tego sformułowania.</li>
+            <li>Wyszukiwanie rozpoznaje polską odmianę — <em>rodzina</em> znajdzie też <em>rodzinie</em> i <em>rodziny</em>.</li>
+        </ul>
+
+        <h3>Zawężanie wyników</h3>
+        <p>Pod polem szukania ustawisz <strong>tom</strong>, <strong>typ dokumentu</strong>,
+           <strong>temat</strong> oraz <strong>zakres dat</strong>. Filtry łączą się ze sobą i działają też przy pustym zapytaniu —
+           możesz nimi po prostu przeglądać korpus.</p>
+
+        <h3>Czytanie tekstu</h3>
+        <ul>
+            <li>Kliknij wynik, aby otworzyć pełny tekst.</li>
+            <li>Strzałki <kbd>←</kbd> <kbd>→</kbd> przechodzą do poprzedniego i następnego wyniku, <kbd>Esc</kbd> wraca do listy.</li>
+            <li>Przycisk <strong>Aa</strong> otwiera ustawienia czytania: czcionkę, rozmiar i tło (także tryb nocny).</li>
+            <li>Kolumnę tekstu rozszerzysz, chwytając <strong>uchwyty na jej bokach</strong>. Szerokość zostaje zapamiętana.</li>
+            <li>Pasek u góry pokazuje, ile tekstu masz już za sobą.</li>
+        </ul>
+
+        <h3>Znaczniki stron i przypisy</h3>
+        <ul>
+            <li><strong>[s. 12]</strong> to numer strony wydania drukowanego — cytuj po nim, nie po ekranie.</li>
+            <li>Cyfra przy słowie to <strong>przypis</strong>. Najedź na nią, żeby zobaczyć treść bez opuszczania akapitu.</li>
+        </ul>
+
+        <h3>Nagrania i PDF</h3>
+        <ul>
+            <li>Wybrane teksty mają <strong>nagranie lektora</strong> — odtwarzacz zapamiętuje, gdzie skończyłeś, i wraca tam przy kolejnej wizycie.</li>
+            <li><strong>Pobierz PDF</strong> przygotuje tekst do druku. Dla VIP-a jest darmowy; w pozostałych planach kosztuje kredyty.</li>
+        </ul>
+
+        <h3>Ile tekstów mogę otworzyć</h3>
+        <ul>
+            <li><strong>Zalogowany</strong> — 5 tekstów na dobę; licznik pokazuje, ile zostało, a raz otwarty tekst możesz wracać czytać za darmo.
+                Zajrzysz do nich przez <strong>„Moje podglądy"</strong>.</li>
+            <li><strong>Donator i VIP</strong> — bez limitu, z pełną paginacją wyników.</li>
+        </ul>
+    {% endblock %}
+{% endembed %}
+
 {% endblock %}

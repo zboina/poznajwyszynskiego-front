@@ -273,6 +273,7 @@
         {% if not unlimited and credits <= 0 %}
             <p class="mt-1"><a href="{{ path('app_donate') }}" style="color:var(--pw-maroon);font-weight:700;">Doładuj pulę pytań — Wesprzyj →</a></p>
         {% endif %}
+
     </div>
 
     {% if app.user %}
@@ -332,7 +333,7 @@
     </div>
 </div>
 
-<div class="rag-composer">
+<div class="rag-composer" data-bottom-bar>
     <div class="inner">
         {% if volumes|length > 1 %}
         <div class="rag-scope">
@@ -359,6 +360,54 @@
         <div class="hint">Odpowiedzi generowane przez AI na podstawie korpusu — zweryfikuj z oryginałem przed cytowaniem.</div>
     </div>
 </div>
+
+{# Pomoc kontekstowa — fixed w rogu, nad composerem (mierzonym na żywo). #}
+        {% embed 'partials/_help.html.twig' with {title: 'Jak działa Asystent Dzieł Zebranych', help_key: 'asystent'} %}
+            {% block help_body %}
+                <h3>Co to jest</h3>
+                <p>To wyszukiwarka, która odpowiada zdaniami. Zadajesz pytanie własnymi słowami,
+                   a asystent układa odpowiedź <strong>wyłącznie z fragmentów pism kardynała Wyszyńskiego</strong>.
+                   Nie korzysta z wiedzy spoza korpusu — jeśli w tekstach nie ma odpowiedzi, napisze wprost, że jej nie ma.</p>
+
+                <h3>Jak zadać pytanie</h3>
+                <ul>
+                    <li>Wpisz pytanie w pole na dole strony i naciśnij <kbd>Enter</kbd>. <kbd>Shift</kbd>+<kbd>Enter</kbd> robi nową linię.</li>
+                    <li>Nie wiesz, o co zapytać? Rozwiń <strong>„Przykładowe pytania"</strong> i kliknij dowolne — wskoczy do pola.</li>
+                    <li>Pytaj pełnym zdaniem. „Co Prymas mówił o rodzinie?" zadziała lepiej niż samo „rodzina".</li>
+                    <li>Odpowiedź pisze się na żywo. Przycisk <strong>■</strong> przerywa i zachowuje to, co już spłynęło.</li>
+                </ul>
+
+                <h3>Źródła i cytaty</h3>
+                <p>Liczby w treści odpowiedzi — jak <strong>¹</strong> — to odnośniki do listy <strong>Źródeł</strong> pod nią.
+                   Każde źródło ma etykietę <strong>Tom i stronę</strong> wydania drukowanego.</p>
+                <ul>
+                    <li>Kliknij źródło, aby otworzyć <strong>podgląd tekstu</strong> — asystent przewinie do cytowanego fragmentu i podświetli go na żółto.</li>
+                    <li>W podglądzie działa panel <strong>Aa</strong> (czcionka, rozmiar, tło).</li>
+                    <li><kbd>Ctrl</kbd> (lub <kbd>⌘</kbd>) + klik otworzy pełny tekst w nowej karcie.</li>
+                </ul>
+
+                <h3>Zakres i pula pytań</h3>
+                <ul>
+                    <li><strong>Zakres</strong> nad polem pytania zawęża szukanie do jednego tomu. Domyślnie przeszukiwane są wszystkie dostępne.</li>
+                    <li>Licznik <strong>„Pozostało pytań"</strong> pokazuje twoją pulę. Pytanie kosztuje 1 — ale tylko wtedy, gdy asystent
+                        faktycznie znalazł źródła i odpowiedział.</li>
+                    <li>Pytanie zadane wcześniej (przez kogokolwiek) wraca z pamięci podręcznej i <strong>nie zużywa puli</strong>.</li>
+                </ul>
+
+                <h3>Po odpowiedzi</h3>
+                <ul>
+                    <li><strong>Kopiuj</strong> — przenosi odpowiedź do schowka.</li>
+                    <li><strong>Zapisz do DOCX</strong> — pobiera pytanie, odpowiedź i źródła jako dokument Worda.</li>
+                    <li>Rozmowy zalogowanych użytkowników zapisują się na koncie — znajdziesz je w <strong>„Moja historia"</strong>,
+                        gdzie można je przypiąć lub usunąć.</li>
+                </ul>
+
+                <div class="pw-help-note">
+                    Odpowiedzi układa model językowy. Zanim zacytujesz je w pracy czy publikacji,
+                    otwórz źródło i sprawdź brzmienie oryginału.
+                </div>
+            {% endblock %}
+        {% endembed %}
 
 {# ===== Source preview modal ===== #}
 <div class="rag-modal" id="rag-modal" aria-hidden="true">

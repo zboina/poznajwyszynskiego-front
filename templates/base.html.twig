@@ -22,6 +22,22 @@
             font-family: var(--font-heading) !important;
         }
 
+        /* ── Stopka zawsze na dole okna, nawet przy krótkiej treści ──
+           Kolumna flex na <body> + margin-top:auto na stopce. Wrapperom stron
+           trzeba oddać wolną przestrzeń (flex: 1 0 auto), inaczej ich tła
+           kończyłyby się na wysokości treści. */
+        body { min-height: 100vh; display: flex; flex-direction: column; }
+        body > .page,
+        body > .rag-page,
+        body > .biblioteka { flex: 1 0 auto; }
+        .pw-footer { margin-top: auto; }
+
+        /* Tabler nadaje .page { min-height: 100% }. Gdy <body> jest kolumną flex
+           o min-height: 100vh, jego wysokość staje się określona i te 100% dają
+           pełne okno — a stopka dochodzi POD spodem, więc strona się przewija.
+           Wysokość .page ma wynikać z flex-grow, nie z procentu. */
+        body > .page { min-height: 0; }
+
         /* ── Font switcher panel (temporary) ── */
         .font-switcher {
             position: fixed; bottom: 1rem; right: 1rem; z-index: 9999;
@@ -272,7 +288,8 @@
         {% block importmap %}{{ importmap('app') }}{% endblock %}
     {% endblock %}
 </head>
-<body class="{% block body_class %}{% endblock %}"{% if app.user and not is_granted('ROLE_VIP') %} data-controller="protection"{% endif %}>
+{# Motyw V6 („Landing Jasny") jest jedynym motywem serwisu — dawny przełącznik V1–V6 usunięty. #}
+<body class="layout-v6 {% block body_class %}{% endblock %}"{% if app.user and not is_granted('ROLE_VIP') %} data-controller="protection"{% endif %}>
     {# ── Welcome splash (only on full page load, not Turbo; once per session) ── #}
     <div class="pw-splash" id="pwSplash" style="display:none">
         <div class="pw-splash-welcome" id="pwWelcome">
@@ -423,6 +440,41 @@
     </script>
 
     {% block body %}{% endblock %}
+
+    {# Jedna stopka dla całego serwisu. Widok bez stopki: {% block footer %}{% endblock %} #}
+    {% block footer %}{{ include('partials/_footer.html.twig') }}{% endblock %}
+
+    <script>
+    // Paski przypięte do dołu ekranu (composer asystenta) rosną wraz z treścią.
+    // Mierzymy je raz i wystawiamy jako --pw-bottom-bar; korzystają z tego stopka
+    // (odsuwa się, żeby nie chować się pod paskiem) i ikonka pomocy.
+    (function () {
+        var bar = document.querySelector('[data-bottom-bar]');
+        // Zmienna siedzi na <html>, które przeżywa nawigację Turbo — na stronie bez
+        // paska trzeba ją skasować, inaczej stopka zostałaby odsunięta bez powodu.
+        if (!bar) { document.documentElement.style.removeProperty('--pw-bottom-bar'); return; }
+        if (bar.__pwBottomBar) return;
+        bar.__pwBottomBar = true;
+        var apply = function () {
+            document.documentElement.style.setProperty('--pw-bottom-bar', bar.offsetHeight + 'px');
+        };
+        apply();
+        if (window.ResizeObserver) new ResizeObserver(apply).observe(bar);
+        else window.addEventListener('resize', apply);
+    })();
+
+    // Ikonka pomocy i przycisk „Aa" celują w ten sam róg. Gdy oba są na tej samej
+    // warstwie, „Aa" staje obok. W asystencie „Aa" siedzi w modalu źródła, który
+    // i tak zasłania pomoc — wtedy nic nie przesuwamy. Klasa na <html> przeżywa
+    // nawigację Turbo, więc używamy toggle(), nie add().
+    (function () {
+        var rt = document.querySelector('.rt-toggle');
+        var hasHelp = !!document.querySelector('.pw-help-fab');
+        var side = hasHelp && !!rt && !rt.closest('.rag-modal, [role="dialog"]');
+        document.documentElement.classList.toggle('pw-has-reader-tools', side);
+    })();
+    </script>
+
     <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js" defer></script>
     <script>
     (function() {

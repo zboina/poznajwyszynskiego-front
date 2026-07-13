@@ -230,20 +230,8 @@
     </div>
 </nav>
 
-{# Poza wyszukiwarką (brak .page z własnym przełącznikiem) nakładamy zapisany
-   motyw na <body>, aby pasek i strona reagowały na styl. Uruchamiane wcześnie
-   → pasek renderuje się od razu w docelowym kolorze. #}
+{# Motyw nie jest już wybierany w locie — klasa layout-v6 siedzi na <body> w base.html.twig. #}
 <script>
-(function () {
-    if (document.querySelector('.page')) return; // wyszukiwarka zarządza motywem sama
-    try {
-        var v = localStorage.getItem('pw_layout') || 'v1';
-        var b = document.body;
-        b.classList.remove('layout-v2', 'layout-v3', 'layout-v4', 'layout-v5', 'layout-v6');
-        if (v !== 'v1') b.classList.add('layout-' + v);
-    } catch (e) {}
-})();
-
 // Hamburger — zwijane menu na mobilnych
 (function () {
     var t = document.getElementById('appNavToggle');

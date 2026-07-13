@@ -1,0 +1,40 @@
+{#
+  Jedyna stopka projektu. Dołączana raz, w base.html.twig, tuż za blokiem body.
+  Widok, który jej nie chce, nadpisuje: {% block footer %}{% endblock %}
+
+  Świadomie nie zmienia układu stron — żadnego flexa na <body>, żadnego
+  sticky. Kończy dokument i tyle. Kolory bierze z klasy <body>, nie z kopii
+  szablonu: domyślnie granat, body.lib-shell — drewno i złoto.
+#}
+<footer class="pw-footer">
+    <a href="{{ path('app_home') }}">poznajwyszynskiego.pl</a>
+    <span class="pw-footer-sep" aria-hidden="true">&bull;</span>
+    <span>&copy; {{ 'now'|date('Y') }}</span>
+</footer>
+
+<style>
+    .pw-footer {
+        /* Odsuwa się od pasków przypiętych do dołu ekranu (composer asystenta),
+           których wysokość mierzy skrypt w base.html.twig. */
+        margin-bottom: var(--pw-bottom-bar, 0px);
+        padding: 1rem 1.25rem;
+        text-align: center;
+        font-family: 'Inter', sans-serif;
+        font-size: .78rem;
+        background: var(--pw-footer-bg, #1A365D);
+        color: var(--pw-footer-ink, rgba(255,255,255,.6));
+        border-top: 1px solid var(--pw-footer-edge, rgba(255,255,255,.08));
+    }
+    .pw-footer a { color: var(--pw-footer-accent, #C9A227); text-decoration: none; }
+    .pw-footer a:hover { text-decoration: underline; }
+    .pw-footer-sep { margin: 0 .5rem; opacity: .45; }
+
+    /* Biblioteka: granat ucinałby regał. */
+    body.lib-shell {
+        --pw-footer-bg: linear-gradient(180deg, #2c1a0e, #1c1008);
+        --pw-footer-ink: #cbb98f;
+        --pw-footer-edge: rgba(201,162,39,.28);
+        --pw-footer-accent: #e6cd78;
+    }
+</style>
+

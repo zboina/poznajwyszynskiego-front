@@ -51,4 +51,40 @@
         {% endif %}
     </div>
 </div>
+
+{# Pomoc kontekstowa — fixed w rogu, poza wyśrodkowanym nagłówkiem. #}
+{% embed 'partials/_help.html.twig' with {title: 'Jak korzystać z Biblioteki', help_key: 'biblioteka'} %}
+    {% block help_body %}
+        <h3>Czym jest Biblioteka</h3>
+        <p>To czytelnia <strong>Dzieł Zebranych</strong> ułożona jak prawdziwy regał: tom po tomie, tekst po tekście.
+           Wyszukiwarka odpowiada na pytanie „gdzie to było?". Biblioteka służy do czegoś innego —
+           do <strong>czytania po kolei</strong>, w porządku, w jakim teksty wydano.</p>
+
+        <h3>Jak się poruszać</h3>
+        <ul>
+<li>Kliknij <strong>grzbiet tomu</strong> na półce, aby zobaczyć jego spis tekstów.</li>
+<li>Ikona głośnika na grzbiecie znaczy, że w tym tomie są <strong>nagrania lektora</strong>;
+    w spisie treści ta sama ikona wskazuje konkretne teksty.</li>
+<li>W tekście linki <strong>‹ Poprzedni</strong> i <strong>Następny ›</strong> prowadzą przez tom bez wracania do spisu.</li>
+        </ul>
+
+        <h3>Ustawienia czytania</h3>
+        <p>Złoty przycisk <strong>Aa</strong> w rogu otwiera panel: <strong>czcionka</strong>, <strong>rozmiar</strong>,
+           <strong>tło</strong> (pergamin, biel, sepia, tryb nocny) i <strong>szerokość</strong> kolumny.
+           Twój wybór zapamiętuje przeglądarka i obowiązuje także w wyszukiwarce oraz u Asystenta AI.</p>
+
+        <h3>Nagrania</h3>
+        <p>Gdy tekst ma nagranie, odtwarzacz pojawia się nad treścią. <strong>Zapamiętuje moment, w którym przerwałeś</strong> —
+           wróć później, a zacznie stąd, gdzie skończyłeś. Strzałki <kbd>←</kbd> <kbd>→</kbd> przewijają o 5 sekund.</p>
+
+        <h3>Znaczniki stron i przypisy</h3>
+        <p><strong>[s. 12]</strong> w tekście to numer strony wydania drukowanego — cytując, powołuj się na niego.
+           Cyfra przy słowie to przypis; najedź na nią, aby zobaczyć treść w dymku, albo kliknij, by zejść na dół tekstu.</p>
+
+        <div class="pw-help-note">
+Biblioteka jest częścią dostępu <strong>VIP</strong>. Teksty i nagrania są tu w całości, bez limitu otwarć.
+        </div>
+    {% endblock %}
+{% endembed %}
+
 {% endblock %}

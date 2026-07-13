@@ -1,0 +1,194 @@
+{#
+  Pomoc kontekstowa strony: pływająca ikonka „?" w prawym dolnym rogu + okno z opisem funkcji.
+  Przycisk jest position:fixed, więc miejsce wstawienia partiala nie wpływa na układ —
+  wstawiaj go na końcu bloku body, poza wyśrodkowanymi nagłówkami.
+
+  Użycie (treść wstrzykujesz blokiem, więc każdy widok opisuje siebie):
+
+    {% embed 'partials/_help.html.twig' with {title: 'Jak działa wyszukiwarka', help_key: 'szukaj'} %}
+        {% block help_body %}
+            <h3>Nagłówek sekcji</h3>
+            <p>Treść…</p>
+        {% endblock %}
+    {% endembed %}
+
+  Parametry:
+    title    — nagłówek okna
+    help_key — klucz do localStorage; dopóki czytelnik nie otworzy pomocy
+               na danej stronie, ikonka delikatnie pulsuje (raz zobaczona → cisza)
+
+  Ikonka sama odsuwa się od pasków przypiętych do dołu ekranu — korzysta ze
+  zmiennej --pw-bottom-bar, którą wystawia skrypt w base.html.twig.
+#}
+{% set help_key = help_key ?? 'default' %}
+
+<button type="button" class="pw-help-fab" data-help-key="{{ help_key }}"
+        title="Pomoc — jak korzystać z tej strony" aria-label="Pomoc — jak korzystać z tej strony"
+        aria-haspopup="dialog" aria-expanded="false" aria-controls="pwHelpDialog">
+    <span aria-hidden="true">?</span>
+</button>
+
+<div class="pw-help" id="pwHelp" hidden>
+    <div class="pw-help-backdrop" data-help-close></div>
+    <div class="pw-help-dialog" id="pwHelpDialog" role="dialog" aria-modal="true" aria-labelledby="pwHelpTitle">
+        <div class="pw-help-head">
+            <h2 class="pw-help-title" id="pwHelpTitle">{{ title|default('Pomoc') }}</h2>
+            <button type="button" class="pw-help-x" data-help-close aria-label="Zamknij pomoc (Esc)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div class="pw-help-body">
+            {% block help_body %}{% endblock %}
+        </div>
+        <div class="pw-help-foot">
+            <span>Esc zamyka to okno.</span>
+            <button type="button" class="pw-help-ok" data-help-close>Rozumiem</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Pływająca ikonka — zawsze w prawym dolnym rogu, niezależnie od układu strony.
+       z-index niżej niż okna modalne (1080+), żeby nie wystawała ponad nie. */
+    .pw-help-fab {
+        position: fixed; right: 16px; z-index: 258;
+        bottom: calc(var(--pw-bottom-bar, 0px) + 16px + env(safe-area-inset-bottom, 0px));
+        width: 46px; height: 46px; padding: 0; cursor: pointer;
+        display: inline-flex; align-items: center; justify-content: center;
+        font-family: 'Playfair Display', serif; font-weight: 800; font-size: 1.35rem; line-height: 1;
+        color: #fff; background: linear-gradient(180deg, #8a3a43, #722F37); border: 0;
+        border-radius: 50%; box-shadow: 0 6px 18px rgba(0,0,0,.4);
+        transition: filter .15s, bottom .12s;
+    }
+    .pw-help-fab:hover { filter: brightness(1.12); }
+
+    /* Gdy na stronie jest też panel ustawień czytania, „Aa" ustępuje miejsca
+       w rogu i staje obok. Klasę nakłada skrypt w base.html.twig — bez :has(). */
+    .pw-has-reader-tools .rt-toggle { right: 74px; }
+
+    /* Dopóki czytelnik nie zajrzał do pomocy na tej stronie — delikatne tętno. */
+    .pw-help-fab.pw-help-new { animation: pwHelpPulse 2.6s ease-out infinite; }
+    @keyframes pwHelpPulse {
+        0%   { box-shadow: 0 6px 18px rgba(0,0,0,.4), 0 0 0 0 rgba(201,162,39,.6); }
+        70%  { box-shadow: 0 6px 18px rgba(0,0,0,.4), 0 0 0 11px rgba(201,162,39,0); }
+        100% { box-shadow: 0 6px 18px rgba(0,0,0,.4), 0 0 0 0 rgba(201,162,39,0); }
+    }
+    @media (prefers-reduced-motion: reduce) { .pw-help-fab.pw-help-new { animation: none; } }
+
+    .pw-help { position: fixed; inset: 0; z-index: 1200; }
+    .pw-help[hidden] { display: none; }
+    .pw-help-backdrop { position: absolute; inset: 0; background: rgba(28,24,19,.6); backdrop-filter: blur(2px); }
+    .pw-help-dialog {
+        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        width: min(680px, 94vw); max-height: 88vh; display: flex; flex-direction: column;
+        background: #fff; color: #2b2620; border-radius: 14px; overflow: hidden;
+        box-shadow: 0 24px 70px rgba(20,15,10,.45);
+        /* Nagłówki stron bywają wyśrodkowane — okno nie może tego dziedziczyć,
+           bo wypunktowania i akapity rozjeżdżają się na środek. */
+        text-align: left;
+        animation: pwHelpIn .18s ease-out;
+    }
+    @keyframes pwHelpIn { from { opacity: 0; transform: translate(-50%, calc(-50% + 8px)); } to { opacity: 1; transform: translate(-50%, -50%); } }
+    .pw-help-head {
+        display: flex; align-items: center; gap: 1rem; padding: 1rem 1.25rem;
+        background: linear-gradient(135deg, #722F37, #5C2630); color: #fff;
+    }
+    .pw-help-title { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 700; margin: 0; flex: 1 1 auto; text-align: left; }
+    .pw-help-x {
+        flex: 0 0 auto; width: 34px; height: 34px; border-radius: 9px; border: 0; cursor: pointer;
+        display: inline-flex; align-items: center; justify-content: center;
+        background: rgba(255,255,255,.15); color: #fff; transition: background .15s;
+    }
+    .pw-help-x:hover { background: rgba(255,255,255,.3); }
+
+    .pw-help-body {
+        overflow-y: auto; padding: 1.35rem 1.5rem; text-align: left;
+        font-family: 'Inter', sans-serif; font-size: .95rem; line-height: 1.65; color: #2b2620;
+    }
+    .pw-help-body h3 {
+        font-family: 'Inter', sans-serif; font-size: .72rem; font-weight: 700;
+        text-transform: uppercase; letter-spacing: .09em; color: #9a7b3c;
+        margin: 1.5rem 0 .5rem; text-align: left;
+    }
+    .pw-help-body h3:first-child { margin-top: 0; }
+    .pw-help-body p { margin: 0 0 .7rem; text-align: left; text-indent: 0; max-width: none; }
+    .pw-help-body ul { margin: 0 0 .9rem; padding-left: 1.15rem; text-align: left; list-style-position: outside; }
+    .pw-help-body li { margin-bottom: .4rem; text-align: left; }
+    .pw-help-body strong { color: #1c1813; }
+    .pw-help-body a { color: #722F37; }
+    .pw-help-body kbd {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .78em;
+        background: #f3efe6; border: 1px solid #ddd4c0; border-bottom-width: 2px;
+        border-radius: 4px; padding: .05em .4em; color: #4a3a22;
+    }
+    .pw-help-note {
+        margin-top: 1.2rem; padding: .7rem .9rem; border-radius: 8px; text-align: left;
+        background: #fdf7e6; border: 1px solid #e8d9a8; color: #6b5a2c; font-size: .88rem;
+    }
+
+    .pw-help-foot {
+        display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+        padding: .8rem 1.25rem; border-top: 1px solid #efe9dd; background: #fbf9f4;
+        font-family: 'Inter', sans-serif; font-size: .8rem; color: #8a7d68; text-align: left;
+    }
+    .pw-help-ok {
+        cursor: pointer; border: 0; border-radius: 999px; padding: .45rem 1.1rem;
+        font-family: 'Inter', sans-serif; font-weight: 700; font-size: .85rem;
+        background: #722F37; color: #fff; transition: filter .15s;
+    }
+    .pw-help-ok:hover { filter: brightness(1.1); }
+
+    @media (max-width: 640px) {
+        .pw-help-fab { right: 12px; width: 42px; height: 42px; font-size: 1.2rem; }
+        .pw-has-reader-tools .rt-toggle { right: 66px; }
+        .pw-help-dialog { width: 96vw; max-height: 92vh; }
+        .pw-help-body { padding: 1.1rem 1rem; }
+    }
+</style>
+
+<script>
+(function () {
+    var btn = document.querySelector('.pw-help-fab');
+    var wrap = document.getElementById('pwHelp');
+    if (!btn || !wrap) return;
+    // Strażnik na węźle, nie na window: Turbo Drive podmienia <body> przy nawigacji,
+    // więc flaga na window zablokowałaby podpięcie listenerów do świeżych elementów.
+    if (wrap.__pwHelpInit) return;
+    wrap.__pwHelpInit = true;
+
+    var KEY = 'pw_help_seen:' + (btn.getAttribute('data-help-key') || 'default');
+    var lastFocus = null;
+
+    function seen() { try { return localStorage.getItem(KEY) === '1'; } catch (e) { return true; } }
+    function markSeen() { try { localStorage.setItem(KEY, '1'); } catch (e) {} }
+
+    if (!seen()) btn.classList.add('pw-help-new');
+
+    function open() {
+        lastFocus = document.activeElement;
+        wrap.hidden = false;
+        btn.setAttribute('aria-expanded', 'true');
+        btn.classList.remove('pw-help-new');
+        markSeen();
+        var x = wrap.querySelector('.pw-help-x');
+        if (x) x.focus();
+    }
+    function close() {
+        if (wrap.hidden) return;
+        wrap.hidden = true;
+        btn.setAttribute('aria-expanded', 'false');
+        if (lastFocus && lastFocus.focus) lastFocus.focus();
+    }
+
+    btn.addEventListener('click', open);
+    wrap.querySelectorAll('[data-help-close]').forEach(function (el) { el.addEventListener('click', close); });
+    // Gdy pomoc jest otwarta, Esc zamyka tylko ją — strony mają własne obsługi Esc
+    // (zamknięcie dokumentu, podglądu źródła), które nie powinny wtedy zadziałać.
+    // Ten listener jest rejestrowany wcześniej niż one, więc może je zatrzymać.
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !wrap.hidden) { e.stopImmediatePropagation(); close(); }
+    });
+    // Nie zapisuj do snapshotu Turbo strony z otwartą pomocą.
+    document.addEventListener('turbo:before-cache', close, { once: true });
+})();
+</script>
