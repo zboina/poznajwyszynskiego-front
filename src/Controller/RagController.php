@@ -273,6 +273,33 @@ class RagController extends AbstractController
         ]);
     }
 
+    /**
+     * Skrót historii dla popovera w pasku pytania: same pytania (bez treści odpowiedzi
+     * i cytatów), przypięte na górze. Pełna historia — z podglądem i zarządzaniem —
+     * zostaje na osobnej stronie `app_rag_history`.
+     */
+    #[Route('/asystent/historia/ostatnie', name: 'app_rag_history_recent', methods: ['GET'])]
+    public function historyRecent(): JsonResponse
+    {
+        /** @var User|null $user */
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return new JsonResponse(['items' => [], 'total' => 0]);
+        }
+
+        $items = array_map(static fn (array $r): array => [
+            'question' => $r['question'],
+            'scope' => $r['scope_label'],
+            'volume' => $r['volume_number'] !== null ? (int) $r['volume_number'] : null,
+            'pinned' => $r['pinned'],
+        ], $this->history->forUser($user->getId(), 8));
+
+        return new JsonResponse([
+            'items' => $items,
+            'total' => $this->history->countForUser($user->getId()),
+        ]);
+    }
+
     #[Route('/asystent/historia/wyczysc', name: 'app_rag_history_clear', methods: ['POST'])]
     public function historyClear(): JsonResponse
     {

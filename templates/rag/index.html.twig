@@ -8,23 +8,26 @@
 <style>
     :root { --pw-maroon: #722F37; --pw-maroon-dark: #5C2630; --pw-gold: #c8b78d; --pw-cream: #f8f4ec; }
 
-    /* ═══════ Motywy v1–v6 — klasa layout-* jest na <body> (skrypt w _navbar).
-       Cała strona używa var(--pw-maroon), więc zmiana tokenu przeskinowuje
-       hero, dymki, przycisk wyślij, źródła, composer i modal. ═══════ */
-    body.layout-v3, body.layout-v4 { --pw-maroon: #1A365D; --pw-maroon-dark: #12243f; }
-    body.layout-v5 { --pw-maroon: #5C2630; --pw-maroon-dark: #481d26; }
+    .rag-page { background: var(--pw-cream); }
+    .rag-wrap { max-width: 860px; margin: 0 auto; padding: 2.5rem 1rem 12rem; }
 
-    .rag-page { background:
-        radial-gradient(1200px 400px at 50% -120px, #faf6ee 0%, transparent 70%); min-height: 100vh; }
-    /* Tło dopasowane do temperatury motywu. */
-    body.layout-v2 .rag-page { background: #fff; }
-    body.layout-v3 .rag-page, body.layout-v4 .rag-page {
-        background: radial-gradient(1200px 400px at 50% -120px, #eaf0f8 0%, transparent 70%); }
-    body.layout-v5 .rag-page { background: radial-gradient(1200px 400px at 50% -120px, #f7eef0 0%, transparent 70%); }
-    body.layout-v6 .rag-page { background: var(--pw-cream); }
-    .rag-wrap { max-width: 860px; margin: 0 auto; padding: 2.5rem 1rem 11rem; }
+    /* ═══════ Stan startowy: hero i pole pytania jako jeden blok, wyśrodkowany w pionie ═══════
+       Przyklejone do dołu pustego ekranu ginęło — między hero a paskiem zieje pustka,
+       więc wzrok nie ma czym zjechać. Centrujemy w WOLNEJ wysokości (to, co zostało po
+       nawigacji i stopce), nie w całym oknie — dlatego blok siada wysoko, a stopka
+       zostaje na ekranie. Po pierwszym pytaniu composer dokuje do dołu i zachowuje się
+       jak w czacie: zawsze pod ostatnią odpowiedzią. */
+    .rag-page.start { display: flex; flex-direction: column; justify-content: center; }
+    .rag-page.start .rag-wrap { padding-top: 1rem; padding-bottom: .5rem; }
+    .rag-page.start .rag-composer {
+        position: static; background: none; padding: 0 1rem 1rem; pointer-events: auto; }
+    /* Panele i tu otwierają się w górę — przykrywają hero, ale mają na to miejsce.
+       W dół zostaje tylko dolna połowa ekranu minus podpowiedź, więc panel by się urywał. */
+    .rag-page.start .rag-pop-body { max-height: min(40vh, 330px); }
 
     .rag-hero { text-align: center; margin-bottom: 2rem; }
+    /* Po pierwszym pytaniu hero ustępuje miejsca wątkowi. */
+    .rag-hero.collapsed { display: none; }
     .rag-hero .crest {
         width: 60px; height: 60px; border-radius: 50%; display: inline-flex;
         align-items: center; justify-content: center; margin-bottom: .75rem;
@@ -34,18 +37,6 @@
     .rag-hero h1 { font-family: var(--font-heading); color: var(--pw-maroon);
         font-weight: 700; font-size: 2.3rem; margin: 0; }
     .rag-hero p { color: #6b6256; max-width: 560px; margin: .5rem auto 0; font-size: 1.02rem; }
-
-    .rag-histbar {
-        display: flex; align-items: center; justify-content: space-between;
-        gap: 1rem; margin-bottom: 1.25rem; padding: .5rem .9rem;
-        background: #fff; border: 1px solid #ece5d8; border-radius: 12px;
-        box-shadow: 0 2px 12px rgba(60,50,30,.05); }
-    .rag-histbar-label { color: #8a7d68; font-size: .85rem; font-weight: 600; }
-    .rag-histbar-clear {
-        border: 1px solid #e3d9c4; background: #fff; color: #8a3b3b;
-        border-radius: 999px; padding: .25rem .75rem; font-size: .8rem; cursor: pointer;
-        display: inline-flex; align-items: center; gap: .3rem; transition: all .15s; }
-    .rag-histbar-clear:hover { background: #8a3b3b; color: #fff; border-color: #8a3b3b; }
 
     .rag-msg { margin-bottom: 1.5rem; }
     .rag-q {
@@ -101,46 +92,106 @@
     .rag-toolbar { margin-top: 1rem; display: flex; gap: .5rem; }
     .rag-toolbar .btn { font-size: .85rem; }
 
-    /* ── Rozwijana lista przykładowych pytań ── */
-    .rag-examples { max-width: 720px; margin: 0 auto; }
-    .rag-ex-toggle {
-        width: 100%; display: flex; align-items: center; gap: .55rem;
-        background: #fff; border: 1px solid var(--pw-gold); border-radius: 14px;
-        padding: .8rem 1.1rem; color: var(--pw-maroon); font-weight: 700; font-size: .95rem;
-        cursor: pointer; box-shadow: 0 2px 14px rgba(60,50,30,.05); transition: background .15s; }
-    .rag-ex-toggle:hover { background: var(--pw-cream); }
-    .rag-ex-toggle span { flex: 1 1 auto; text-align: left; }
-    .rag-ex-toggle .ti-chevron-down { transition: transform .2s; }
-    .rag-ex-toggle[aria-expanded="true"] .ti-chevron-down { transform: rotate(180deg); }
-    .rag-ex-panel { display: none; margin-top: .6rem; }
-    .rag-ex-panel.open { display: block; animation: ragExIn .18s ease-out; }
-    @keyframes ragExIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
-    .rag-ex-group { margin-bottom: 1rem; }
+    /* ═══════ Pasek narzędzi w composerze („taca”) + jeden wspólny panel ═══════
+       Przykłady, Zakres i Historia dzielą tę samą mechanikę: przycisk w tacy
+       otwiera panel nad polem pytania. Jeden panel naraz — Esc i klik obok
+       zamykają. Stąd spójność: trzy różne treści, jeden język wizualny. */
+    .rag-shell { position: relative; }
+
+    .rag-tray {
+        display: flex; align-items: center; gap: .25rem;
+        padding: .35rem .15rem 0; margin-top: .3rem; border-top: 1px solid #f2ebdd; }
+    .rag-tray-btn {
+        display: inline-flex; align-items: center; gap: .35rem; border: 0; background: transparent;
+        color: #8a7d68; font-size: .82rem; font-weight: 600; cursor: pointer;
+        padding: .32rem .6rem; border-radius: 999px; transition: background .14s, color .14s; }
+    .rag-tray-btn:hover { background: var(--pw-cream); color: var(--pw-maroon); }
+    .rag-tray-btn[aria-expanded="true"] { background: var(--pw-maroon); color: #fff; }
+    .rag-tray-btn i { font-size: .95rem; }
+    .rag-tray-btn .chev { font-size: .7rem; opacity: .7; transition: transform .18s; }
+    .rag-tray-btn[aria-expanded="true"] .chev { transform: rotate(180deg); }
+    /* Zawężony zakres widać bez otwierania panelu. */
+    .rag-tray-btn.is-set { color: var(--pw-maroon); background: var(--pw-cream); box-shadow: inset 0 0 0 1px var(--pw-gold); }
+    .rag-tray-btn.is-set[aria-expanded="true"] { color: #fff; background: var(--pw-maroon); box-shadow: none; }
+    .rag-tray-spacer { flex: 1 1 auto; }
+    .rag-tray-credits { color: #9a917f; font-size: .78rem; white-space: nowrap; padding-right: .4rem; }
+    .rag-tray-credits strong { color: var(--pw-maroon); }
+    .rag-tray-credits.low strong { color: #a34141; }
+
+    .rag-pop {
+        position: absolute; bottom: calc(100% + .55rem); left: 0; right: 0; display: none;
+        background: #fff; border: 1px solid var(--pw-gold); border-radius: 16px; overflow: hidden;
+        box-shadow: 0 16px 44px rgba(60,50,30,.20), 0 2px 8px rgba(60,50,30,.10); }
+    .rag-pop.open { display: flex; flex-direction: column; animation: ragPopIn .16s ease-out; }
+    @keyframes ragPopIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    .rag-pop-head {
+        display: flex; align-items: center; gap: .5rem; padding: .65rem 1rem;
+        border-bottom: 1px solid #f2ebdd; background: var(--pw-cream); }
+    .rag-pop-head .ttl {
+        flex: 1 1 auto; display: flex; align-items: center; gap: .45rem;
+        color: var(--pw-maroon); font-weight: 700; font-size: .9rem; }
+    .rag-pop-x {
+        border: 0; background: transparent; color: #8a7d68; cursor: pointer;
+        width: 26px; height: 26px; border-radius: 7px;
+        display: inline-flex; align-items: center; justify-content: center; }
+    .rag-pop-x:hover { background: #eee4cf; color: var(--pw-maroon); }
+    .rag-pop-body { overflow-y: auto; max-height: min(50vh, 400px); padding: .7rem 1rem .9rem; }
+    .rag-pop-foot { border-top: 1px solid #f2ebdd; padding: .55rem 1rem; text-align: center; }
+    .rag-pop-foot a { color: var(--pw-maroon); font-weight: 700; font-size: .85rem; text-decoration: none; }
+    .rag-pop-foot a:hover { text-decoration: underline; }
+    .rag-pop-empty { color: #9a917f; font-size: .9rem; text-align: center; padding:1.3rem .5rem; }
+
+    /* Przykłady — kategorie w dwóch kolumnach, by lista mieściła się bez długiego scrolla. */
+    .rag-ex-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 1.5rem; }
+    @media (max-width: 640px) { .rag-ex-grid { grid-template-columns: 1fr; } }
     .rag-ex-cat {
-        font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; font-weight: 700;
-        color: #9a7b3c; margin: 0 .15rem .4rem; }
-    .rag-ex-q {
+        font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; font-weight: 700;
+        color: #9a7b3c; margin: .55rem .3rem .2rem; }
+    .rag-pick {
         display: block; width: 100%; text-align: left; cursor: pointer;
-        background: #fff; border: 1px solid #ece5d8; border-radius: 10px;
-        padding: .6rem .85rem; margin-bottom: .4rem; color: #2b2620; font-size: .92rem;
-        line-height: 1.4; transition: all .12s; }
-    .rag-ex-q:hover { border-color: var(--pw-gold); background: var(--pw-cream); color: var(--pw-maroon); transform: translateX(2px); }
+        background: transparent; border: 0; border-radius: 9px; padding: .42rem .55rem;
+        color: #2b2620; font-size: .9rem; line-height: 1.35; transition: background .12s, color .12s; }
+    .rag-pick:hover { background: var(--pw-cream); color: var(--pw-maroon); }
+
+    /* Zakres — lista tomów; ptaszek pokazuje aktywny. */
+    .rag-vol {
+        display: flex; align-items: center; gap: .6rem; width: 100%; text-align: left;
+        cursor: pointer; background: transparent; border: 0; border-radius: 9px;
+        padding: .5rem .6rem; color: #2b2620; font-size: .92rem; }
+    .rag-vol:hover { background: var(--pw-cream); }
+    .rag-vol .tick { flex: 0 0 auto; width: 1.1rem; color: var(--pw-maroon); opacity: 0; }
+    .rag-vol[aria-checked="true"] { color: var(--pw-maroon); font-weight: 700; }
+    .rag-vol[aria-checked="true"] .tick { opacity: 1; }
+    .rag-vol .vt { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* Historia — same pytania; przypięte na górze, oddzielone kreską. */
+    .rag-hist {
+        display: flex; align-items: baseline; gap: .55rem; width: 100%; text-align: left;
+        cursor: pointer; background: transparent; border: 0; border-radius: 9px;
+        padding: .45rem .55rem; color: #2b2620; font-size: .9rem; }
+    .rag-hist:hover { background: var(--pw-cream); color: var(--pw-maroon); }
+    .rag-hist .pin { flex: 0 0 auto; width: 1rem; color: var(--pw-gold); font-size: .85rem; }
+    .rag-hist .qt { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .rag-hist .sc { flex: 0 0 auto; color: #9a917f; font-size: .75rem; }
+    .rag-hist-sep { border-top: 1px dashed #ece2cc; margin: .45rem .25rem; }
 
     .rag-composer {
         position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
         /* Dłuższy, gęstszy zanik u dołu — tekst wątku „wtapia się" pod paskiem,
            a sam blok nie ginie, bo dolne 60% jest w pełni kryjące. */
-        background: linear-gradient(to top, #fff 60%, rgba(255,255,255,.9) 80%, rgba(255,255,255,0) 100%);
+        background: linear-gradient(to top, var(--pw-cream) 60%, rgba(248,244,236,.9) 80%, rgba(248,244,236,0) 100%);
         padding: 2rem 1rem 1.15rem;
         /* Strefa zaniku przepuszcza kliknięcia do wątku pod spodem; treść paska je odzyskuje. */
         pointer-events: none; }
     .rag-composer .inner { max-width: 860px; margin: 0 auto; pointer-events: auto; }
     .rag-composer .box {
-        display: flex; gap: .5rem; align-items: flex-end; background: #fff;
-        border: 1.5px solid var(--pw-gold); border-radius: 18px; padding: .55rem .55rem .55rem 1.15rem;
+        display: flex; flex-direction: column; background: #fff;
+        border: 1.5px solid var(--pw-gold); border-radius: 18px; padding: .5rem .6rem .4rem;
         /* Warstwowy cień unosi blok nad stroną → nie zlewa się z tłem. */
         box-shadow: 0 12px 36px rgba(60,50,30,.16), 0 2px 8px rgba(60,50,30,.09);
         transition: border-color .18s, box-shadow .18s, transform .18s; }
+    /* Wiersz z polem i przyciskiem wyślij; taca siedzi pod nim, w tej samej ramce. */
+    .rag-composer .box-input { display: flex; gap: .5rem; align-items: flex-end; padding-left: .55rem; }
     /* Wyraźne podświetlenie w trakcie pisania — blok „ożywa" i przyciąga wzrok. */
     .rag-composer .box:focus-within {
         border-color: var(--pw-maroon);
@@ -166,20 +217,6 @@
     .rag-composer .send:active:not(:disabled) { transform: translateY(0); box-shadow: 0 3px 9px rgba(114,47,55,.32); }
     .rag-composer .send:disabled { opacity: .4; cursor: default; box-shadow: none; }
     .rag-composer .send.stop { background: linear-gradient(135deg, #a34141, #8a3b3b); box-shadow: 0 4px 12px rgba(138,59,59,.34); }
-    /* Dopasowanie paska do ciepłych/zimnych motywów, by nie był białym slabem na tle. */
-    body.layout-v6 .rag-composer {
-        background: linear-gradient(to top, var(--pw-cream) 60%, rgba(248,244,236,.9) 80%, rgba(248,244,236,0) 100%); }
-    body.layout-v3 .rag-composer, body.layout-v4 .rag-composer {
-        background: linear-gradient(to top, #fbfcfe 60%, rgba(251,252,254,.9) 80%, rgba(251,252,254,0) 100%); }
-    .rag-scope {
-        display: flex; align-items: center; gap: .4rem; margin: 0 auto .55rem;
-        width: fit-content; color: #8a7d68; font-size: .82rem; background: #fff;
-        border: 1px solid var(--pw-gold); border-radius: 999px; padding: .25rem .75rem;
-        box-shadow: 0 2px 10px rgba(60,50,30,.06); }
-    .rag-scope select {
-        border: 0; outline: 0; background: transparent; color: var(--pw-maroon);
-        font-weight: 600; font-size: .82rem; cursor: pointer; padding-right: .2rem; }
-    .rag-composer .hint { text-align: center; color: #9a917f; font-size: .78rem; margin-top: .5rem; }
     .rag-blocked {
         display: flex; align-items: center; justify-content: center; gap: .5rem; flex-wrap: wrap;
         background: #fff; border: 1px solid var(--pw-gold); border-radius: 16px;
@@ -189,21 +226,6 @@
     .rag-blocked a:hover { text-decoration: underline; }
     .rag-badge { background: var(--pw-cream); border: 1px solid var(--pw-gold); color: #5a4a2e;
         border-radius: 999px; padding: .1rem .6rem; font-size: .75rem; font-weight: 600; }
-
-    /* ── Archive (saved questions) quick list ── */
-    .rag-histbar { flex-wrap: wrap; }
-    .rag-histbar-toggle {
-        border: 0; background: transparent; color: var(--pw-maroon); font-weight: 600;
-        font-size: .85rem; cursor: pointer; display: inline-flex; align-items: center; gap: .35rem; }
-    .rag-histlist { width: 100%; margin-top: .5rem; border-top: 1px dashed #e6ddca; padding-top: .5rem; display: none; }
-    .rag-histlist.open { display: block; }
-    .rag-histitem {
-        display: flex; gap: .5rem; align-items: baseline; width: 100%; text-align: left;
-        border: 0; background: transparent; cursor: pointer; padding: .3rem .25rem;
-        border-radius: 6px; font-size: .9rem; color: #2b2620; }
-    .rag-histitem:hover { background: var(--pw-cream); }
-    .rag-histitem .qn { color: var(--pw-gold); font-weight: 700; flex: 0 0 auto; }
-    .rag-histitem .qt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
     /* ── Source preview modal ── */
     .rag-modal { position: fixed; inset: 0; z-index: 1080; display: none; }
@@ -249,115 +271,146 @@
 
 {% block body %}
 {% include 'partials/_navbar.html.twig' %}
-<div class="rag-page">
+<div class="rag-page start" id="rag-page">
 <div class="rag-wrap">
-    <div class="rag-hero">
+    <div class="rag-hero" id="rag-hero">
         <div class="crest"><i class="ti ti-feather"></i></div>
         <h1>Asystent Dzieł Zebranych</h1>
         <p>Zadaj pytanie — odpowiem wyłącznie na podstawie pism kardynała Stefana Wyszyńskiego,
            z odnośnikami do tomu i strony wydania drukowanego.</p>
-        <p class="mt-2">
-            {% if volumes is empty %}
-                <span class="rag-badge">Korpus w przygotowaniu</span>
-            {% else %}
-                <span class="rag-badge">Dostępne tomy:
-                    {%- for v in volumes %} {{ v.roman }}{% if not loop.last %},{% endif %}{% endfor -%}
-                </span>
-            {% endif %}
-            {% if not unlimited %}
-                <span class="rag-badge" id="rag-credits" title="Pula pytań do asystenta">
-                    Pozostało pytań: <strong id="rag-credits-n">{{ credits }}</strong>
-                </span>
-            {% endif %}
-        </p>
-        {% if not unlimited and credits <= 0 %}
-            <p class="mt-1"><a href="{{ path('app_donate') }}" style="color:var(--pw-maroon);font-weight:700;">Doładuj pulę pytań — Wesprzyj →</a></p>
+        {% if volumes is empty %}
+            <p class="mt-2"><span class="rag-badge">Korpus w przygotowaniu</span></p>
         {% endif %}
-
     </div>
-
-    {% if app.user %}
-    <div class="rag-histbar" id="rag-histbar">
-        <span class="rag-histbar-label"><i class="ti ti-cloud-check"></i> Twoje rozmowy zapisują się na koncie</span>
-        <a class="rag-histbar-toggle" href="{{ path('app_rag_history') }}">
-            <i class="ti ti-folder"></i> Moja historia <i class="ti ti-chevron-right"></i>
-        </a>
-    </div>
-    {% endif %}
 
     <div id="rag-thread"></div>
-
-    <div class="rag-examples" id="rag-examples">
-        <button type="button" class="rag-ex-toggle" id="rag-ex-toggle" aria-expanded="false">
-            <i class="ti ti-bulb"></i>
-            <span>Przykładowe pytania do asystenta</span>
-            <i class="ti ti-chevron-down" id="rag-ex-chevron"></i>
-        </button>
-        <div class="rag-ex-panel" id="rag-ex-panel">
-            <div class="rag-ex-group">
-                <div class="rag-ex-cat">Kościół i Sobór Watykański II</div>
-                <button class="rag-ex-q">Co Kardynał Wyszyński mówił o głównych nurtach Soboru Watykańskiego II?</button>
-                <button class="rag-ex-q">Jak Prymas rozumiał Kościół jako „Rodzinę Bożą"?</button>
-                <button class="rag-ex-q">Co mówił o odnowie liturgii i konstytucji o liturgii świętej?</button>
-                <button class="rag-ex-q">Jak odniósł się do encykliki „Pacem in terris" i sprawy pokoju?</button>
-            </div>
-            <div class="rag-ex-group">
-                <div class="rag-ex-cat">Maryja i pobożność</div>
-                <button class="rag-ex-q">Czym było oddanie się w „słodką niewolę" Matki Najświętszej?</button>
-                <button class="rag-ex-q">Co Kardynał Wyszyński mówił o Maryi jako Matce Kościoła?</button>
-                <button class="rag-ex-q">Jakie znaczenie nadawał Apelowi Jasnogórskiemu?</button>
-                <button class="rag-ex-q">Co mówił o Tysiącleciu Chrztu Polski?</button>
-            </div>
-            <div class="rag-ex-group">
-                <div class="rag-ex-cat">Rodzina, młodzież, powołanie</div>
-                <button class="rag-ex-q">Co Prymas mówił o rodzinie katolickiej?</button>
-                <button class="rag-ex-q">Jakie przesłanie kierował do młodzieży akademickiej?</button>
-                <button class="rag-ex-q">Co mówił dziewczętom o godności i powołaniu kobiety?</button>
-                <button class="rag-ex-q">Jak rozumiał powołanie i odpowiedzialność mężczyzn katolickich?</button>
-            </div>
-            <div class="rag-ex-group">
-                <div class="rag-ex-cat">Kapłaństwo i naród</div>
-                <button class="rag-ex-q">Co Kardynał Wyszyński mówił do neoprezbiterów w dniu święceń?</button>
-                <button class="rag-ex-q">Jakie zadania stawiał duchowieństwu polskiemu wobec potrzeb współczesnych?</button>
-                <button class="rag-ex-q">Co mówił o miłości Ojczyzny i wolności narodu?</button>
-                <button class="rag-ex-q">Jak ujmował chrześcijański sens pracy?</button>
-            </div>
-            <div class="rag-ex-group">
-                <div class="rag-ex-cat">Życie i posługa Prymasa</div>
-                <button class="rag-ex-q">Co Kardynał Wyszyński napisał po nominacji na arcybiskupa Gniezna i Warszawy?</button>
-                <button class="rag-ex-q">Jak mówił o odbudowie katedry gnieźnieńskiej?</button>
-                <button class="rag-ex-q">Co przekazał w odezwie na 950-lecie kanonizacji świętego Wojciecha?</button>
-                <button class="rag-ex-q">Jakie słowa skierował do Polaków za granicą?</button>
-            </div>
-        </div>
-    </div>
 </div>
 
 <div class="rag-composer" data-bottom-bar>
     <div class="inner">
-        {% if volumes|length > 1 %}
-        <div class="rag-scope">
-            <i class="ti ti-books"></i>
-            <span>Zakres:</span>
-            <select id="rag-scope">
-                <option value="">Wszystkie tomy</option>
-                {% for v in volumes %}
-                    <option value="{{ v.number }}">Tom {{ v.roman }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        {% endif %}
-        <div class="box" id="rag-box">
-            <textarea id="rag-q" rows="1" placeholder="Napisz pytanie do tekstów Prymasa…"></textarea>
-            <button id="rag-send" class="send" title="Wyślij"><i class="ti ti-send"></i></button>
-            <button id="rag-stop" class="send stop" title="Zatrzymaj" style="display:none;"><i class="ti ti-player-stop-filled"></i></button>
+        <div class="rag-shell" id="rag-shell">
+
+            {# ── Panel: przykładowe pytania ── #}
+            <div class="rag-pop" id="pop-examples" data-pop="examples">
+                <div class="rag-pop-head">
+                    <span class="ttl"><i class="ti ti-bulb"></i> Przykładowe pytania</span>
+                    <button type="button" class="rag-pop-x" data-pop-close title="Zamknij"><i class="ti ti-x"></i></button>
+                </div>
+                <div class="rag-pop-body">
+                    <div class="rag-ex-grid">
+                        <div>
+                            <div class="rag-ex-cat">Kościół i Sobór Watykański II</div>
+                            <button type="button" class="rag-pick">Co Kardynał Wyszyński mówił o głównych nurtach Soboru Watykańskiego II?</button>
+                            <button type="button" class="rag-pick">Jak Prymas rozumiał Kościół jako „Rodzinę Bożą"?</button>
+                            <button type="button" class="rag-pick">Co mówił o odnowie liturgii i konstytucji o liturgii świętej?</button>
+                            <button type="button" class="rag-pick">Jak odniósł się do encykliki „Pacem in terris" i sprawy pokoju?</button>
+                        </div>
+                        <div>
+                            <div class="rag-ex-cat">Maryja i pobożność</div>
+                            <button type="button" class="rag-pick">Czym było oddanie się w „słodką niewolę" Matki Najświętszej?</button>
+                            <button type="button" class="rag-pick">Co Kardynał Wyszyński mówił o Maryi jako Matce Kościoła?</button>
+                            <button type="button" class="rag-pick">Jakie znaczenie nadawał Apelowi Jasnogórskiemu?</button>
+                            <button type="button" class="rag-pick">Co mówił o Tysiącleciu Chrztu Polski?</button>
+                        </div>
+                        <div>
+                            <div class="rag-ex-cat">Rodzina, młodzież, powołanie</div>
+                            <button type="button" class="rag-pick">Co Prymas mówił o rodzinie katolickiej?</button>
+                            <button type="button" class="rag-pick">Jakie przesłanie kierował do młodzieży akademickiej?</button>
+                            <button type="button" class="rag-pick">Co mówił dziewczętom o godności i powołaniu kobiety?</button>
+                            <button type="button" class="rag-pick">Jak rozumiał powołanie i odpowiedzialność mężczyzn katolickich?</button>
+                        </div>
+                        <div>
+                            <div class="rag-ex-cat">Kapłaństwo i naród</div>
+                            <button type="button" class="rag-pick">Co Kardynał Wyszyński mówił do neoprezbiterów w dniu święceń?</button>
+                            <button type="button" class="rag-pick">Jakie zadania stawiał duchowieństwu polskiemu wobec potrzeb współczesnych?</button>
+                            <button type="button" class="rag-pick">Co mówił o miłości Ojczyzny i wolności narodu?</button>
+                            <button type="button" class="rag-pick">Jak ujmował chrześcijański sens pracy?</button>
+                        </div>
+                        <div>
+                            <div class="rag-ex-cat">Życie i posługa Prymasa</div>
+                            <button type="button" class="rag-pick">Co Kardynał Wyszyński napisał po nominacji na arcybiskupa Gniezna i Warszawy?</button>
+                            <button type="button" class="rag-pick">Jak mówił o odbudowie katedry gnieźnieńskiej?</button>
+                            <button type="button" class="rag-pick">Co przekazał w odezwie na 950-lecie kanonizacji świętego Wojciecha?</button>
+                            <button type="button" class="rag-pick">Jakie słowa skierował do Polaków za granicą?</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# ── Panel: zakres przeszukiwania ── #}
+            {% if volumes|length > 1 %}
+            <div class="rag-pop" id="pop-scope" data-pop="scope">
+                <div class="rag-pop-head">
+                    <span class="ttl"><i class="ti ti-books"></i> Przeszukuj</span>
+                    <button type="button" class="rag-pop-x" data-pop-close title="Zamknij"><i class="ti ti-x"></i></button>
+                </div>
+                <div class="rag-pop-body">
+                    <button type="button" class="rag-vol" role="checkbox" aria-checked="true" data-volume="" data-label="Wszystkie tomy">
+                        <i class="ti ti-check tick"></i>
+                        <span class="vt">Wszystkie tomy</span>
+                    </button>
+                    {% for v in volumes %}
+                        {# Tytuł tomu w bazie brzmi „Dzieła Zebrane Tom I” — powtórzony obok numeru
+                           dawałby „Tom I — Dzieła Zebrane Tom I”. Zostaje sama numeracja. #}
+                        <button type="button" class="rag-vol" role="checkbox" aria-checked="false"
+                                data-volume="{{ v.number }}" data-label="Tom {{ v.roman }}">
+                            <i class="ti ti-check tick"></i>
+                            <span class="vt">Tom {{ v.roman }}</span>
+                        </button>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {# ── Panel: historia (skrót; pełna lista na osobnej stronie) ── #}
+            {% if app.user %}
+            <div class="rag-pop" id="pop-history" data-pop="history">
+                <div class="rag-pop-head">
+                    <span class="ttl"><i class="ti ti-history"></i> Twoje pytania</span>
+                    <button type="button" class="rag-pop-x" data-pop-close title="Zamknij"><i class="ti ti-x"></i></button>
+                </div>
+                <div class="rag-pop-body" id="rag-hist-body"></div>
+                <div class="rag-pop-foot" id="rag-hist-foot" style="display:none;">
+                    <a href="{{ path('app_rag_history') }}">Zobacz całą historię<span class="cnt"></span> →</a>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="box" id="rag-box">
+                <div class="box-input">
+                    <textarea id="rag-q" rows="1" placeholder="Napisz pytanie do tekstów Prymasa…"></textarea>
+                    <button id="rag-send" class="send" title="Wyślij"><i class="ti ti-send"></i></button>
+                    <button id="rag-stop" class="send stop" title="Zatrzymaj" style="display:none;"><i class="ti ti-player-stop-filled"></i></button>
+                </div>
+                <div class="rag-tray">
+                    <button type="button" class="rag-tray-btn" data-pop-toggle="examples" aria-expanded="false">
+                        <i class="ti ti-bulb"></i> <span>Przykłady</span>
+                    </button>
+                    {% if volumes|length > 1 %}
+                    <button type="button" class="rag-tray-btn" id="rag-scope-btn" data-pop-toggle="scope" aria-expanded="false">
+                        <i class="ti ti-books"></i> <span id="rag-scope-label">Wszystkie tomy</span>
+                        <i class="ti ti-chevron-down chev"></i>
+                    </button>
+                    {% endif %}
+                    {% if app.user %}
+                    <button type="button" class="rag-tray-btn" data-pop-toggle="history" aria-expanded="false">
+                        <i class="ti ti-history"></i> <span>Historia</span>
+                    </button>
+                    {% endif %}
+                    <span class="rag-tray-spacer"></span>
+                    {% if not unlimited %}
+                    <span class="rag-tray-credits" id="rag-credits" title="Pula pytań do asystenta">
+                        Pozostało pytań: <strong id="rag-credits-n">{{ credits }}</strong>
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
         </div>
         <div class="rag-blocked" id="rag-blocked" style="display:none;">
             <i class="ti ti-lock"></i>
             <span>Wykorzystałeś pulę pytań do asystenta.</span>
             <a href="{{ path('app_donate') }}">Doładuj — Wesprzyj →</a>
         </div>
-        <div class="hint">Odpowiedzi generowane przez AI na podstawie korpusu — zweryfikuj z oryginałem przed cytowaniem.</div>
     </div>
 </div>
 
@@ -372,9 +425,19 @@
                 <h3>Jak zadać pytanie</h3>
                 <ul>
                     <li>Wpisz pytanie w pole na dole strony i naciśnij <kbd>Enter</kbd>. <kbd>Shift</kbd>+<kbd>Enter</kbd> robi nową linię.</li>
-                    <li>Nie wiesz, o co zapytać? Rozwiń <strong>„Przykładowe pytania"</strong> i kliknij dowolne — wskoczy do pola.</li>
                     <li>Pytaj pełnym zdaniem. „Co Prymas mówił o rodzinie?" zadziała lepiej niż samo „rodzina".</li>
                     <li>Odpowiedź pisze się na żywo. Przycisk <strong>■</strong> przerywa i zachowuje to, co już spłynęło.</li>
+                </ul>
+
+                <h3>Pasek pod polem pytania</h3>
+                <p>Trzy przyciski rozwijają panel nad polem. Wybór z panelu <strong>wstawia pytanie do pola</strong> —
+                   możesz je jeszcze poprawić przed wysłaniem, więc nic nie zużyje puli przez przypadek.</p>
+                <ul>
+                    <li><strong>💡 Przykłady</strong> — gotowe pytania w pięciu kategoriach. Dobre na start.</li>
+                    <li><strong>📚 Zakres</strong> — zawęża szukanie do jednego tomu. Napis na przycisku pokazuje, co jest wybrane
+                        („Wszystkie tomy" albo „Tom III"), więc nie musisz go otwierać, by to sprawdzić.</li>
+                    <li><strong>🕘 Historia</strong> — twoje ostatnie pytania, przypięte na górze. Pełna lista, z przypinaniem
+                        i usuwaniem, kryje się pod „Zobacz całą historię".</li>
                 </ul>
 
                 <h3>Źródła i cytaty</h3>
@@ -386,11 +449,10 @@
                     <li><kbd>Ctrl</kbd> (lub <kbd>⌘</kbd>) + klik otworzy pełny tekst w nowej karcie.</li>
                 </ul>
 
-                <h3>Zakres i pula pytań</h3>
+                <h3>Pula pytań</h3>
                 <ul>
-                    <li><strong>Zakres</strong> nad polem pytania zawęża szukanie do jednego tomu. Domyślnie przeszukiwane są wszystkie dostępne.</li>
-                    <li>Licznik <strong>„Pozostało pytań"</strong> pokazuje twoją pulę. Pytanie kosztuje 1 — ale tylko wtedy, gdy asystent
-                        faktycznie znalazł źródła i odpowiedział.</li>
+                    <li>Licznik <strong>„Pozostało pytań"</strong> po prawej stronie paska pokazuje twoją pulę. Pytanie kosztuje 1 —
+                        ale tylko wtedy, gdy asystent faktycznie znalazł źródła i odpowiedział.</li>
                     <li>Pytanie zadane wcześniej (przez kogokolwiek) wraca z pamięci podręcznej i <strong>nie zużywa puli</strong>.</li>
                 </ul>
 
@@ -398,8 +460,7 @@
                 <ul>
                     <li><strong>Kopiuj</strong> — przenosi odpowiedź do schowka.</li>
                     <li><strong>Zapisz do DOCX</strong> — pobiera pytanie, odpowiedź i źródła jako dokument Worda.</li>
-                    <li>Rozmowy zalogowanych użytkowników zapisują się na koncie — znajdziesz je w <strong>„Moja historia"</strong>,
-                        gdzie można je przypiąć lub usunąć.</li>
+                    <li>Rozmowy zalogowanych użytkowników zapisują się na koncie — wracasz do nich przez <strong>Historię</strong> w pasku.</li>
                 </ul>
 
                 <div class="pw-help-note">
@@ -445,10 +506,12 @@
     const q = document.getElementById('rag-q');
     const send = document.getElementById('rag-send');
     const stop = document.getElementById('rag-stop');
-    const scope = document.getElementById('rag-scope');
-    const examples = document.getElementById('rag-examples');
+    const shell = document.getElementById('rag-shell');
+    const hero = document.getElementById('rag-hero');
+    const page = document.getElementById('rag-page');
     const box = document.getElementById('rag-box');
     const blocked = document.getElementById('rag-blocked');
+    let scopeVolume = '';   // '' = wszystkie tomy
     let seq = 0;
     let activeES = null;   // EventSource currently streaming, if any
     const unlimited = {{ unlimited ? 'true' : 'false' }};
@@ -457,10 +520,24 @@
     // Whether the user may currently ask a question.
     function canAsk() { return unlimited || credits > 0; }
 
+    // Przejście ze stanu startowego (pole pod tytułem) w tryb czatu (pole przy dole).
+    // Jednokierunkowe — raz zaczęta rozmowa nie wraca do ekranu powitalnego.
+    function dock() {
+        if (!page || !page.classList.contains('start')) return;
+        page.classList.remove('start');
+        if (hero) hero.classList.add('collapsed');
+        // Composer właśnie stał się paskiem przy dolnej krawędzi — stopka i ikonka
+        // pomocy muszą go teraz omijać (sama zmiana pozycji nie rusza wysokości,
+        // więc obserwator rozmiaru by tego nie zauważył).
+        if (window.pwMeasureBottomBar) window.pwMeasureBottomBar();
+    }
+
     // Lock/unlock the composer based on the remaining question pool.
     function renderAskability() {
         const n = document.getElementById('rag-credits-n');
         if (n) n.textContent = credits;
+        const badge = document.getElementById('rag-credits');
+        if (badge) badge.classList.toggle('low', !unlimited && credits <= 3);
         if (canAsk()) {
             if (box) box.style.display = '';
             if (blocked) blocked.style.display = 'none';
@@ -663,15 +740,15 @@
     function ask(question) {
         if (activeES) return; // one stream at a time
         if (!canAsk()) { renderAskability(); return; }
-        collapseExamples(); // zwiń panel, ale zostaw przycisk z przykładami dostępny
+        closePop();
+        dock(); // hero znika, composer zjeżdża na dół — wątek przejmuje ekran
         const refs = createMsg(question, true);
         refs.msg.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
         let acc = '';
         let citations = [];
         let url = '/asystent/strumien?q=' + encodeURIComponent(question);
-        const vol = scope ? scope.value : '';
-        if (vol) url += '&volume=' + encodeURIComponent(vol);
+        if (scopeVolume) url += '&volume=' + encodeURIComponent(scopeVolume);
         const es = new EventSource(url);
         activeES = es;
         setBusy(true);
@@ -681,6 +758,7 @@
         const complete = () => {
             const shown = finalSources(acc, citations);
             finalize(refs, question, acc, shown);
+            histLoaded = false; // świeże pytanie doszło do historii — przeładuj przy następnym otwarciu
         };
 
         es.addEventListener('citations', e => {
@@ -773,20 +851,106 @@
     q.addEventListener('keydown', e => {
         if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit(); }
     });
-    const exToggle = document.getElementById('rag-ex-toggle');
-    const exPanel = document.getElementById('rag-ex-panel');
-    if (exToggle) exToggle.addEventListener('click', () => {
-        const open = exPanel.classList.toggle('open');
-        exToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-    });
-    // Zwija rozwijany panel przykładów, ale zostawia sam przycisk widoczny —
-    // dzięki temu przykładowe pytania są dostępne także przy aktywnej rozmowie/historii.
-    function collapseExamples() {
-        if (exPanel) exPanel.classList.remove('open');
-        if (exToggle) exToggle.setAttribute('aria-expanded', 'false');
+
+    // ══════ Panele paska pytania: Przykłady / Zakres / Historia ══════
+    // Jedna mechanika dla trzech treści — najwyżej jeden panel otwarty naraz.
+    const pops = {};
+    const toggles = {};
+    shell.querySelectorAll('.rag-pop').forEach(p => { pops[p.dataset.pop] = p; });
+    shell.querySelectorAll('[data-pop-toggle]').forEach(b => { toggles[b.dataset.popToggle] = b; });
+    let openPop = null;
+
+    function closePop() {
+        if (!openPop) return;
+        pops[openPop].classList.remove('open');
+        toggles[openPop].setAttribute('aria-expanded', 'false');
+        openPop = null;
     }
-    examples.querySelectorAll('.rag-ex-q').forEach(b =>
-        b.addEventListener('click', () => ask(b.textContent.trim())));
+    function togglePop(name) {
+        const pop = pops[name];
+        if (!pop) return;
+        if (openPop === name) { closePop(); return; }
+        closePop();
+        pop.classList.add('open');
+        toggles[name].setAttribute('aria-expanded', 'true');
+        openPop = name;
+        if (name === 'history') loadHistory();
+    }
+
+    Object.keys(toggles).forEach(name =>
+        toggles[name].addEventListener('click', e => { e.stopPropagation(); togglePop(name); }));
+    shell.querySelectorAll('[data-pop-close]').forEach(b => b.addEventListener('click', closePop));
+    document.addEventListener('click', e => { if (openPop && !shell.contains(e.target)) closePop(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && openPop) closePop(); });
+
+    // Wybór z panelu trafia do pola — użytkownik świadomie decyduje o zużyciu pytania z puli.
+    function prefill(text) {
+        q.value = text;
+        autosize();
+        closePop();
+        q.focus();
+        try { q.setSelectionRange(q.value.length, q.value.length); } catch (_) {}
+    }
+
+    shell.querySelectorAll('.rag-pick').forEach(b =>
+        b.addEventListener('click', () => prefill(b.textContent.trim())));
+
+    // ── Zakres: etykieta przycisku niesie stan, więc widać go bez otwierania panelu.
+    const scopeBtn = document.getElementById('rag-scope-btn');
+    const scopeLabel = document.getElementById('rag-scope-label');
+    shell.querySelectorAll('.rag-vol').forEach(b => b.addEventListener('click', () => {
+        scopeVolume = b.dataset.volume || '';
+        shell.querySelectorAll('.rag-vol').forEach(o =>
+            o.setAttribute('aria-checked', o === b ? 'true' : 'false'));
+        if (scopeLabel) scopeLabel.textContent = b.dataset.label;
+        if (scopeBtn) scopeBtn.classList.toggle('is-set', scopeVolume !== '');
+        closePop();
+    }));
+
+    // ── Historia: skrót ostatnich pytań; pełna lista (z przypinaniem) na osobnej stronie.
+    const histBody = document.getElementById('rag-hist-body');
+    const histFoot = document.getElementById('rag-hist-foot');
+    let histLoaded = false;
+
+    function loadHistory() {
+        if (!histBody || histLoaded) return;
+        histBody.innerHTML = '<div class="rag-pop-empty">'
+            + '<span class="spinner-border spinner-border-sm" style="color:var(--pw-maroon);"></span></div>';
+        fetch('/asystent/historia/ostatnie', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(r => r.ok ? r.json() : Promise.reject(new Error('err')))
+            .then(d => { histLoaded = true; renderHistory(d); })
+            .catch(() => {
+                histBody.innerHTML = '<div class="rag-pop-empty">Nie udało się wczytać historii.</div>';
+            });
+    }
+
+    function renderHistory(d) {
+        const items = d.items || [];
+        if (!items.length) {
+            histBody.innerHTML = '<div class="rag-pop-empty">Tu pojawią się pytania, które zadasz.</div>';
+            histFoot.style.display = 'none';
+            return;
+        }
+        let html = '';
+        let sepDone = false;
+        items.forEach((it, i) => {
+            // Kreska oddziela przypięte od reszty (przypięte przychodzą pierwsze).
+            if (!it.pinned && !sepDone && i > 0 && items[0].pinned) {
+                html += '<div class="rag-hist-sep"></div>';
+                sepDone = true;
+            }
+            html += '<button type="button" class="rag-hist" data-q="' + esc(it.question) + '">'
+                + '<span class="pin">' + (it.pinned ? '<i class="ti ti-pin-filled"></i>' : '') + '</span>'
+                + '<span class="qt">' + esc(it.question) + '</span>'
+                + '<span class="sc">' + esc(it.scope) + '</span>'
+                + '</button>';
+        });
+        histBody.innerHTML = html;
+        histFoot.style.display = '';
+        histFoot.querySelector('.cnt').textContent = d.total > items.length ? ' (' + d.total + ')' : '';
+        histBody.querySelectorAll('.rag-hist').forEach(b =>
+            b.addEventListener('click', () => prefill(b.dataset.q)));
+    }
 
     // Prefill z parametru ?q= (np. „Zapytaj ponownie" z Mojej historii) — bez auto-wysyłki,
     // żeby użytkownik świadomie zdecydował o zużyciu pytania z puli.
@@ -795,7 +959,6 @@
         if (pq && pq.trim()) {
             q.value = pq.trim();
             autosize();
-            collapseExamples();
             q.focus();
         }
     } catch (_) {}
