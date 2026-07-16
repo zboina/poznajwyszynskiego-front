@@ -71,6 +71,37 @@
     </div>
 </div>
 
+{% embed 'partials/_help.html.twig' with {title: 'Czytelnia — jak czytać teksty', help_key: 'biblioteka-czytaj'} %}
+    {% block help_body %}
+        <h3>Ustawienia czytania</h3>
+        <p>Przycisk <strong>Aa</strong> obok tej ikonki otwiera panel, w którym dopasujesz tekst do siebie:</p>
+        <ul>
+            <li><strong>Krój i wielkość pisma</strong> — powiększ, jeśli czytasz z dystansu lub dłużej.</li>
+            <li><strong>Tło</strong> — biel, sepia albo noc. Sepia bywa łagodniejsza przy długim czytaniu,
+                noc — wieczorem.</li>
+            <li><strong>Szerokość kolumny</strong> — węższa kolumna czyta się spokojniej, bo oko nie gubi wiersza.</li>
+        </ul>
+        <p>Wybór zapamiętujemy w tej przeglądarce, więc obowiązuje też w kolejnych tekstach.</p>
+
+        <h3>W samym tekście</h3>
+        <ul>
+            <li><strong>Przypisy</strong> — najedź na numer w tekście, żeby zobaczyć treść przypisu bez utraty miejsca;
+                pełna lista jest na końcu.</li>
+            <li><strong>Numery stron</strong> odpowiadają papierowemu wydaniu Dzieł zebranych — przydają się przy cytowaniu.</li>
+            <li>Jeśli tekst ma <strong>nagranie</strong>, odtwarzacz stoi nad treścią i pamięta, w którym miejscu przerwałeś.</li>
+        </ul>
+
+        <h3>Nawigacja</h3>
+        <p>Na dole strony przechodzisz do <strong>poprzedniego i następnego</strong> tekstu w tomie. Odnośnik u góry
+            wraca do spisu tomu.</p>
+
+        <div class="pw-help-note">
+            Ten sam panel ustawień działa w <a href="{{ path('app_search') }}">wyszukiwarce</a> i u
+            <a href="{{ path('app_rag') }}">asystenta</a> — teksty czyta się wszędzie tak samo.
+        </div>
+    {% endblock %}
+{% endembed %}
+
 {% if audioUrl %}
 <script>
 (function () {

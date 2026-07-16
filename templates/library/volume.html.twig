@@ -50,4 +50,25 @@
         </div>
     </div>
 </div>
+
+{% embed 'partials/_help.html.twig' with {title: 'Spis tekstów tomu', help_key: 'biblioteka-tom'} %}
+    {% block help_body %}
+        <h3>Gdzie jesteś</h3>
+        <p>To spis treści jednego tomu <strong>Dzieł zebranych</strong>. Każda pozycja na liście to osobny tekst
+            Kardynała — kazanie, list, przemówienie — z datą i miejscem wygłoszenia, jeśli są znane.</p>
+
+        <h3>Co możesz zrobić</h3>
+        <ul>
+            <li><strong>Kliknij tytuł</strong>, aby otworzyć tekst w czytelni.</li>
+            <li>W czytelni ustawisz krój i wielkość pisma, tło i szerokość kolumny, a przy tekstach z nagraniem
+                posłuchasz audio.</li>
+            <li><strong>Regał z tomami</strong> u góry wraca do widoku wszystkich tomów.</li>
+        </ul>
+
+        <div class="pw-help-note">
+            Szukasz konkretnego zdania, a nie tomu? Skorzystaj z <a href="{{ path('app_search') }}">wyszukiwarki</a> —
+            przeszukuje treść wszystkich tekstów naraz.
+        </div>
+    {% endblock %}
+{% endembed %}
 {% endblock %}
