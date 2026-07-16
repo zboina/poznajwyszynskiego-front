@@ -21,10 +21,20 @@
                 tekst po tekście, z możliwością wysłuchania wybranych z nagrania.
                 Ta sala otwiera się przed Czytelnikami&nbsp;VIP.
             </p>
-            <a class="lib-cta" href="{{ path('app_donate') }}">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.5-9.5-9A5 5 0 0 1 12 6a5 5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z"/></svg>
-                Zostań Czytelnikiem VIP
-            </a>
+
+            {# Oferta dostępu — założenia wstępne: 30 dni za min. 100 zł (może być więcej). #}
+            <div class="lib-offer">
+                <div class="lib-offer-lead">Otwórz Czytelnię dla siebie</div>
+                <div class="lib-offer-head">Dostęp VIP na 30 dni</div>
+                <div class="lib-offer-price">od <strong>100&nbsp;zł</strong></div>
+                <div class="lib-offer-note">
+                    Wystarczy jednorazowa wpłata min. 100&nbsp;zł — kwotę możesz podnieść wedle uznania.
+                    Przez 30 dni czytasz całe tomy i słuchasz nagrań bez ograniczeń.
+                </div>
+            </div>
+
+            {# Przycisk płatności celowo tymczasowo usunięty — logika wykupu VIP nie jest
+               jeszcze podpięta. Zostaje sama informacja o ofercie. #}
             <div>
                 <a class="lib-cta-2" href="{{ path('app_search') }}">Wróć do wyszukiwarki</a>
             </div>

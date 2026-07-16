@@ -164,10 +164,14 @@
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9h8M8 13h6"/><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                 <span class="t">Asystent AI</span>
             </a>
+            {# Biblioteka wyłącznie dla Czytelników VIP — ten sam warunek co w LibraryController.
+               Kto nie ma dostępu, nie widzi zakładki (a wejście z linku i tak trafia na upsell). #}
+            {% if is_granted('ROLE_VIP') %}
             <a href="{{ path('app_library') }}" class="pwnav-link {{ _isLibrary ? 'active' }}">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5a1 1 0 0 1 1-1h4v16H5a1 1 0 0 1-1-1z"/><path d="M9 4h5v16H9z"/><path d="m14 5 4 .8 2.5 13.5-4 .7"/></svg>
                 <span class="t">Biblioteka</span>
             </a>
+            {% endif %}
             {% endif %}
         </div>
         <div class="nav-actions d-flex align-items-center gap-2">
