@@ -55,6 +55,9 @@ class StripeWebhookController extends AbstractController
         $userId = (int) ($meta['user_id'] ?? 0);
         $credits = (int) ($meta['credits'] ?? 0);
         $role = (string) ($meta['granted_role'] ?? 'ROLE_DONATOR');
+        // Okres dostępu: preferuj dni (VIP na 30 dni), a gdy ich brak — miesiące
+        // (dotychczasowe darowizny DONATOR na 12 miesięcy). Zawsze dodatnie.
+        $days = max(0, (int) ($meta['period_days'] ?? 0));
         $months = max(1, (int) ($meta['period_months'] ?? 12));
         $amount = (int) ($session['amount_total'] ?? 0);
 
@@ -67,16 +70,24 @@ class StripeWebhookController extends AbstractController
 
         // Grant: top up AI credits, (re)grant role, extend access window.
         $user->addAiCredits($credits);
+        $prevRole = $user->getGrantedRole();
         $user->addRole($role);
         $user->setGrantedRole($role);
 
+        // Odnowienie TEJ SAMEJ roli dolicza się do istniejącego okna; zmiana poziomu
+        // (np. donator kupuje VIP na 30 dni) liczy się od teraz, żeby nie odziedziczyć
+        // dalekiej daty poprzedniej roli i nie rozdąć krótkiego dostępu VIP na lata.
         $base = $user->getAccessExpiresAt();
-        $from = ($base instanceof \DateTimeInterface && $base > new \DateTimeImmutable())
+        $sameTier = $prevRole === $role;
+        $from = ($sameTier && $base instanceof \DateTimeInterface && $base > new \DateTimeImmutable())
             ? \DateTimeImmutable::createFromInterface($base)
             : new \DateTimeImmutable();
-        $user->setAccessExpiresAt($from->modify("+{$months} months"));
+        $user->setAccessExpiresAt($days > 0 ? $from->modify("+{$days} days") : $from->modify("+{$months} months"));
 
-        $payment = new Payment($user->getId(), $amount, $role, $months);
+        // period_months w Payment jest tylko etykietą audytową — dla okresu dniowego
+        // zapisujemy przybliżenie (30 dni ≈ 1 mies.), bez zmiany schematu bazy.
+        $periodMonths = $days > 0 ? max(1, (int) ceil($days / 30)) : $months;
+        $payment = new Payment($user->getId(), $amount, $role, $periodMonths);
         $payment->setExternalId($sessionId)->setProvider('stripe')->markPaid();
 
         $this->em->persist($payment);

@@ -37,6 +37,7 @@ class StripeService
         string $successUrl,
         string $cancelUrl,
         array $metadata,
+        string $productName = 'Darowizna — Dzieła Zebrane kard. Wyszyńskiego',
     ): string {
         $body = [
             'mode' => 'payment',
@@ -49,7 +50,7 @@ class StripeService
                 'price_data' => [
                     'currency' => 'pln',
                     'unit_amount' => $amountGrosze,
-                    'product_data' => ['name' => 'Darowizna — Dzieła Zebrane kard. Wyszyńskiego'],
+                    'product_data' => ['name' => $productName],
                 ],
             ]],
             'metadata' => $metadata,

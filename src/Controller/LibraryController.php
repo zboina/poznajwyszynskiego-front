@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Service\DocumentReader;
+use App\Service\StripeService;
 use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -20,13 +21,28 @@ class LibraryController extends AbstractController
     public function __construct(
         private Connection $connection,
         private DocumentReader $reader,
+        private StripeService $stripe,
     ) {}
+
+    /**
+     * Ekran-blokada dla kont bez VIP: klimatyczny upsell z ofertą wykupu dostępu
+     * (30 dni od VIP_MIN_PLN). 403, żeby nie udawać, że treść jest dostępna.
+     */
+    private function locked(string $scope): Response
+    {
+        return $this->render('library/locked.html.twig', [
+            'scope' => $scope,
+            'vipMinPln' => DonationController::VIP_MIN_PLN,
+            'vipPeriodDays' => DonationController::VIP_PERIOD_DAYS,
+            'stripeConfigured' => $this->stripe->isConfigured(),
+        ], new Response('', 403));
+    }
 
     #[Route('/biblioteka', name: 'app_library')]
     public function index(): Response
     {
         if (!$this->isGranted('ROLE_VIP')) {
-            return $this->render('library/locked.html.twig', ['scope' => 'index'], new Response('', 403));
+            return $this->locked('index');
         }
 
         $volumes = $this->connection->executeQuery(
@@ -50,7 +66,7 @@ class LibraryController extends AbstractController
     public function volume(int $id): Response
     {
         if (!$this->isGranted('ROLE_VIP')) {
-            return $this->render('library/locked.html.twig', ['scope' => 'volume'], new Response('', 403));
+            return $this->locked('volume');
         }
 
         $volume = $this->connection->executeQuery(
@@ -87,7 +103,7 @@ class LibraryController extends AbstractController
     public function read(int $id): Response
     {
         if (!$this->isGranted('ROLE_VIP')) {
-            return $this->render('library/locked.html.twig', ['scope' => 'read'], new Response('', 403));
+            return $this->locked('read');
         }
 
         $doc = $this->connection->executeQuery(

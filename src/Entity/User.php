@@ -96,6 +96,20 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getRoles(): array
     {
         $roles = $this->roles;
+
+        // Płatna rola wygasa wraz z oknem dostępu: po terminie nadana rola (np.
+        // ROLE_VIP / ROLE_DONATOR) przestaje obowiązywać — traci moc wszędzie, gdzie
+        // decyduje isGranted: biblioteka, darmowy eksport PDF, zwolnienie z ochrony
+        // treści. Role z hierarchii (np. admin) nie mają grantedRole ani daty, więc
+        // ich to nie dotyczy. Sam wpis w $this->roles zostaje — czyści go dopiero
+        // faktyczny zakup lub porządkowanie danych; tu tylko przestaje być aktywny.
+        if ($this->grantedRole !== null
+            && $this->accessExpiresAt instanceof \DateTimeInterface
+            && $this->accessExpiresAt < new \DateTimeImmutable()
+        ) {
+            $roles = array_values(array_filter($roles, fn ($r) => $r !== $this->grantedRole));
+        }
+
         $roles[] = 'ROLE_USER';
         return array_unique($roles);
     }
