@@ -78,10 +78,11 @@
                     <span class="cur">zł</span>
                 </div>
                 <input type="hidden" name="_csrf_token" value="{{ csrf_token('donate') }}">
+                {{ include('partials/_payment_methods.html.twig', {gateways: gateways|default({})}) }}
                 <button type="submit" class="don-submit">
                     <i class="ti ti-lock me-1"></i> Przejdź do płatności
                 </button>
-                <div class="don-methods"><i class="ti ti-brand-stripe"></i> BLIK · karta · Przelewy24 — bezpiecznie przez Stripe</div>
+                <div class="don-methods"><i class="ti ti-lock"></i> BLIK · karta · szybki przelew — płatność szyfrowana</div>
                 <div class="don-note">Minimalna darowizna {{ minPln }} zł = {{ minPln * creditsPerPln }} pytań. Dostęp na {{ periodMonths }} miesięcy.</div>
             </form>
 

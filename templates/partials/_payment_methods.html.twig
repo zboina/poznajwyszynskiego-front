@@ -1,0 +1,66 @@
+{#
+  Wybór bramki płatniczej. Wstawiany wewnątrz formularza — sam nie tworzy <form>.
+
+  Użycie:
+    {{ include('partials/_payment_methods.html.twig', {gateways: gateways}) }}
+
+  Przy jednej dostępnej bramce nie pokazujemy wyboru — pusty „wybierz jedno z
+  jednego" tylko dokłada decyzji. Idzie wtedy samo ukryte pole, żeby kontroler
+  dostał nazwę dostawcy tak samo w obu przypadkach.
+#}
+{% set _gw = gateways|default({}) %}
+
+{% if _gw|length > 1 %}
+    <fieldset class="pay-methods">
+        <legend>Sposób płatności</legend>
+        {% for name, gateway in _gw %}
+            <label class="pay-method">
+                <input type="radio" name="provider" value="{{ name }}" {{ loop.first ? 'checked' : '' }}>
+                <span class="pay-method-box">
+                    <span class="pay-method-name">{{ gateway.label }}</span>
+                </span>
+            </label>
+        {% endfor %}
+    </fieldset>
+
+    <style>
+        .pay-methods { border: 0; margin: 0 0 .9rem; padding: 0; }
+        .pay-methods legend {
+            padding: 0; margin-bottom: .45rem;
+            font-family: 'Inter', sans-serif; font-size: .72rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: .09em; color: #9a7b3c;
+        }
+        .pay-method { display: block; cursor: pointer; margin-bottom: .4rem; }
+        .pay-method:last-child { margin-bottom: 0; }
+        /* Sam radio znika, ale zostaje w drzewie — obsługa klawiaturą i czytniki
+           ekranu mają działać normalnie, stąd nie display:none. */
+        .pay-method input {
+            position: absolute; opacity: 0; width: 0; height: 0;
+        }
+        .pay-method-box {
+            display: flex; align-items: center; gap: .55rem;
+            padding: .6rem .85rem; border-radius: 10px;
+            border: 1.5px solid #e2d9c4; background: #fff;
+            font-family: 'Inter', sans-serif; font-size: .9rem; color: #2b2620;
+            transition: border-color .14s, background .14s, box-shadow .14s;
+        }
+        .pay-method-box::before {
+            content: ''; flex: 0 0 auto; width: 16px; height: 16px; border-radius: 50%;
+            border: 2px solid #c9bda2; transition: border-color .14s, box-shadow .14s;
+        }
+        .pay-method:hover .pay-method-box { border-color: #c9a227; }
+        .pay-method input:checked + .pay-method-box {
+            border-color: #722F37; background: #fdf9ef;
+        }
+        .pay-method input:checked + .pay-method-box::before {
+            border-color: #722F37; box-shadow: inset 0 0 0 3.5px #722F37;
+        }
+        .pay-method input:focus-visible + .pay-method-box {
+            box-shadow: 0 0 0 3px rgba(201,162,39,.45);
+        }
+    </style>
+{% elseif _gw|length == 1 %}
+    {% for name, gateway in _gw %}
+        <input type="hidden" name="provider" value="{{ name }}">
+    {% endfor %}
+{% endif %}
