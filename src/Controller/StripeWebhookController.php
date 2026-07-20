@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Payment;
 use App\Repository\PaymentRepository;
 use App\Repository\UserRepository;
+use App\Service\AccessGranter;
 use App\Service\StripeService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
@@ -21,6 +22,7 @@ class StripeWebhookController extends AbstractController
         private PaymentRepository $payments,
         private EntityManagerInterface $em,
         private LoggerInterface $logger,
+        private AccessGranter $granter,
     ) {}
 
     #[Route('/webhook/stripe', name: 'app_stripe_webhook', methods: ['POST'])]
@@ -69,26 +71,13 @@ class StripeWebhookController extends AbstractController
         }
 
         // Grant: top up AI credits, (re)grant role, extend access window.
-        $user->addAiCredits($credits);
-        $prevRole = $user->getGrantedRole();
-        $user->addRole($role);
-        $user->setGrantedRole($role);
+        $this->granter->apply($user, $credits, $role, $days, $months);
 
-        // Odnowienie TEJ SAMEJ roli dolicza się do istniejącego okna; zmiana poziomu
-        // (np. donator kupuje VIP na 30 dni) liczy się od teraz, żeby nie odziedziczyć
-        // dalekiej daty poprzedniej roli i nie rozdąć krótkiego dostępu VIP na lata.
-        $base = $user->getAccessExpiresAt();
-        $sameTier = $prevRole === $role;
-        $from = ($sameTier && $base instanceof \DateTimeInterface && $base > new \DateTimeImmutable())
-            ? \DateTimeImmutable::createFromInterface($base)
-            : new \DateTimeImmutable();
-        $user->setAccessExpiresAt($days > 0 ? $from->modify("+{$days} days") : $from->modify("+{$months} months"));
-
-        // period_months w Payment jest tylko etykietą audytową — dla okresu dniowego
-        // zapisujemy przybliżenie (30 dni ≈ 1 mies.), bez zmiany schematu bazy.
+        // period_months zostaje etykietą audytową (30 dni ≈ 1 mies.), ale dokładny
+        // okres dniowy zapisujemy już wprost — od migracji add_p24_payments.sql.
         $periodMonths = $days > 0 ? max(1, (int) ceil($days / 30)) : $months;
         $payment = new Payment($user->getId(), $amount, $role, $periodMonths);
-        $payment->setExternalId($sessionId)->setProvider('stripe')->markPaid();
+        $payment->setExternalId($sessionId)->setProvider('stripe')->setPeriodDays($days)->markPaid();
 
         $this->em->persist($payment);
         $this->em->flush();

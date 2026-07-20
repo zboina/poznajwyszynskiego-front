@@ -3,7 +3,7 @@
 namespace App\Controller;
 
 use App\Service\DocumentReader;
-use App\Service\StripeService;
+use App\Service\Payment\PaymentGatewayRegistry;
 use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,7 +21,7 @@ class LibraryController extends AbstractController
     public function __construct(
         private Connection $connection,
         private DocumentReader $reader,
-        private StripeService $stripe,
+        private PaymentGatewayRegistry $gateways,
     ) {}
 
     /**
@@ -34,7 +34,8 @@ class LibraryController extends AbstractController
             'scope' => $scope,
             'vipMinPln' => DonationController::VIP_MIN_PLN,
             'vipPeriodDays' => DonationController::VIP_PERIOD_DAYS,
-            'stripeConfigured' => $this->stripe->isConfigured(),
+            'paymentsConfigured' => $this->gateways->anyConfigured(),
+            'gateways' => $this->gateways->available(),
         ], new Response('', 403));
     }
 

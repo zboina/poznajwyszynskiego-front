@@ -2,7 +2,7 @@
 
 namespace App\Controller;
 
-use App\Service\StripeService;
+use App\Service\Payment\PaymentGatewayRegistry;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -34,7 +34,7 @@ class DonationController extends AbstractController
     private int $minPln;
 
     public function __construct(
-        private StripeService $stripe,
+        private PaymentGatewayRegistry $gateways,
         private LoggerInterface $logger,
         int $donateMinPln = 10,
     ) {
@@ -53,7 +53,8 @@ class DonationController extends AbstractController
             'minPln' => $this->minPln,
             'creditsPerPln' => self::CREDITS_PER_PLN,
             'periodMonths' => self::PERIOD_MONTHS,
-            'configured' => $this->stripe->isConfigured(),
+            'configured' => $this->gateways->anyConfigured(),
+            'gateways' => $this->gateways->available(),
             'currentCredits' => $this->getUser() ? $this->getUser()->getAiCredits() : 0,
         ]);
     }
@@ -69,7 +70,7 @@ class DonationController extends AbstractController
             $this->addFlash('error', 'Sesja wygasła — spróbuj ponownie.');
             return $this->redirectToRoute('app_donate');
         }
-        if (!$this->stripe->isConfigured()) {
+        if (!$this->gateways->anyConfigured()) {
             $this->addFlash('error', 'Płatności są chwilowo niedostępne.');
             return $this->redirectToRoute('app_donate');
         }
@@ -92,16 +93,22 @@ class DonationController extends AbstractController
             'period_months' => (string) self::PERIOD_MONTHS,
         ];
 
+        // Wybór dostawcy pochodzi z formularza, więc jest niezaufany — rejestr
+        // sam cofa nieznaną nazwę do bramki domyślnej.
+        $gateway = $this->gateways->get($request->request->getString('provider') ?: null);
+
         try {
-            $url = $this->stripe->createCheckoutSession(
+            $url = $gateway->createCheckout(
                 $user,
                 $amountGrosze,
                 $this->generateUrl('app_donate_success', [], UrlGeneratorInterface::ABSOLUTE_URL),
                 $this->generateUrl('app_donate_cancel', [], UrlGeneratorInterface::ABSOLUTE_URL),
                 $metadata,
+                'Darowizna — Dzieła Zebrane kard. Wyszyńskiego',
             );
         } catch (\Throwable $e) {
-            $this->logger->error('Stripe checkout nie powiódł się (kwota {gr} gr): {err}', [
+            $this->logger->error('Checkout {gw} nie powiódł się (kwota {gr} gr): {err}', [
+                'gw' => $gateway->name(),
                 'gr' => $amountGrosze,
                 'err' => $e->getMessage(),
             ]);
@@ -128,7 +135,7 @@ class DonationController extends AbstractController
             $this->addFlash('error', 'Sesja wygasła — spróbuj ponownie.');
             return $this->redirectToRoute('app_library');
         }
-        if (!$this->stripe->isConfigured()) {
+        if (!$this->gateways->anyConfigured()) {
             $this->addFlash('error', 'Płatności są chwilowo niedostępne.');
             return $this->redirectToRoute('app_library');
         }
@@ -150,8 +157,10 @@ class DonationController extends AbstractController
             'period_days' => (string) self::VIP_PERIOD_DAYS,
         ];
 
+        $gateway = $this->gateways->get($request->request->getString('provider') ?: null);
+
         try {
-            $url = $this->stripe->createCheckoutSession(
+            $url = $gateway->createCheckout(
                 $user,
                 $amountGrosze,
                 $this->generateUrl('app_donate_success', [], UrlGeneratorInterface::ABSOLUTE_URL),
@@ -160,7 +169,8 @@ class DonationController extends AbstractController
                 sprintf('Dostęp VIP do Czytelni (%d dni)', self::VIP_PERIOD_DAYS),
             );
         } catch (\Throwable $e) {
-            $this->logger->error('Stripe VIP checkout nie powiódł się (kwota {gr} gr): {err}', [
+            $this->logger->error('VIP checkout {gw} nie powiódł się (kwota {gr} gr): {err}', [
+                'gw' => $gateway->name(),
                 'gr' => $amountGrosze,
                 'err' => $e->getMessage(),
             ]);

@@ -18,6 +18,12 @@ services:
         autowire: true      # Automatically injects dependencies in your services.
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
 
+    # Bramki płatnicze zbierane po interfejsie — dopisanie kolejnej nie wymaga
+    # zmiany tej konfiguracji, wystarczy zaimplementować PaymentGateway.
+    _instanceof:
+        App\Service\Payment\PaymentGateway:
+            tags: ['app.payment_gateway']
+
     # makes classes in src/ available to be used as services
     # this creates a service per class whose id is the fully-qualified class name
     App\:
@@ -40,6 +46,20 @@ services:
         arguments:
             $secretKey: '%env(STRIPE_SECRET_KEY)%'
             $webhookSecret: '%env(STRIPE_WEBHOOK_SECRET)%'
+
+    # Przelewy24 — jak wyżej: wartości wyłącznie z .env.local.
+    App\Service\P24Service:
+        arguments:
+            $merchantId: '%env(int:P24_MERCHANT_ID)%'
+            $posId: '%env(int:P24_POS_ID)%'
+            $apiKey: '%env(P24_API_KEY)%'
+            $crc: '%env(P24_CRC)%'
+            $sandbox: '%env(bool:P24_SANDBOX)%'
+
+    App\Service\Payment\PaymentGatewayRegistry:
+        arguments:
+            $gateways: !tagged_iterator app.payment_gateway
+            $default: '%env(PAYMENT_DEFAULT_GATEWAY)%'
 
     # Rejestracja — opcjonalny PIN zaproszenia (gdy pusty, rejestracja otwarta).
     App\Controller\RegistrationController:
