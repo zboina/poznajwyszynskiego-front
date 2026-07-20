@@ -46,7 +46,11 @@ security:
         - { path: ^/asystent, roles: PUBLIC_ACCESS }
         - { path: ^/dokument/\d+/podglad$, roles: PUBLIC_ACCESS }
         - { path: ^/dokument/\d+/audio$, roles: PUBLIC_ACCESS }
+        # Webhooki dostawców płatności: bez sesji i bez logowania, bo wołają je
+        # serwery Stripe/P24, nie przeglądarka. Uwierzytelnienie odbywa się
+        # podpisem kryptograficznym w kontrolerze, nie przez firewall.
         - { path: ^/webhook/stripe$, roles: PUBLIC_ACCESS }
+        - { path: ^/webhook/p24$, roles: PUBLIC_ACCESS }
         - { path: ^/, roles: ROLE_USER }
 
 when@test:
