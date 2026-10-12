@@ -29,7 +29,7 @@ class SettingsService
             $this->cache = self::DEFAULTS;
             try {
                 $rows = $this->connection->fetchAllAssociative(
-                    "SELECT \"key\", value FROM setting WHERE \"key\" LIKE 'frontend_%' OR \"key\" LIKE 'demo_%'"
+                    "SELECT \"key\", value FROM setting WHERE \"key\" LIKE 'frontend_%' OR \"key\" LIKE 'demo_%' OR \"key\" LIKE 'rag_%'"
                 );
                 foreach ($rows as $row) {
                     $this->cache[$row['key']] = $row['value'];

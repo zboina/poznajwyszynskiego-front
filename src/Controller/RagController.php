@@ -210,6 +210,20 @@ class RagController extends AbstractController
                 $full .= $tok;
                 $emit('token', ['t' => $tok]);
             });
+            // Model nic nie zwrócił (limit klucza, zły model, awaria dostawcy) — mówimy
+            // to wprost i oddajemy kredyt, zamiast pokazać pustą odpowiedź.
+            if (trim($full) === '') {
+                if ($rq && $rq->getCreditsCost() > 0 && $user instanceof User) {
+                    $user->addAiCredits($rq->getCreditsCost());
+                    $rq->waiveCredits();
+                }
+                $this->recordUsage($rq, $usage);
+                $emit('error', [
+                    'message' => 'Asystent jest chwilowo niedostępny. Pytanie nie zostało policzone — spróbuj ponownie za kilka minut.',
+                    'refunded' => !$unlimited,
+                ]);
+                return;
+            }
             $emit('done', []);
 
             // Uzupełnij wpis o realne zużycie (tokeny + koszt USD z OpenRouter).

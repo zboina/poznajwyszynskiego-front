@@ -2,6 +2,8 @@
 
 namespace App\Service;
 
+use Psr\Log\LoggerInterface;
+
 /**
  * Retrieval-Augmented answering over Wyszyński's collected works.
  * Retrieves chunks, asks a local LLM (Ollama) to answer ONLY from them, and
@@ -11,7 +13,8 @@ namespace App\Service;
  * Generation provider is switchable: 'ollama' (local, nothing leaves the
  * server) or 'openrouter' (cloud, fast/cheap — only the question + retrieved
  * passages are sent out). Embeddings stay local regardless. Configured via env
- * (RAG_LLM_PROVIDER, RAG_LLM_MODEL, OPENROUTER_API_KEY).
+ * (RAG_LLM_PROVIDER, RAG_LLM_MODEL, OPENROUTER_API_KEY); model OpenRouter
+ * można nadpisać w panelu admina (Ustawienia → Asystent AI).
  */
 class RagAnswerer
 {
@@ -33,6 +36,8 @@ class RagAnswerer
 
     public function __construct(
         private ChunkRetriever $retriever,
+        private SettingsService $settings,
+        private LoggerInterface $logger,
         private string $provider = 'ollama',
         private string $openrouterModel = 'google/gemini-2.5-flash',
         private string $ollamaModel = 'llama3.1:8b',
@@ -42,6 +47,24 @@ class RagAnswerer
     private function useOpenRouter(): bool
     {
         return $this->provider === 'openrouter' && $this->openrouterKey !== '';
+    }
+
+    /**
+     * Model OpenRouter: wybrany w panelu admina (setting rag_llm_model),
+     * a gdy nic nie wybrano — ten z env RAG_LLM_MODEL.
+     */
+    private function model(): string
+    {
+        $chosen = trim((string) $this->settings->get('rag_llm_model'));
+        return $chosen !== '' ? $chosen : $this->openrouterModel;
+    }
+
+    /** Czytelny opis błędu OpenRouter dla logu (bez treści pytania). */
+    private function openRouterError(int $code, string $body): string
+    {
+        $data = json_decode($body, true);
+        $msg = $data['error']['message'] ?? trim(substr($body, 0, 300));
+        return sprintf('OpenRouter HTTP %d (%s): %s', $code, $this->model(), $msg !== '' ? $msg : 'brak treści');
     }
 
     /**
@@ -72,7 +95,7 @@ class RagAnswerer
     private function parseOpenRouterUsage(array $u): array
     {
         return [
-            'model' => $this->openrouterModel,
+            'model' => $this->model(),
             'inputTokens' => (int) ($u['prompt_tokens'] ?? 0),
             'outputTokens' => (int) ($u['completion_tokens'] ?? 0),
             'costUsd' => (float) ($u['cost'] ?? 0),
@@ -276,7 +299,7 @@ class RagAnswerer
         curl_setopt_array($ch, [
             CURLOPT_POST => true,
             CURLOPT_POSTFIELDS => json_encode([
-                'model' => $this->openrouterModel,
+                'model' => $this->model(),
                 'temperature' => 0.2,
                 'usage' => ['include' => true], // OpenRouter zwróci tokeny + realny koszt
                 'messages' => [
@@ -290,10 +313,12 @@ class RagAnswerer
         ]);
         $resp = curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
         curl_close($ch);
 
         if ($code !== 200 || !$resp) {
-            return ['content' => null, 'usage' => $this->emptyUsage($this->openrouterModel)];
+            $this->logger->error($curlError !== '' ? 'OpenRouter: ' . $curlError : $this->openRouterError($code, (string) $resp));
+            return ['content' => null, 'usage' => $this->emptyUsage($this->model())];
         }
         $data = json_decode($resp, true);
         $content = $data['choices'][0]['message']['content'] ?? null;
@@ -305,9 +330,9 @@ class RagAnswerer
 
     private function streamOpenRouter(string $system, string $user, callable $onToken): array
     {
-        $usage = $this->emptyUsage($this->openrouterModel);
+        $usage = $this->emptyUsage($this->model());
         $payload = json_encode([
-            'model' => $this->openrouterModel,
+            'model' => $this->model(),
             'temperature' => 0.2,
             'stream' => true,
             'usage' => ['include' => true], // tokeny + realny koszt w końcowym chunku
@@ -318,13 +343,18 @@ class RagAnswerer
         ]);
 
         $buffer = '';
+        $raw = '';      // początek odpowiedzi — przy błędzie HTTP to treść komunikatu
+        $streamError = null;
         $ch = curl_init(self::OPENROUTER_URL);
         curl_setopt_array($ch, [
             CURLOPT_POST => true,
             CURLOPT_POSTFIELDS => $payload,
             CURLOPT_HTTPHEADER => $this->openRouterHeaders(),
             CURLOPT_TIMEOUT => 120,
-            CURLOPT_WRITEFUNCTION => function ($ch, $data) use (&$buffer, &$usage, $onToken) {
+            CURLOPT_WRITEFUNCTION => function ($ch, $data) use (&$buffer, &$raw, &$streamError, &$usage, $onToken) {
+                if (strlen($raw) < 2000) {
+                    $raw .= $data;
+                }
                 $buffer .= $data;
                 // OpenAI-style SSE: "data: {json}\n\n", terminated by "data: [DONE]".
                 while (($pos = strpos($buffer, "\n")) !== false) {
@@ -338,6 +368,10 @@ class RagAnswerer
                         continue;
                     }
                     $obj = json_decode($json, true);
+                    // Błąd w trakcie strumienia (np. dostawca modelu padł) przychodzi jako {"error":…}.
+                    if (isset($obj['error'])) {
+                        $streamError = (string) ($obj['error']['message'] ?? 'nieznany błąd');
+                    }
                     $tok = $obj['choices'][0]['delta']['content'] ?? '';
                     if ($tok !== '') {
                         $onToken($tok);
@@ -351,7 +385,22 @@ class RagAnswerer
             },
         ]);
         curl_exec($ch);
+        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
         curl_close($ch);
+
+        // Bez tego wyczerpany limit klucza (HTTP 402) czy zły model (400/404)
+        // dawały pustą odpowiedź bez śladu w logach.
+        if ($curlError !== '') {
+            $usage['error'] = 'OpenRouter: ' . $curlError;
+        } elseif ($code !== 200) {
+            $usage['error'] = $this->openRouterError($code, $raw);
+        } elseif ($streamError !== null) {
+            $usage['error'] = sprintf('OpenRouter (%s): %s', $this->model(), $streamError);
+        }
+        if (isset($usage['error'])) {
+            $this->logger->error($usage['error']);
+        }
 
         return $usage;
     }

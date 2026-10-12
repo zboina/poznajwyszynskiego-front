@@ -92,6 +92,13 @@ class RagQuery
         return $this;
     }
 
+    /** Model nic nie zwrócił — pytanie nie kosztuje kredytu (kredyt oddaje kontroler). */
+    public function waiveCredits(): static
+    {
+        $this->creditsCost = 0;
+        return $this;
+    }
+
     public function getId(): ?int { return $this->id; }
     public function getUserId(): int { return $this->userId; }
     public function getVolumeId(): ?int { return $this->volumeId; }
