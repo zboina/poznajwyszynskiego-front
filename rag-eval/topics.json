@@ -1,0 +1,141 @@
+{
+  "description": "Prawdziwe pytania czytelników z rag_query (pisownia oryginalna). Nie mają jednej dobrej odpowiedzi — każdy z 8 wyników ocenia model (app:rag-eval --judge).",
+  "items": [
+    {
+      "id": "t01",
+      "question": "Co Prymas mówił o modlitwie różańcowej?"
+    },
+    {
+      "id": "t02",
+      "question": "Co Prymas mówił o konieczności zatrzymania się?"
+    },
+    {
+      "id": "t03",
+      "question": "co prymas mówił o weselu w kanie galilejskiej w nawiązaniu do słupów jasnogórskich"
+    },
+    {
+      "id": "t04",
+      "question": "co prymas Wyszyński mówił o św. Wawrzyńcu?"
+    },
+    {
+      "id": "t05",
+      "question": "co prymas mówił o edycie stein?"
+    },
+    {
+      "id": "t06",
+      "question": "Jak kardynał Wyszyński widział rolę ojca w rodzinie?"
+    },
+    {
+      "id": "t07",
+      "question": "Co mówił o porządku miłości?"
+    },
+    {
+      "id": "t08",
+      "question": "Jak ujmował chrześcijański sens pracy?"
+    },
+    {
+      "id": "t09",
+      "question": "czy treść ślubów jasnogórskich jest aktualna dzisiaj?"
+    },
+    {
+      "id": "t10",
+      "question": "dusze czyścowe jak im pomóc"
+    },
+    {
+      "id": "t11",
+      "question": "kierownik duchowy"
+    },
+    {
+      "id": "t12",
+      "question": "Prymas Wyszyński o Laskach"
+    },
+    {
+      "id": "t13",
+      "question": "Co Prymas Wyszyński mówił do Ósemek"
+    },
+    {
+      "id": "t14",
+      "question": "jak prymas dbał o duszpasterstwo akademickie?"
+    },
+    {
+      "id": "t15",
+      "question": "jak prymas współpracował z kardynałem wojtyłą?"
+    },
+    {
+      "id": "t16",
+      "question": "Dary ducha świętego"
+    },
+    {
+      "id": "t17",
+      "question": "Modlitwa serc udręczonych jest zawsze skuteczna i owocna"
+    },
+    {
+      "id": "t18",
+      "question": "Czy Prymas zachęcał do pisania ręcznego, notowania, prowadzenia zapisków?"
+    },
+    {
+      "id": "t19",
+      "question": "Jakie lektury polecał Prymas?"
+    },
+    {
+      "id": "t20",
+      "question": "relacja teściowa - synowa"
+    },
+    {
+      "id": "t21",
+      "question": "trudności w przebaczaniu"
+    },
+    {
+      "id": "t22",
+      "question": "wyczerpanie psychiczne"
+    },
+    {
+      "id": "t23",
+      "question": "przemienienie na górze tabor"
+    },
+    {
+      "id": "t24",
+      "question": "Jak rozumiał powołanie i odpowiedzialność mężczyzn katolickich?"
+    },
+    {
+      "id": "t25",
+      "question": "Co Prymas sądził o pracy zawodowej kobiet?"
+    },
+    {
+      "id": "t26",
+      "question": "Jakie było nauczanie Prymasa na temat cierpliwości?"
+    },
+    {
+      "id": "t27",
+      "question": "Jak oceniał sobór watykański ks kardynał?"
+    },
+    {
+      "id": "t28",
+      "question": "pierwsze soboty miesiąca"
+    },
+    {
+      "id": "t29",
+      "question": "Jak mówił o odbudowie katedry gnieźnieńskiej?"
+    },
+    {
+      "id": "t30",
+      "question": "jak zło ukrywa się pod postacią dobra?"
+    },
+    {
+      "id": "t31",
+      "question": "Co Kardynał Wyszyński mówił o Maryi jako Matce Kościoła?"
+    },
+    {
+      "id": "t32",
+      "question": "Jakie znaczenie nadawał Apelowi Jasnogórskiemu?"
+    },
+    {
+      "id": "t33",
+      "question": "Jakie słowa skierował do Polaków za granicą?"
+    },
+    {
+      "id": "t34",
+      "question": "gdzie urodził się wyszyński?"
+    }
+  ]
+}

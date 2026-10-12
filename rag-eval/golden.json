@@ -1,0 +1,998 @@
+{
+    "description": "Pytania wzorcowe do testu wyszukiwania asystenta AI. Trafienie = fragment zawierający „anchor” (dosłowne zdanie z tekstu) w czołówce wyników. Pola \"checked\" ustawia człowiek po przejrzeniu.",
+    "generated": "2026-10-12T20:15:18+02:00",
+    "model": "google/gemini-2.5-flash",
+    "seed": "wyszynski-2026",
+    "items": [
+        {
+            "id": "g001",
+            "type": "pytanie",
+            "question": "W jaki sposób Kościół, a konkretnie księża biskupi, wyrażają swoje poparcie dla praw Polski do Ziem Zachodnich, nie angażując się bezpośrednio w politykę?",
+            "anchor": "Nasza spokojna obecność wśród tego ludu, nasza wspólna modlitwa, nasze błogosławieństwo są najwłaściwszym dla nas i najskuteczniejszym wyrazem naszego stanowiska w obronie Ziem Zachodnich.",
+            "document_id": 5387,
+            "volume": 1,
+            "title": "OD ZIEMI LUBUSKIEJ PO NYSĘ",
+            "checked": false
+        },
+        {
+            "id": "g002",
+            "type": "pytanie",
+            "question": "Jakie konkretne działania Prymas wskazał jako przejawy miłosierdzia wobec dzieci i młodzieży?",
+            "anchor": "Okazać miłosierdzie rozumowi dziecięcia, odsłaniając prawdę nieśmiertelną. – Okazać miłosierdzie woli dziecka, prężąc jej ramiona ku dobru uszczęśliwiaącemu! - Okazać miłosierdzie sercu ludzkiemu, otwierając je na miłość bez złud i rozczarowań.",
+            "document_id": 5398,
+            "volume": 1,
+            "title": "NA TYDZIEŃ MIŁOSIERDZIA",
+            "checked": false
+        },
+        {
+            "id": "g003",
+            "type": "haslo",
+            "question": "Prymas o karach dla księży",
+            "anchor": "Jednocześnie zachęcamy winnych prób naruszenia porządku społecznego w Kościele do zaniechania wszelkich spisków i knowań przeciwko prawowitej władzy duchownej i do oddania wszystkich swoich sił pracy duszpasterskiej, w przeciwnym razie – quod Deus avertat[2] – musielibyśmy przystąpić do zastosowania sankcji kościelnego prawa karnego zawartych w kanonie 2331 KPK.",
+            "document_id": 5365,
+            "volume": 1,
+            "title": "DO KOMISYJ KSIĘŻY PRZY ZBOWID PASTERSKA PRZESTROGA",
+            "checked": false
+        },
+        {
+            "id": "g004",
+            "type": "pytanie",
+            "question": "Jakie były główne powody, dla których Episkopat Polski uznał, że sytuacja Kościoła w kraju pogarsza się, pomimo pewnych zachowanych dóbr?",
+            "anchor": "Zgodnie z prawdą Episkopat Polski poczuwa się do obowiązku oświadczyć, że położenie Kościoła w Polsce nie tylko się w sposób trwały nie poprawia, lecz przeciwnie, stale się pogarsza. W bilansie omawianego trzechlecia przeważają niezaprzeczalnie groźne negatywy.",
+            "document_id": 6553,
+            "volume": 1,
+            "title": "[Aneks II]",
+            "checked": false
+        },
+        {
+            "id": "g005",
+            "type": "pytanie",
+            "question": "Ile wystąpień publicznych Prymas miał w ciągu jednego tygodnia na początku września?",
+            "anchor": "W ciągu tygodnia wygłosiłem trzydzieści przemówień.",
+            "document_id": 6555,
+            "volume": 1,
+            "title": "[Aneks IV] ZAPISKI WŁASNE KS. PRYMASA O WYGŁASZANYCH W L. 1949-1953 KAZANIACH I PRZEMÓWIENIACH",
+            "checked": false
+        },
+        {
+            "id": "g006",
+            "type": "haslo",
+            "question": "Pius XII otwiera Rok Święty",
+            "anchor": "Ojciec święty Pius XII otworzył w południe dnia wigilijnego Rok Święty – Rok Boży, tysiąc dziewięćset pięćdziesiąty[1].",
+            "document_id": 5345,
+            "volume": 1,
+            "title": "STEFAN WYSZYŃSKI Z BOŻEGO ZMIŁOWANIA I WOLI STOLICY ŚWIĘTEJ ARCYBISKUP-METROPOLITA GNIEŹNIEŃSKI I WARSZAWSKI, PRYMAS POLSKI UMIŁOWANYM W PANU KAPŁANOM I LUDOWI WIERNEMU OBYDWU ARCHIDIECEZJI SWOICH BŁOGOSŁAWIEŃSTWO I ZAPROSZENIE DO ŁASK JUBILEUSZOWYCH R...",
+            "checked": false
+        },
+        {
+            "id": "g007",
+            "type": "pytanie",
+            "question": "Na jakim etapie były prace przy odbudowie wież bazyliki prymasowskiej w Gnieźnie, gdy Prymas Wyszyński apelował o wsparcie?",
+            "anchor": "Wszystkie te szlachetne pragnienia złożyły się na to, że zdołaliśmy już sprowadzić i opłacić stalowe konstrukcje wieżyc, które czekają przed katedrą na montaż. Obecnie otrzymaliśmy przydział blachy miedzianej na pokrycie wieżyc, którą trzeba opłacić.",
+            "document_id": 5344,
+            "volume": 1,
+            "title": "ODEZWA W SPRAWIE ODBUDOWY WIEŻYC BAZYLIKI PRYMASOWSKIEJ W GNIEŹNIE",
+            "checked": false
+        },
+        {
+            "id": "g008",
+            "type": "pytanie",
+            "question": "Jakie główne obszary pracy duszpasterskiej zostały wytyczone przez Prymasa na początku jego posługi?",
+            "anchor": "Na czoło wysuwa się trzy kierunki pracy:\n1) w dziedzinie modlitwy wspólnej;\n2) w dziedzinie nauczania prawd wiary świętej;\n3) w dziedzinie społeczno-religijnej.",
+            "document_id": 5332,
+            "volume": 1,
+            "title": "W UROCZYSTOŚĆ CHRYSTUSA KRÓLA  DO KAPŁANÓW",
+            "checked": false
+        },
+        {
+            "id": "g009",
+            "type": "haslo",
+            "question": "Prymas Wyszyński o tym, jak powstaje pisarz katolicki",
+            "anchor": "Pisarz katolicki rodzić się musi dopiero z małżeństwa wiary z wiedzą.",
+            "document_id": 5399,
+            "volume": 1,
+            "title": "LIST DO REDAKCJI „TYGODNIKA POWSZECHNEGO”",
+            "checked": false
+        },
+        {
+            "id": "g010",
+            "type": "pytanie",
+            "question": "Co Prymas zrobił, naśladując gest Chrystusa wobec apostołów, i dlaczego?",
+            "anchor": "Idąc za wzorem Chrystusa, ja również w tej chwili skłaniam głowę do waszych stóp i z biskupią uległością je całuję. Składam hołd waszemu człowieczeństwu, odkupionemu przez krew Chrystusa, waszemu cierpieniu, w którym omywacie winy świata; waszemu trudowi i męce, które są tak krzepiące dla ludzi udręczonych i cierpiących, a może również i dla ludzi nie znających pociech i radości Bożych.",
+            "document_id": 5077,
+            "volume": 12,
+            "title": "WASZYMI CIERPIENIAMI WSPIERAJCIE KOŚCIÓŁ",
+            "checked": false
+        },
+        {
+            "id": "g011",
+            "type": "pytanie",
+            "question": "Jakie słowa wypowiedział niewidomy człowiek z drogi do Jerycha, aby przywołać Jezusa?",
+            "anchor": "Jezusie, Synu Dawidów, zmiłuj się nade mną”.",
+            "document_id": 5065,
+            "volume": 12,
+            "title": "NADZIEJA LUDZKOŚCI…",
+            "checked": false
+        },
+        {
+            "id": "g012",
+            "type": "haslo",
+            "question": "Prymas o grzechu przeciwko Duchowi Świętemu",
+            "anchor": "Dlatego też wina ich jest najcięższa i jeżeli który z grzechów należy uważać za grzech przeciwko Duchowi Świętemu, to grzech tych, którzy zwalczają Boga w sercach innych, którzy zamykają drogę do Boga dzieciom swoim, a zwłaszcza dzieciom cudzym, powierzonym ich opiece i wychowaniu.",
+            "document_id": 5071,
+            "volume": 12,
+            "title": "W IMIĘ MIŁOŚCI OJCZYZNY, W OBRONIE ŻYCIA POLAKÓW!...",
+            "checked": false
+        },
+        {
+            "id": "g013",
+            "type": "pytanie",
+            "question": "Co łączy wszystkich członków Kościoła, niezależnie od wieku czy statusu?",
+            "anchor": "Wszyscy jesteśmy związani przez żywą wiarę w Boga Ojca, w Boga Syna i w Boga Ducha Świętego, którą wyznajemy i językami dojrzałymi, i małymi dziecięcymi języczkami.",
+            "document_id": 5050,
+            "volume": 12,
+            "title": "KOŚCIÓŁ – RODZINA BOŻA U SWEJ KOLEBKI",
+            "checked": false
+        },
+        {
+            "id": "g014",
+            "type": "pytanie",
+            "question": "Dlaczego kardynał Wyszyński uważał, że nie powinniśmy osądzać mężczyzn, którzy przyczynili się do męki Chrystusa?",
+            "anchor": "Ich wielka wina zmalała jak gdyby w naszych oczach i sądach, zmniejszając naszą zawziętość. Już nie chcemy domagać się na nich sprawiedliwości za zniewagi wyrządzone Bogu. Wszystkie ich czyny należą do „szczęśliwej winy”.",
+            "document_id": 5076,
+            "volume": 12,
+            "title": "ŚWIĘTE WIDOWISKO MĘKI CHRYSTUSA",
+            "checked": false
+        },
+        {
+            "id": "g015",
+            "type": "haslo",
+            "question": "Prymas o rozpowszechnianiu wizerunków Matki Bożej Jasnogórskiej na Soborze",
+            "anchor": "Ja osobiście, będąc przy stole Prezydium soborowego, bardzo często otrzymywałem od biskupów listy z prośbami, aby dla nich, dla ich domów, dla służby albo Polaków, którzy są w ich diecezjach, chociaż mały obrazek przesłać. Czyniłem to chętnie, bo widziałem w tym dalszy, wielki krok ku upowszechnieniu chwały Matki Bożej Jasnogórskiej i spotęgowaniu nadziei ku Niej.",
+            "document_id": 5054,
+            "volume": 12,
+            "title": "„SŁAWNE RZECZY POWIEDZIANO O TOBIE…”",
+            "checked": false
+        },
+        {
+            "id": "g016",
+            "type": "pytanie",
+            "question": "Dlaczego Żydzi, widząc cud wskrzeszenia Łazarza, chcieli go zabić, i jak to skomentował święty Augustyn?",
+            "anchor": "Żydzi widząc, co się stało, choć mieli dowód, że Chrystus jest Panem życia, chcieli Łazarza zabić. Ale – powiada święty Augustyn, pisarz starochrześcijański – jacy niemądrzy są ludzie! Czyż Chrystus, który wskrzesił umarłego, nie mógłby wskrzesić zabitego?",
+            "document_id": 5074,
+            "volume": 12,
+            "title": "KRÓL – SŁUGA ZA KRÓLEM, KTÓRY PRZYJĄŁ POSTAĆ SŁUGI...",
+            "checked": false
+        },
+        {
+            "id": "g017",
+            "type": "pytanie",
+            "question": "Jakie znaczenie dla Kościoła ma fragment Ewangelii, który mówi o powołaniach o różnych porach dnia?",
+            "anchor": "Urywek Ewangelii[1], przed chwilą przypomniany, jest obrazem Kościoła Chrystusowego, który od wczesnego ranka dziejów prowadzi rodzaj ludzki do pełni czasów.",
+            "document_id": 5055,
+            "volume": 12,
+            "title": "GŁÓWNE NURTY PRACY SOBORU",
+            "checked": false
+        },
+        {
+            "id": "g018",
+            "type": "haslo",
+            "question": "Giorgio La Pira apel do władz ZSRR",
+            "anchor": "Niech więc Pan pozwoli, że w trosce o dobro narodu sowieckiego i w imieniu braterskiego pokoju, braterskiej jedności ludów, powiem Panu z całą otwartością: niech Pan uwolni ziemię rosyjską od tego trupa ateizmu, tak jak uwolnił ją Pan z trupa Stalina.",
+            "document_id": 5079,
+            "volume": 12,
+            "title": "ZAWSZE WIERNE I CZUJNE",
+            "checked": false
+        },
+        {
+            "id": "g019",
+            "type": "pytanie",
+            "question": "Jak Prymas Wyszyński zachęcał pielgrzymów do wzajemnego wspierania się w trudnościach, odwołując się do ich wspólnej drogi na Jasną Górę?",
+            "anchor": "Pomniejszajcie wzajemnie wasze cierpienia i bóle, starajcie się iść sobie z pomocą, tak jak szliście z pomocą wzajemną w tej pielgrzymce, w wędrówce na Jasną Górę.",
+            "document_id": 5261,
+            "volume": 13,
+            "title": "ABYŚMY UJRZELI „ZNAK WIELKI NA NIEBIE” I CORAZ WIĘCEJ PRAGNĘLI CHWAŁY MARYI",
+            "checked": false
+        },
+        {
+            "id": "g020",
+            "type": "pytanie",
+            "question": "W jaki sposób kardynał Wyszyński wyjaśniał rolę zakonów w Kościele?",
+            "anchor": "Gdy Kościołowi potrzeba było potężnej akcji czy działalności misyjnej, apostolskiej, a nawet reformatorskiej, Duch Święty powoływał do tego zakony. Dlatego są one nieodłącznie związane z ustrojem Kościoła i im to został poświęcony rozdział piąty w Konstytucji o Kościele.",
+            "document_id": 5297,
+            "volume": 13,
+            "title": "O MATCE KOŚCIOŁA NA SOBORZE",
+            "checked": false
+        },
+        {
+            "id": "g021",
+            "type": "haslo",
+            "question": "rola Maryi w nauczaniu Soboru Watykańskiego II",
+            "anchor": "Właśnie dlatego Sobór Watykański II, gdy rozpoczął swoje rozważania o Kościele jako Mistycznym Ciele Chrystusa, domagał się voce magna[28] obecności Matki tego Ciała, Maryi.",
+            "document_id": 5288,
+            "volume": 13,
+            "title": "WSPÓŁCZESNE PRĄDY MARIOLOGICZNE A POTRZEBY RODZINY LUDZKIEJ",
+            "checked": false
+        },
+        {
+            "id": "g022",
+            "type": "pytanie",
+            "question": "Jakie rady Prymas Wyszyński dawał młodej przełożonej, aby dobrze odnalazła się w nowym miejscu i roli?",
+            "anchor": "A młodej Przełożonej[7] życzę, aby już nie tęskniła za Gnieznem, tylko wrosła w Warszawę i korzystając z doświadczeń naszej matki Maksencji, również umiała duchem pogody i życzliwego uśmiechu wszystkich nas wspierać i radować.",
+            "document_id": 5301,
+            "volume": 13,
+            "title": "WIGILIA W DOMU OJCA",
+            "checked": false
+        },
+        {
+            "id": "g023",
+            "type": "pytanie",
+            "question": "Jaką rolę Prymas przypisywał Maryi w kontekście ludzkich niedoskonałości i dobrych intencji?",
+            "anchor": "Maryja to Virgo Auxiliatrix[9], która widzi, jak wiele mamy dobrych pragnień, a jak mało z nich możemy wypełnić. Wszystkie tak zwane dobre czyny nie są wolne od słabości i niedoskonałości.",
+            "document_id": 5241,
+            "volume": 13,
+            "title": "PODZWONNE PO PRYMIE…",
+            "checked": false
+        },
+        {
+            "id": "g024",
+            "type": "haslo",
+            "question": "Maryja jako nadzieja w trudach życia",
+            "anchor": "Matce ufamy: bo jest Matką. Przeto łaski pełna, Główna nasza nadziejo, Ochraniaj nas Wśród bezdroży tego życia",
+            "document_id": 5308,
+            "volume": 13,
+            "title": "[Aneks II] MEMORIAŁ EPISKOPATU POLSKI",
+            "checked": false
+        },
+        {
+            "id": "g025",
+            "type": "pytanie",
+            "question": "W jaki sposób Maryja sprawowała władzę nad Jezusem w Jego młodości?",
+            "anchor": "Maryja na mocy prawa matki rządzi, „rozkazuje”. Chrystus jest Jej poddany, jest niejako w Jej niewoli.",
+            "document_id": 5246,
+            "volume": 13,
+            "title": "– W MACIERZYŃSKĄ NIEWOLĘ SŁUŻEBNICY BOŻEJ",
+            "checked": false
+        },
+        {
+            "id": "g026",
+            "type": "pytanie",
+            "question": "Jakie działania podjął biskup Gedko, aby poprawić sytuację chłopów, i co o nim napisał Wincenty Kadłubek?",
+            "anchor": "O biskupie Gedko tak pisze błogosławiony Wincenty: „Nie mógł bowiem pobożny Pasterz zaniedbać i w zapomnienie puścić tak okropnego ucisku trzody swojej, nie narażając własnego zbawienia”.",
+            "document_id": 5269,
+            "volume": 13,
+            "title": "WYCHOWAWCA NARODU POLSKIEGO",
+            "checked": false
+        },
+        {
+            "id": "g027",
+            "type": "haslo",
+            "question": "Prymas o haśle Wielkiej Nowenny",
+            "anchor": "W dalszym programie Wielkiej Nowenny głosiliśmy świętość małżeństwa chrześcijańskiego, rodziny sakramentalnej, tej najsilniejszej budowy dla rodziny rodzin – Narodu. Później głosiliśmy wezwanie: „Rodzina Bogiem silna”, a następnie mówiliśmy naszej młodzieży: „Młodzież wierna Chrystusowi”.",
+            "document_id": 5276,
+            "volume": 13,
+            "title": "KAZANIE DO WIERNYCH",
+            "checked": false
+        },
+        {
+            "id": "g028",
+            "type": "pytanie",
+            "question": "Dlaczego, zdaniem Prymasa, systematyczne poznawanie Boga może sprawić, że staje się On odległy?",
+            "anchor": "I niekiedy Bóg, poznawany tak porządnie, w sposób systematyczny i programowy, staje się nam bardzo daleki. Widzimy Go oczyma rozumu i wiary, ale umieszczamy Go bardzo wysoko, na wyniosłych ołtarzach.",
+            "document_id": 4067,
+            "volume": 14,
+            "title": "PRZYGOTOWANIE DO KAPŁAŃSTWA W KOŚCIELE CHRYSTUSOWYM I MARYJNYM",
+            "checked": false
+        },
+        {
+            "id": "g029",
+            "type": "pytanie",
+            "question": "Jaka historia z obrad soborowych wpłynęła na decyzję o włączeniu imienia świętego Józefa do Kanonu Mszy Świętej?",
+            "anchor": "W szeregu różnych głosów, które padały z ust Ojców Soborowych, jeden szczególnie, głos biskupa jugosłowiańskiego[3] zapadł wszystkim w duszę. Wspomniał on, że za wiarę spędził w więzieniu osiem lat i jedyną jego nadzieją była wtedy żywa cześć do świętego Józefa.",
+            "document_id": 4034,
+            "volume": 14,
+            "title": "NOWE SPOJRZENIE NA KOŚCIÓŁ W ŚWIETLE SOBOROWEJ KONSTYTUCJI DOGMATYCZNEJ O KOŚCIELE",
+            "checked": false
+        },
+        {
+            "id": "g030",
+            "type": "haslo",
+            "question": "Kto wchodzi w skład Ludu Bożego według nauczania Prymasa?",
+            "anchor": "To są wszyscy w Kościele, a więc Ojciec Święty, wszyscy biskupi i kapłani całego katolickiego świata, zakonnicy i zakonnice, to Wy, rodzice, wasza młodzież, dzieci i niemowlęta.",
+            "document_id": 4016,
+            "volume": 14,
+            "title": "WŁAŚCIWA PEDAGOGIKA MACIERZYŃSKIEGO KOŚCIOŁA",
+            "checked": false
+        },
+        {
+            "id": "g031",
+            "type": "pytanie",
+            "question": "Dlaczego Maryja i Jezus musieli naprawić to, co zepsuli Adam i Ewa?",
+            "anchor": "Od chwili, gdy dwoje, Adam i Ewa, naruszyli plan Ojca Niebieskiego, trzeba było, aby Dwoje, Jezus i Maryja, go naprawili.",
+            "document_id": 4071,
+            "volume": 14,
+            "title": "APEL PRYMASA POLSKI",
+            "checked": false
+        },
+        {
+            "id": "g032",
+            "type": "pytanie",
+            "question": "Jakie dwie postacie, według wczesnych Ojców Kościoła, musiały współdziałać, aby podnieść człowieka z upadku, skoro dwie inne przyczyniły się do jego upadku?",
+            "anchor": "Cudownie mówili pierwsi Ojcowie i pisarze kościelni, że jeżeli dwoje przyczyniło się do upadku to też Dwoje musi współdziałać nad podniesieniem człowieka z upadku.",
+            "document_id": 4077,
+            "volume": 14,
+            "title": "WY JESTEŚCIE ŚWIĄTYNIĄ BOGA",
+            "checked": false
+        },
+        {
+            "id": "g033",
+            "type": "haslo",
+            "question": "Kto nazwał Maryję Matką Kościoła?",
+            "anchor": "Słusznie więc Paweł VI, na wniosek biskupów polskich, nazwał Matkę Chrystusową Matką Kościoła.",
+            "document_id": 4030,
+            "volume": 14,
+            "title": "POTĘŻNE NURTY ODNOWY KOŚCIOŁA",
+            "checked": false
+        },
+        {
+            "id": "g034",
+            "type": "pytanie",
+            "question": "Co symbolizują dary złożone przez Mędrców, które są wspominane w liturgii święta Trzech Króli?",
+            "anchor": "Mamy zwyczaj rozumieć, że mirra oznacza ludzkie cierpienia Jezusa Chrystusa, Jego mękę i ofiarę, a zarazem przypomina nam ludzki trud, który powinien być uświęcony. Kadzidło jest wyrazem należnej Bogu chwały od Mędrców i od nas wszystkich. Złoto zaś wyraża, iż wszystko, co człowiek zdobędzie swoją pracą, po zaspokojeniu ludzkich potrzeb po Bożemu, ma być obrócone na większą chwałę Bożą.",
+            "document_id": 4010,
+            "volume": 14,
+            "title": "W TROSCE O WSPÓLNE DOBRO…",
+            "checked": false
+        },
+        {
+            "id": "g035",
+            "type": "pytanie",
+            "question": "Jak Sobór Watykański II zmienił sposób odprawiania Mszy Świętej przez kapłanów, jeśli chodzi o ich miejsce w kościele?",
+            "anchor": "Sobór inaczej podszedł do tej sprawy, bo każdego kapłana odprawiającego Mszę Świętą z udziałem ludu, podczas pierwszej części posadził „na katedrze”.",
+            "document_id": 4028,
+            "volume": 14,
+            "title": "WŁAŚCIWY DUCH SOBORU",
+            "checked": false
+        },
+        {
+            "id": "g036",
+            "type": "haslo",
+            "question": "rola świeckich w Akcji Katolickiej przed wojną",
+            "anchor": "Ruch Akcji Katolickiej przed wojną może właśnie nie miał tej podstawowej bazy zakorzenienia świeckiego apostoła w organizmie nadprzyrodzonym Kościoła.",
+            "document_id": 4032,
+            "volume": 14,
+            "title": "GŁÓWNE NURTY ODNOWY SOBOROWEJ",
+            "checked": false
+        },
+        {
+            "id": "g037",
+            "type": "pytanie",
+            "question": "Dlaczego kardynał Wyszyński odwiedził parafię Słomczyn w dzień roboczy, a nie w niedzielę?",
+            "anchor": "Pragnę usprawiedliwić się przed Wami, że na nawiedzenie parafii Słomczyn wybrałem dzień powszedni. Łączy się to z moimi licznymi obowiązkami.",
+            "document_id": 3860,
+            "volume": 15,
+            "title": "LUD BOŻY W KOŚCIELE – DOSKONAŁE WYRÓWNANIE SPOŁECZNE",
+            "checked": false
+        },
+        {
+            "id": "g038",
+            "type": "pytanie",
+            "question": "Jak Prymas Wyszyński przestrzegał dzieci przed sprawianiem przykrości innym?",
+            "anchor": "Nikomu, ani waszym rodzicom, ani rodzeństwu, ani wychowawcom i nauczycielom, ani kapłanom, ani mnie, ani koleżankom, ani kolegom nie wyciskajcie łez z oczu.",
+            "document_id": 3866,
+            "volume": 15,
+            "title": "ABY SERCA WASZE UPODOBNIŁY SIĘ DO SERCA PANA JEZUSA",
+            "checked": false
+        },
+        {
+            "id": "g039",
+            "type": "haslo",
+            "question": "Jak Maryja zareagowała na słowa anioła Gabriela podczas zwiastowania?",
+            "anchor": "To niezwykłe pozdrowienie musiało zdziwić Maryję. „Rozważała, cóż by to było za pozdrowienie”.",
+            "document_id": 3858,
+            "volume": 15,
+            "title": "OBECNOŚĆ MARYI W MISTERIUM CHRYSTUSA I KOŚCIOŁA",
+            "checked": false
+        },
+        {
+            "id": "g040",
+            "type": "pytanie",
+            "question": "W jaki sposób mały Jezus obserwował swoją Matkę i jak to wpływało na Jego misję?",
+            "anchor": "Patrzył dziecięcymi oczyma, które zasłaniały mądrość Słowa Przedwiecznego i śledził Ją, jak każde niemowlę śledzi uważnie każde poruszenie matki wokół niego i po izbie. Tak samo maleńki Bóg-Człowiek bacznie śledził swą Matkę, Służebnicę Pańską.",
+            "document_id": 3874,
+            "volume": 15,
+            "title": "W NIEWOLĘ SŁUŻEBNICY PAŃSKIEJ",
+            "checked": false
+        },
+        {
+            "id": "g041",
+            "type": "pytanie",
+            "question": "W jakim celu Prymas Wyszyński wzywał do oddania się w opiekę Matce Bożej?",
+            "anchor": "A więc oddajemy się Maryi po to, aby Ona, Najmilsze Dzieci, oddała nas Chrystusowi.",
+            "document_id": 3882,
+            "volume": 15,
+            "title": "POCZĄTEK CUDÓW W POLSKIEJ KANIE NARODU",
+            "checked": false
+        },
+        {
+            "id": "g042",
+            "type": "haslo",
+            "question": "Kto wydał dekret o Jubileuszu Tysiąclecia Chrztu Polski?",
+            "anchor": "Ponadto sami postanowiliśmy wydać dekret o tym wyjątkowym Jubileuszu dla całego Narodu, a więc zarówno dla wszystkich dzieci Naszych, żyjących w granicach Polski, jak i dla tych, co przebywają z dala od Ojczyzny.",
+            "document_id": 3933,
+            "volume": 15,
+            "title": "[Aneks IX] LIST APOSTOLSKI Z OKAZJI TYSIĄCLECIA CHRZTU POLSKI",
+            "checked": false
+        },
+        {
+            "id": "g043",
+            "type": "pytanie",
+            "question": "W jaki sposób Paweł VI zachęcał do oddawania czci Maryi?",
+            "anchor": "Powiedział: „Gorącym moim pragnieniem jest, aby pod mianem Matki Kościoła Maryja była jak najbardziej czczona”.",
+            "document_id": 3852,
+            "volume": 15,
+            "title": "NA DROGI KAPŁAŃSKIEGO ŻYCIA Z MARYJĄ, MATKĄ WIECZYSTEGO KAPŁANA",
+            "checked": false
+        },
+        {
+            "id": "g044",
+            "type": "pytanie",
+            "question": "W jaki sposób polscy biskupi zamierzali przygotować naród na nadejście nowego tysiąclecia?",
+            "anchor": "Żeby zaś tym bezpieczniej wejść w bramy nowego tysiąclecia, postanowiliśmy, wszyscy biskupi polscy, aby cały Kościół święty w Ojczyźnie naszej, wszystkie diecezje, wszystkie parafie, całą Ojczyznę, wszystkie miasta i wsie, wszystkie stany i zawody, wszystkie rodziny, ojców i matki, młodzież i dziatwę, wszystkie dzieci Boże oddać w macierzyńskie ramiona Najświętszej Panienki.",
+            "document_id": 3853,
+            "volume": 15,
+            "title": "KORONACJA OBRAZU MATKI BOŻEJ",
+            "checked": false
+        },
+        {
+            "id": "g045",
+            "type": "haslo",
+            "question": "Prymas o stronniczości prasy soborowej",
+            "anchor": "Co więcej, nawet dzienniki soborowe, ogłaszane przez ludzi z utartym autorytetem w świecie katolickim, nie grzeszą obiektywizmem. Są niekiedy zarażone tendencją, którą ktoś chce włożyć w bieg prac soborowych, tak iż nie jest rzeczą łatwą mieć właściwy obraz Soboru, zwłaszcza dla katolików polskich, którzy prasy niezależnej w ogóle nie posiadają.",
+            "document_id": 3881,
+            "volume": 15,
+            "title": "ECCLESIA MATER – MATER ECCLESIAE",
+            "checked": false
+        },
+        {
+            "id": "g046",
+            "type": "pytanie",
+            "question": "Z czym Prymas Wyszyński zgadzał się, jeśli chodzi o obecność Kościoła w dzisiejszym świecie?",
+            "anchor": "Ja godzę się z tym wołaniem wszystkich, nie wyłączając polskich postępowców katolickich, że Kościół musi być obecny w świecie współczesnym.",
+            "document_id": 5159,
+            "volume": 16,
+            "title": "MOCE BOŻE W POLITYCE ŚWIATOWEJ",
+            "checked": false
+        },
+        {
+            "id": "g047",
+            "type": "pytanie",
+            "question": "Jakie cechy wyróżniały Rodzinę Nazaretańską, mimo braku cudów i rozgłosu?",
+            "anchor": "W Najświętszej Rodzinie wszystko było takie, jak w najzwyklejszej rodzinie – bez cudów, bez nadzwyczajności, bez rozgłosu, a tak skuteczne. Ta Rodzina służących sobie wzajemnie do dziś jest natchnieniem wszystkich rodzin i waszej Rodziny Maryi.",
+            "document_id": 5199,
+            "volume": 16,
+            "title": "WŁADAĆ – TO ZNACZY SŁUŻYĆ W MILCZENIU",
+            "checked": false
+        },
+        {
+            "id": "g048",
+            "type": "haslo",
+            "question": "historia Jerzego z Lasek",
+            "anchor": "A proszę księdza, bo ksiądz mi powiedział, że ja idę do Matki Bożej, a ja nie zdążę. – Dlaczego nie zdążysz? – Niech ksiądz zobaczy, jaki ja jeszcze jestem silny.",
+            "document_id": 5149,
+            "volume": 16,
+            "title": "ORĘDZIE SOBORU DO KOBIET",
+            "checked": false
+        },
+        {
+            "id": "g049",
+            "type": "pytanie",
+            "question": "Jakie konkretne słowa Soboru Watykańskiego II skierowano do osób doświadczających cierpienia?",
+            "anchor": "„Dla Was wszystkich, doświadczeni Bracia, nawiedzeni przez różnorakie cierpienia, Sobór ma specjalne orędzie. Czuje on na sobie oczy błagające, błyszczące gorączką, zniechęcone zmęczeniem, spojrzenia pytające, które na próżno szukają odpowiedzi na owe «dlaczego?» cierpień ludzkich i z niepokojem zapytują się, kiedy i skąd przyjdzie otucha.",
+            "document_id": 5178,
+            "volume": 16,
+            "title": "CHORZY A SOBÓR",
+            "checked": false
+        },
+        {
+            "id": "g050",
+            "type": "pytanie",
+            "question": "Gdzie Prymas wyświęcił młodych księży w 1966 roku?",
+            "anchor": "W dniu 14 kwietnia Roku Milenijnego 1966, w Bazylice Prymasowskiej Świętego Wojciecha, na legendarnym i historycznym Wzgórzu Lecha, na którym od tysiąca lat oddawana jest cześć Bogu, na grobach naszych Poprzedników, postanowiliśmy włączyć Was do szeregów kapłaństwa Chrystusowego.",
+            "document_id": 5200,
+            "volume": 16,
+            "title": "MŁODYM KAPŁANOM TYSIĄCLECIA NA DROGĘ!",
+            "checked": false
+        },
+        {
+            "id": "g051",
+            "type": "haslo",
+            "question": "Początek, który niepokoi człowieka",
+            "anchor": "Ten Początek, który mówi do człowieka, niepokoi go. Jest to szczęśliwa okoliczność, że człowiek nie pozostaje obojętny, ale powstaje w nim tragiczny wysiłek zrozumienia tego Początku.",
+            "document_id": 5175,
+            "volume": 16,
+            "title": "„JAM JEST POCZĄTEK, KTÓRY MÓWI...”",
+            "checked": false
+        },
+        {
+            "id": "g052",
+            "type": "pytanie",
+            "question": "Jakie przekonanie o polskim Kościele panowało na świecie, zanim biskupi wysłali listy do episkopatów?",
+            "anchor": "W tej świadomości bowiem przeważa wrażenie, jakoby był to Kościół już tylko milczący. Dla nich niezwykłe są te odkrycia, których dokonujemy, pokazując im, że jest to Kościół wybitnie żywotny i aktywny.",
+            "document_id": 5162,
+            "volume": 16,
+            "title": "NA PROGU WIELKIEGO „TE DEUM” NARODU",
+            "checked": false
+        },
+        {
+            "id": "g053",
+            "type": "pytanie",
+            "question": "Z jakiego powodu Prymas wyraża wdzięczność za to, że kolejne pokolenia Polaków przez dziesięć wieków tworzyły naród ochrzczony?",
+            "anchor": "Szczególnie wdzięczni jesteśmy za to, że pokolenia Polaków, chrzczonych przez dziesięć wieków na naszej ziemi, stworzyły Naród ochrzczony.",
+            "document_id": 5193,
+            "volume": 16,
+            "title": "WSTĘP DO PONOWIENIA PRZYRZECZEŃ CHRZTU ŚWIĘTEGO",
+            "checked": false
+        },
+        {
+            "id": "g054",
+            "type": "haslo",
+            "question": "Prymas o roli starszego rodzeństwa w wychowaniu",
+            "anchor": "Nieraz tak się zdarza, że starsze rodzeństwo doskonale wyręcza pracujących rodziców i daje pomoc, a niekiedy wychowanie i naukę maleństwom, które od początku trzeba otoczyć delikatną opieką i zakładać w nich dobre fundamenty pod dalsze zasady wychowawcze.",
+            "document_id": 5173,
+            "volume": 16,
+            "title": "WYCHOWANIE NOWOCZESNYCH KRÓLEWICZÓW",
+            "checked": false
+        },
+        {
+            "id": "g055",
+            "type": "pytanie",
+            "question": "Jakie słowa Chrystusa, wypowiedziane do apostołów, przetrwały do dziś i są nadal aktualne w Polsce?",
+            "anchor": "W czasie dziękczynnej Mszy Świętej odprawionej w prokatedrze diakon ogłosił słowa, które skierowane do dwunastu Rybaków, padły w świat przed blisko dwoma tysiącami lat. Te same słowa, stosownie do zapowiedzi Chrystusa: „Niebo i ziemia przeminą, ale słowa moje nie przeminą”, przetrwały do dnia dzisiejszego.",
+            "document_id": 5554,
+            "volume": 17,
+            "title": "CO KOŚCIÓŁ DAJE NARODOWI W WIARY NOWYM TYSIĄCLECIU",
+            "checked": false
+        },
+        {
+            "id": "g056",
+            "type": "pytanie",
+            "question": "Jakie przekonanie, zdaniem Prymasa, Polacy przenoszą z wiary w życie wieczne na swoją ojczyznę?",
+            "anchor": "Ale jednocześnie swoją żywą wiarę we własne zmartwychwstanie przenoszą na Ojczyznę i wierzą, że ona również ma trwać w nieskończoność.",
+            "document_id": 5541,
+            "volume": 17,
+            "title": "CAŁUJĄC OBLICZE POLSKIEJ ZIEMI MILENIJNEJ",
+            "checked": false
+        },
+        {
+            "id": "g057",
+            "type": "haslo",
+            "question": "Prymas o służebnej postawie",
+            "anchor": "Za cenę postawy służebnej zdobywa się chwałę mądrości, bo nie sztuka jest władać, ale sztuka jest służyć. Trzeba niekiedy umieć wyrzec się możności władania, aby zasmakować rozkoszy służenia, rozkoszy oddania się sprawom, które przekraczają osobiste, chociażby najszlachetniejsze plany i programy życiowe.",
+            "document_id": 5505,
+            "volume": 17,
+            "title": "DO MŁODZIEŻY KATOLICKIEGO UNIWERSYTETU LUBELSKIEGO W CZASIE UROCZYSTOŚCI „TE DEUM” TYSIĄCLECIA",
+            "checked": false
+        },
+        {
+            "id": "g058",
+            "type": "pytanie",
+            "question": "Za co Prymas Wyszyński dziękował papieżowi w kontekście obchodów Tysiąclecia Chrztu Polski?",
+            "anchor": "Pragniemy też całym sercem skierować stąd nasze uczucia wdzięczności ku Ojcu Świętemu i podziękować mu za to, że się na nas nie zagniewał, że modlił się z Polakami u Świętego Piotra i ogłosił jeszcze większą swoją miłość do naszego Narodu.",
+            "document_id": 5507,
+            "volume": 17,
+            "title": "UROCZYSTOŚĆ BOŻEGO CIAŁA W STOLICY TYSIĄCLECIA",
+            "checked": false
+        },
+        {
+            "id": "g059",
+            "type": "pytanie",
+            "question": "Do jakich grup społecznych miała się udać Matka Boża w obrazie nawiedzenia po 4 września?",
+            "anchor": "Obecnie, od 4 września, wybiera się do krainy kopalń, do ludu górniczego i hutniczego, który oczekuje z radością Panienki Jasnogórskiej, ufając, że przyjdzie Ona z pomocą ich trudnemu i odpowiedzialnemu zadaniu jako Dziewica Wspomożycielka.",
+            "document_id": 5559,
+            "volume": 17,
+            "title": "„BŁOGOSŁAWIONE OCZY…”",
+            "checked": false
+        },
+        {
+            "id": "g060",
+            "type": "haslo",
+            "question": "Prymas o sztandarze dla Polonii w Rio",
+            "anchor": "Przed Mszą Świętą poświęciłem sztandar dla Polonii w Rio de Janeiro – obraz naszej umiłowanej Dziewicy Wspomożycielki, Pani Jasnogórskiej.",
+            "document_id": 5536,
+            "volume": 17,
+            "title": "CO MÓWIŁ WAM PRYMAS…",
+            "checked": false
+        },
+        {
+            "id": "g061",
+            "type": "pytanie",
+            "question": "Dlaczego Prymas Tysiąclecia nie mógł przybyć na uroczystości polonijne w USA, mimo otrzymanych zaproszeń?",
+            "anchor": "Ale widocznie jeszcze nie przyszła pora na to, skoro przyjąwszy z radością zaproszenie hierarchii katolickiej w USA, biskupów i duchowieństwa polskiego, stowarzyszeń i bractw polonijnych, waszych parafii i szkół, seminarium w Orchard Lake i uniwersytetów amerykańskich – nie mogę spełnić waszych życzeń.",
+            "document_id": 5543,
+            "volume": 17,
+            "title": "LIST DO POLONII",
+            "checked": false
+        },
+        {
+            "id": "g062",
+            "type": "pytanie",
+            "question": "Jak Prymas Wyszyński opisywał trudności w praktykowaniu miłości bliźniego i jakich postaw uczył w obliczu tych wyzwań?",
+            "anchor": "Niełatwo nam to przychodzi, ale zmagamy się z sobą, przezwyciężamy siebie, by stać się ludźmi, wyzbywając się instynktów i porywów zwierzęcych. Próbujemy stawać się „braterstwa miłośnikami”, wyciągać życzliwe dłonie, bez zdrady i podstępu.",
+            "document_id": 5553,
+            "volume": 17,
+            "title": "PANI OPOLSKA W ZIEMI POLSKIEJ – „A BYŁA TAM MATKA JEZUSOWA”...",
+            "checked": false
+        },
+        {
+            "id": "g063",
+            "type": "haslo",
+            "question": "Prymas o szukaniu Matki Bożej",
+            "anchor": "– Jak to zabawnie i śmiesznie wygląda, jaka to dziecinada, gdy poważni ludzie, zamiast zająć się rzetelną pracą dla dobra Narodu, latają uzbrojeni po polach i drogach, szukając Matki Najświętszej.",
+            "document_id": 5514,
+            "volume": 17,
+            "title": "„TE DEUM” W GRODZIE KOPERNIKA",
+            "checked": false
+        },
+        {
+            "id": "g064",
+            "type": "pytanie",
+            "question": "Jakie miasto, mimo złej opinii i braku zrozumienia, było szczególnie drogie Chrystusowi i dlaczego?",
+            "anchor": "Tak umiłował to małe miasteczko, że Ewangelia mówi o Chrystusie: „Przyszedł Jezus do ojczyzny swojej”[2]. – „Przyszedł do miasta swego”.",
+            "document_id": 5606,
+            "volume": 18,
+            "title": "CZYŃCIE SOBIE ZIEMIĘ OJCZYSTĄ PODDANĄ!",
+            "checked": false
+        },
+        {
+            "id": "g065",
+            "type": "pytanie",
+            "question": "Jaki papież, zanim został głową Kościoła, poznał historię Matki Bożej Jasnogórskiej dzięki lekturze powieści Sienkiewicza?",
+            "anchor": "Wczytał się w Jej dzieje – jak mi się później zwierzył – w Potopie Sienkiewicza. Tam nauczył się kochać Tę, którą później sam nawiedził na Jasnej Górze.",
+            "document_id": 5579,
+            "volume": 18,
+            "title": "MARYJNA SOBOTA PRZED DNIEM PAŃSKIM",
+            "checked": false
+        },
+        {
+            "id": "g066",
+            "type": "haslo",
+            "question": "Paweł VI wizyta ONZ cel",
+            "anchor": "Podziwialiśmy niezwykłą odwagę Ojca Świętego Pawła VI, który w ubiegłym roku w czasie IV sesji Soboru udał się do Organizacji Narodów Zjednoczonych[4] i prosił przedstawicieli wszystkich państw, aby mieli litość nad narodami i chcieli w duchu Chrystusa zwiastować pokój wszystkim ludziom dobrej woli na ziemi.",
+            "document_id": 5617,
+            "volume": 18,
+            "title": "SOBOROWE ŚWIATŁA NA DROGACH NOWEGO TYSIĄCLECIA WIARY",
+            "checked": false
+        },
+        {
+            "id": "g067",
+            "type": "pytanie",
+            "question": "Z kim królowa Jadwiga rozprawiała się w Inowrocławiu i kto jej towarzyszył?",
+            "anchor": "Niedawno byłem w Inowrocławiu. Wczesnym rankiem mówiłem kazanie w kościele Świętego Mikołaja, do którego swego czasu przybyła z Wawelu królowa Jadwiga i mężnie rozprawiała się z zakonem krzyżackim. Towarzyszył jej wtedy arcybiskup gnieźnieński Janisław i biskup poznański Gamrot.",
+            "document_id": 5612,
+            "volume": 18,
+            "title": "Z MARYJĄ W WIARY NOWE TYSIĄCLECIE",
+            "checked": false
+        },
+        {
+            "id": "g068",
+            "type": "pytanie",
+            "question": "Jakie postaci świętych Prymas wymienił jako tych, którzy czekali na powrót Polaków na Ziemie Odzyskane?",
+            "anchor": "Oto jedna wiara, jeden chrzest, jedne sakramenty święte! Jak bardzo nam to pomogło wszczepić się od razu w nurt dziejowy i w tętno tej ziemi, w której cierpliwie czekali na swoich rodaków błogosławiony Czesław w tej kaplicy, duch świętego Jacka i duch błogosławionej Bronisławy, dzieci Kamienia Opolskiego, na którym budowany był dla przyszłych, naszych pokoleń dom Boży – mieszkanie Boga z ludźmi.",
+            "document_id": 5598,
+            "volume": 18,
+            "title": "TYSIĄCLECIE NA ZIEMIACH PO WIEKACH ODZYSKANYCH",
+            "checked": false
+        },
+        {
+            "id": "g069",
+            "type": "haslo",
+            "question": "Prymas o Jakubie Strzemię jako wzorze miłowania Ojczyzny",
+            "anchor": "Pozostał w dziejach Polski Tysiąclecia świadectwem, że Kościół umie przez krzyż i Ewangelię wychowywać dzieci Narodu dla wiernej, Bożej służby Narodowi.",
+            "document_id": 5605,
+            "volume": 18,
+            "title": "MILENIUM ZIEMI ZAWSZE WIERNEJ",
+            "checked": false
+        },
+        {
+            "id": "g070",
+            "type": "pytanie",
+            "question": "Jakie wydarzenia i dokumenty mają stanowić podstawę dla działań Kościoła w Polsce w nadchodzącym tysiącleciu po chrzcie?",
+            "anchor": "Na nim wesprze się nasza praca w duchu postanowień wielkiego Soboru Watykańskiego II i narodowych Ślubów Jasnogórskich oraz Aktu oddania Narodu w macierzyńską niewolę Maryi za wolność Kościoła w świecie i w Ojczyźnie naszej, aby Kościół mógł wykonać postanowienia i umacniać ducha soborowej odnowy.",
+            "document_id": 5637,
+            "volume": 18,
+            "title": "ZAKOŃCZENIE SACRUM POLONIAE MILLENNIUM",
+            "checked": false
+        },
+        {
+            "id": "g071",
+            "type": "pytanie",
+            "question": "Dlaczego Prymas Wyszyński uważał, że nie można zapomnieć o krzywdach wyrządzonych Kościołowi, mimo gotowości do przebaczenia?",
+            "anchor": "Ale wymazać ich z pamięci nie wolno, bo stałoby się to ze szkodą dla Narodu i państwa. My tę przeszłość traktujemy jako ciężką szkołę życia i nie możemy zapomnieć tego, czegośmy w niej doznali.",
+            "document_id": 5638,
+            "volume": 18,
+            "title": "[Aneks I] O ZADANICH POSOBOROWYCH KOŚCIOŁA ŚWIĘTEGO I JEGO POŁOŻENIU W POLSCE W ROKU MILENIJNYM 1966",
+            "checked": false
+        },
+        {
+            "id": "g072",
+            "type": "haslo",
+            "question": "Prymas o niezmienności słów Chrystusa",
+            "anchor": "Sytuacje miną, jak miną najrozmaitsze doktryny i wieki, jak niebo i ziemia przeminą, ale słowa Chrystusowe nie przeminą. One zostaną.",
+            "document_id": 5618,
+            "volume": 18,
+            "title": "TRWAŁE MOCE W NARODZIE OCHRZCZONYM",
+            "checked": false
+        },
+        {
+            "id": "g073",
+            "type": "pytanie",
+            "question": "Z czym Prymas Wyszyński łączył pochwałę aktywności, nawiązując do działalności ojca Honorata?",
+            "anchor": "Pochwała aktywności zawsze łączy się z aprobatą wartości, które ład przyrodzony i nadprzyrodzony niesie współczesnemu światu.",
+            "document_id": 3982,
+            "volume": 19,
+            "title": "MARYJNY SZLAK W STOLICY",
+            "checked": false
+        },
+        {
+            "id": "g074",
+            "type": "pytanie",
+            "question": "Co Prymas zapamiętał z Soboru Watykańskiego II w kontekście myśli filozoficznej?",
+            "anchor": "Jako uczestnik Soboru wyniosłem wrażenie, że na tle nowoczesnych zmagań filozoficznych ostatecznie zwyciężył święty Tomasz. On więc będzie prowadził myśl teologiczną w okresie posoborowym.",
+            "document_id": 3943,
+            "volume": 19,
+            "title": "NA UROCZYSTOŚĆ ŚWIĘTEGO TOMASZA Z AKWINU",
+            "checked": false
+        },
+        {
+            "id": "g075",
+            "type": "haslo",
+            "question": "Prymas o poświęcaniu się za innych",
+            "anchor": "W praktyczny sposób sprawdza się dzisiaj na oczach całego świata prawda, że poświęcać się trzeba przez własną – a nie przez cudzą krew! – tak jak uczynił Chrystus.",
+            "document_id": 3984,
+            "volume": 19,
+            "title": "NAPEŁNIAJCIE ŁÓDŹ MIŁOŚCIĄ",
+            "checked": false
+        },
+        {
+            "id": "g076",
+            "type": "pytanie",
+            "question": "Jak to jest, że Barabasz zawdzięcza swoją wolność Chrystusowi?",
+            "anchor": "Chyba Chrystus, bo gdyby nie było Chrystusa przed trybunałem Piłata, Barabasz pozostałby w więzieniu. Zawdzięcza on swą wolność Chrystusowi, a więc nawet za Barabasza warto być wydanym w ręce zgrai.",
+            "document_id": 3951,
+            "volume": 19,
+            "title": "STOPY JEZUSOWE NAMASZCZAĆ W BRACIACH NASZYCH.PRAKTYCZNE WNIOSKI Z NAUKI O MISTYCZNYM CIELE CHRYSTUSA",
+            "checked": false
+        },
+        {
+            "id": "g077",
+            "type": "pytanie",
+            "question": "Skąd według Prymasa bierze się nienawiść u człowieka, skoro jego natura jest z gruntu dobra?",
+            "anchor": "Nienawiść w człowieku nie pochodzi z jego natury, tylko z grzechu. Niechęć, nienawiść, wrogość nie pochodzą z osobowości ludzkiej, lecz z „przygody”, jaka człowieka spotyka, gdy grzeszy. Tylko grzech rodzi w człowieku zło.",
+            "document_id": 3979,
+            "volume": 19,
+            "title": "W SŁODKIM JARZMIE MIŁOŚCI",
+            "checked": false
+        },
+        {
+            "id": "g078",
+            "type": "haslo",
+            "question": "Prymas o wzajemności w miłości małżeńskiej",
+            "anchor": "Jeżeli mąż narzeka, że go serce boli, bo mu żona dokucza, niech pamięta, że żona też ma serce. Potrzebne są dwa serca, aby była miłość, nie wystarczy jedno.",
+            "document_id": 3947,
+            "volume": 19,
+            "title": "PRAWDĘ CZYŃCIE W MIŁOŚCI",
+            "checked": false
+        },
+        {
+            "id": "g079",
+            "type": "pytanie",
+            "question": "Jakie spostrzeżenie na temat różnic między dawną kulturą chrześcijańską a współczesną kulturą „postępową” przedstawił Chesterton, nawiązując do liczby dzieci w rodzinie?",
+            "anchor": "Już stary Chesterton[2], zastanawiając się nad tym zboczeniem współczesnym, mówi, że stara kultura chrześcijańska, gdy miała w rodzinie siedem główek i sześć kapelusików, wysilała się, jakby ten siódmy kapelusik zdobyć. Współczesna zaś kultura „postępowa” w podobnej sytuacji wysila się, jakby tę siódmą główkę... uciąć (!!!).",
+            "document_id": 3968,
+            "volume": 19,
+            "title": "W OBRONIE PRAWA DO ŻYCIA...",
+            "checked": false
+        },
+        {
+            "id": "g080",
+            "type": "pytanie",
+            "question": "Co Prymas Wyszyński rozumiał pod pojęciem „żywego fundamentu katedry”?",
+            "anchor": "ŻYWY FUNDAMENT KATEDRY Z POWSTAŃCZEJ KRWI",
+            "document_id": 3983,
+            "volume": 19,
+            "title": "PROPUGNACULUM FIDEI – SZANIEC WIARY",
+            "checked": false
+        },
+        {
+            "id": "g081",
+            "type": "haslo",
+            "question": "Prymas o mowie ojczystej Polonii",
+            "anchor": "Bo właśnie tam, w świątyniach polskich i we wszystkich innych świątyniach, w tylu katedrach diecezjalnych zabrzmiała mowa ojczysta, ta mowa, którą wasi praojcowie jako najwspanialszy skarb przynieśli z sobą znad Bugu i Wisły, znad Sanu i Odry do nowej Ojczyzny, i którą z taką miłością się posługiwali, krzepiąc się we wspólnocie i jedności.",
+            "document_id": 3939,
+            "volume": 19,
+            "title": "PRZEMÓWIENIE DO POLONII AMERYKAŃSKIEJ",
+            "checked": false
+        },
+        {
+            "id": "g082",
+            "type": "pytanie",
+            "question": "Jakie trudności i wyzwania musiała pokonać Maryja, aby w pełni wypełnić swoją rolę Matki Zbawiciela i Kościoła?",
+            "anchor": "Zadanie najwspanialszej Matki Dziewicy było niesłuchanie powikłane. Zawsze ktoś interweniował, próbował i doświadczał Jej wiary, aby nie tylko raz uwierzyła, jak w dzień zwiastowania, ale – by wciąż na nowo musiała wierzyć...",
+            "document_id": 4157,
+            "volume": 20,
+            "title": "[Aneks III] RADOSNE 25 LAT RAZEM DLA WSPÓLNEJ SPRAWY – PRZEZ MARYJĘ JASNOGÓRSKĄ!...",
+            "checked": false
+        },
+        {
+            "id": "g083",
+            "type": "pytanie",
+            "question": "Jak Prymas Wyszyński opisał różnorodność przedstawień Dzieciątka Jezus w wydaniu książkowym, które widział?",
+            "anchor": "Jest wspaniała edycja Maryja i Dziecię w języku francuskim. W edycji tej Dziecię Boże przedstawione jest w różnych wydaniach: „po polsku”, „po francusku”, „po niemiecku” – oczywiście w szlafmycy – „po rosyjsku” i „po murzyńsku” – taki Jezusiczek z buzią szeroką a czarnuchną – „kieby mak”.",
+            "document_id": 4143,
+            "volume": 20,
+            "title": "„PÓJDŹMY AŻ DO BETLEJEM...”",
+            "checked": false
+        },
+        {
+            "id": "g084",
+            "type": "haslo",
+            "question": "rola Chrystusa w nauczaniu",
+            "anchor": "We współczesnym zmaganiu się ludzi stojących na ambonie i pod amboną dokonuje się przedziwne misterium pośrednictwa Chrystusa, który jest nie tylko między nami, nauczającymi i słuchającymi, ale jest w nas, w nauczających i słuchających zarazem.",
+            "document_id": 4113,
+            "volume": 20,
+            "title": "MAGISTRI IN ISRAEL DOCEANT NOS!...",
+            "checked": false
+        },
+        {
+            "id": "g085",
+            "type": "pytanie",
+            "question": "Co Prymas mówił o roli Maryi w walce z herezjami i błędami?",
+            "anchor": "Ale ostatecznie przekonujemy się, że im większa walka zmobilizowana jest przeciwko Niej, tym bardziej Ona zwycięża. Zwycięża wszystkie herezje i błędy i nadal jest – Znakiem Wielkim.",
+            "document_id": 4095,
+            "volume": 20,
+            "title": "\"ZNAK WIELKI\" NAD ZAGŁĘBIEM KONIŃSKIM PRZYMIERZE OJCZYZNY ZIEMSKIEJ Z MATKĄ OJCZYZNY NIEBIESKIEJ",
+            "checked": false
+        },
+        {
+            "id": "g086",
+            "type": "pytanie",
+            "question": "W jaki sposób Prymas charakteryzował postawę św. Stanisława Kostki wobec pokus i nacisków otoczenia?",
+            "anchor": "Nie poddał się naciskom środowiska i otoczenia. Tę bezkompromisową postawę przejawia zarówno w domu rodzinnym, jak i później w Wiedniu, Dylindze czy Rzymie.",
+            "document_id": 4128,
+            "volume": 20,
+            "title": "LIST PRYMASA POLSKI DO MŁODZIEŻY NA 400-LECIE ŚMIERCI ŚWIĘTEGO STANISŁAWA KOSTKI",
+            "checked": false
+        },
+        {
+            "id": "g087",
+            "type": "haslo",
+            "question": "Prymas o obchodach Roku Wiary",
+            "anchor": "Tak się szczęśliwie składa, że na progu nowego tysiąclecia, kiedy Ojciec Święty ogłosił Rok Wiary[2], mamy możność odsłaniać żywe owoce wiary, zarówno z dawnej przeszłości, jak i współczesne.",
+            "document_id": 4097,
+            "volume": 20,
+            "title": "WIECZNIE AKTUALNY WZÓR DLA MŁODZIEŻY ŚWIATA",
+            "checked": false
+        },
+        {
+            "id": "g088",
+            "type": "pytanie",
+            "question": "Dlaczego Prymas Wyszyński porównał deszcz do wody potrzebnej do obmycia oczu noworodka?",
+            "anchor": "Wy, drogie Matki, wiecie, że gdy się Wam człowiek narodzi na świat, potrzebna jest naprzód woda, do omycia ocząt, by ujrzały światło Boże.",
+            "document_id": 4098,
+            "volume": 20,
+            "title": "Z MAZOWIECKIEJ KOŁYSKI – NA OŁTARZE!",
+            "checked": false
+        },
+        {
+            "id": "g089",
+            "type": "pytanie",
+            "question": "W jaki sposób Prymas Wyszyński opisywał ludzkie próby pomocy osobom powołanym, które przeżywają trudności?",
+            "anchor": "Nasze jednak rady i wskazówki są tak skromne, często podobne do gąbki, nasyconej mirrą i octem, podanej na długiej, długiej trzcinie...",
+            "document_id": 4114,
+            "volume": 20,
+            "title": "MISTERIUM WIELKIEGO INTROITU ODKUPIENIA",
+            "checked": false
+        },
+        {
+            "id": "g090",
+            "type": "haslo",
+            "question": "Kto jest przykładem moralności społecznej w Polsce?",
+            "anchor": "Stąd tak niesłychanie ważną jest funkcja moralna, jaką na horyzoncie nie tylko naszego społeczeństwa, ale na szerszym horyzoncie, spełnia od wielu lat czcigodna i dostojna osoba Kardynała Prymasa Polski, który stał się miernikiem i sprawdzianem tej wielkiej, ważnej sprawy ludzkiej.",
+            "document_id": 4156,
+            "volume": 20,
+            "title": "[Aneks II] PRZEMÓWIENIE JEGO EMINENCJI KSIĘDZA KARDYNAŁA KAROLA WOJTYŁY NA ZAKOŃCZENIE „TYGODNIA SOBOROWEGO” W BYDGOSZCZY (NA SZWEDEROWIE)",
+            "checked": false
+        },
+        {
+            "id": "g091",
+            "type": "pytanie",
+            "question": "Z kim biskupi polscy porównują się, oddając hołd pierwszemu biskupowi Poznania?",
+            "anchor": "Jak dzieci, które po długiej wędrówce wracają do ojczystej zagrody, aby rozpoznać miejsce swego urodzenia i pochodzenia, korzymy się dziś w pielgrzymim hołdzie dziękczynnym przed Biskupem i Pasterzem dusz naszych, Jezusem Chrystusem, i przed pierwszym biskupem, który przez Chrystusa posłany został do Poznania.",
+            "document_id": 4364,
+            "volume": 21,
+            "title": "TYSIĄC LAT BISKUPSTWA W POZNANIU",
+            "checked": false
+        },
+        {
+            "id": "g092",
+            "type": "pytanie",
+            "question": "Jakie cechy charakteryzują współczesne młode pokolenie w kontekście dążeń chrześcijańskich?",
+            "anchor": "Co więcej, chrześcijański faktor towarzyszący dążeniom współczesnego młodego pokolenia wyraża się w niechęci do wszelkiego gwałtu, przemocy i wojen, chce natomiast oglądać w świecie pokój Boży malowany niemal Izajaszowymi obrazami.",
+            "document_id": 4314,
+            "volume": 21,
+            "title": "„IDZIE NOWYCH LUDZI PLEMIĘ...”",
+            "checked": false
+        },
+        {
+            "id": "g093",
+            "type": "haslo",
+            "question": "Prymas o miłości i władzy",
+            "anchor": "Jeżeli władza od Boga, to i miłość, którą rządzi się Bóg, musi wejść w aparat sprawowania władzy, aby ludzie przestali się bać władców, a zaczęli ich kochać.",
+            "document_id": 4315,
+            "volume": 21,
+            "title": "PRAWNICY – SĘDZIOWIE – BOGOWIE!",
+            "checked": false
+        },
+        {
+            "id": "g094",
+            "type": "pytanie",
+            "question": "Dlaczego kardynał Wyszyński ufał młodym ludziom, że poradzą sobie z budowaniem przyszłości Polski?",
+            "anchor": "Jeżeli Ci ufamy, droga Młodzieży, to ufamy dlatego – podkreślam to ciągle – że pragniesz na nowo przeżyć Polskę Chrystusową i uczynić ją lepszą, dając jej wymiary bardziej ludzkie i Boże, bo to, co prawdziwie ludzkie, jest Boże.",
+            "document_id": 4339,
+            "volume": 21,
+            "title": "DROGI MŁODZIEŻY KU NOWEJ POLSCE TYSIĄCLECIA",
+            "checked": false
+        },
+        {
+            "id": "g095",
+            "type": "pytanie",
+            "question": "Dlaczego Prymas uważał, że powołanie nauczyciela jest wyjątkowe i wymaga od niego szczególnej postawy?",
+            "anchor": "Ale jeżeli popełni go nauczyciel czy kapłan, wtedy jest zgorszenie, bo to nauczyciel, bo to kapłan... Może nie jest to argument najmocniejszy, abyście bronili waszego człowieczeństwa i nosili je z wielkim szacunkiem i czcią, ale w każdym razie – argument bardzo doniosły.",
+            "document_id": 4310,
+            "volume": 21,
+            "title": "WYPRAWA DO MŁODZIEŻY Z SERCEM",
+            "checked": false
+        },
+        {
+            "id": "g096",
+            "type": "haslo",
+            "question": "Paweł VI o niepokoju posoborowym",
+            "anchor": "Ojciec Święty Paweł VI, z którym rozmawiałem na ten temat w okresie III sesji soborowej, powiedział: Każdy Sobór wywołuje pewien niepokój. Ale gdy wykrzyczą się demagogowie i publicyści, przyjdą naukowcy, uporządkują naniesiony materiał, a wówczas można będzie korzystać z tego „chleba” wypieczonego na Soborze w ogniach Świętego Ducha, Miłości i Prawdy.",
+            "document_id": 4303,
+            "volume": 21,
+            "title": "OD NIEPOKOJU POSOBOROWEGO – DO DOJRZAŁOŚCI MYŚLI TEOLOGICZNEJ",
+            "checked": false
+        },
+        {
+            "id": "g097",
+            "type": "pytanie",
+            "question": "O co Prymas prosił wiernych archidiecezji warszawskiej w liście z 25 marca 1968 roku, w kontekście obchodów 3 maja?",
+            "anchor": "Jako wasz arcypasterz proszę Was, umiłowane Dzieci Boże, byście zgromadzili się wszyscy w waszej świątyni w dniu 3 maja wieczorem i w łączności duchowej z Jasną Górą modlili się za katolicką Polskę.",
+            "document_id": 4308,
+            "volume": 21,
+            "title": "DO WIERNYCH ARCHIDIECEZJI WARSZAWSKIEJ W SPRAWIE UROCZYSTOŚCI 3 MAJA 1968 ROKU",
+            "checked": false
+        },
+        {
+            "id": "g098",
+            "type": "pytanie",
+            "question": "Jakie było stanowisko włoskich ekspertów w kwestii sztucznego wpływania na proces powstawania życia, omawiane podczas Soboru?",
+            "anchor": "Wszyscy oni wypowiedzieli się przeciwko jakiejkolwiek formie sztucznego wpływania na proces powstającego życia.",
+            "document_id": 4336,
+            "volume": 21,
+            "title": "KONFERENCJA VI NA TEMAT KONSTYTUCJI PASTORALNEJ O OBECNOŚCI KOŚCIOŁA W ŚWIECIE WSPÓŁCZESNYM",
+            "checked": false
+        },
+        {
+            "id": "g099",
+            "type": "haslo",
+            "question": "Dlaczego Słowo Boże potrzebowało ludzkiego serca, żeby stać się ciałem?",
+            "anchor": "Nawet Bogu, aby Słowo ciałem się stało, potrzeba było serca – Serca Jezusa, Serca pełnego Człowieka, o którym mówi się: Ecce Homo.",
+            "document_id": 4359,
+            "volume": 21,
+            "title": "WKŁAD SERCA W SŁOWO",
+            "checked": false
+        }
+    ]
+}
