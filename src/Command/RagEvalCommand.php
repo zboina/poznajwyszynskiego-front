@@ -57,6 +57,7 @@ class RagEvalCommand extends Command
             ->addOption('judge-model', null, InputOption::VALUE_REQUIRED, 'Model oceniający', 'google/gemini-2.5-flash')
             ->addOption('compare', null, InputOption::VALUE_REQUIRED, 'Plik wcześniejszego przebiegu do porównania')
             ->addOption('only', null, InputOption::VALUE_REQUIRED, 'Tylko pytania o tych id (po przecinku)')
+            ->addOption('rerank', null, InputOption::VALUE_REQUIRED, 'Ile fragmentów ocenia reranker (0 = bez rerankera; domyślnie jak w env)')
             ->addOption('show-misses', null, InputOption::VALUE_NONE, 'Wypisz pytania, których fragmentu nie ma w 8 wynikach');
     }
 
@@ -70,6 +71,9 @@ class RagEvalCommand extends Command
             return Command::FAILURE;
         }
         $items = $golden['items'];
+        if (($rr = $input->getOption('rerank')) !== null) {
+            $this->retriever->setRerankCandidates((int) $rr);
+        }
         if ($only = $input->getOption('only')) {
             $ids = array_map('trim', explode(',', $only));
             $items = array_values(array_filter($items, fn($i) => in_array($i['id'], $ids, true)));
@@ -145,6 +149,7 @@ class RagEvalCommand extends Command
             'question' => $it['question'],
             'rank' => $rank,          // miejsce fragmentu z kotwicą w wynikach łączonych
             'doc_rank' => $docRank,   // miejsce pierwszego fragmentu z właściwego tekstu
+            'top_score' => $fused[0]['rerank_score'] ?? null, // ocena rerankera najlepszego fragmentu
             'sem_rank' => $this->firstRank($this->arm('sem', $it['question']), $it),
             'fts_rank' => $this->firstRank($this->arm('fts', $it['question']), $it),
         ];
@@ -267,8 +272,9 @@ class RagEvalCommand extends Command
             $scores = array_map(fn($k) => $cache[$k] ?? 0, $keys);
             $relevant = count(array_filter($scores, fn($s) => $s >= 1));
             $direct = count(array_filter($scores, fn($s) => $s === 2));
-            $all[] = ['id' => $t['id'], 'question' => $t['question'], 'relevant' => $relevant, 'direct' => $direct, 'scores' => $scores];
-            $rows[] = [$t['id'], mb_strimwidth($t['question'], 0, 60, '…'), "$relevant/" . count($chunks), "$direct/" . count($chunks)];
+            $top = $chunks[0]['rerank_score'] ?? null;
+            $all[] = ['id' => $t['id'], 'question' => $t['question'], 'relevant' => $relevant, 'direct' => $direct, 'scores' => $scores, 'top_score' => $top];
+            $rows[] = [$t['id'], mb_strimwidth($t['question'], 0, 60, '…'), "$relevant/" . count($chunks), "$direct/" . count($chunks), $top === null ? '–' : round($top, 2)];
         }
         ksort($cache);
         file_put_contents($cacheFile, json_encode($cache, JSON_PRETTY_PRINT) . "\n");
@@ -280,7 +286,7 @@ class RagEvalCommand extends Command
             'direct_avg' => round(array_sum(array_column($all, 'direct')) / $n, 2),
         ];
         $io->section('Pytania ogólne czytelników (ocena modelu)');
-        $io->table(['id', 'pytanie', 'na temat', 'wprost'], $rows);
+        $io->table(['id', 'pytanie', 'na temat', 'wprost', 'reranker'], $rows);
         $io->writeln(sprintf(' Średnio na temat: <info>%.2f</info> z 8, wprost odpowiada: <info>%.2f</info> z 8.', $summary['relevant_avg'], $summary['direct_avg']));
         return ['summary' => $summary, 'items' => $all];
     }

@@ -4,11 +4,17 @@ namespace App\Service;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Hybrid retrieval over document_chunks: semantic (bge-m3 cosine) + Polish
  * full-text, merged with Reciprocal Rank Fusion. Returns chunks enriched with
  * citation metadata (document title, volume number, printed-page range).
+ *
+ * Gdy ustawiony jest RERANKER_URL, czołówka wyników hybrydy trafia do polskiego
+ * rerankera (reranker/, cross-encoder czytający pytanie razem z fragmentem),
+ * który ustala ostateczną kolejność. Usługa niedostępna = kolejność z RRF.
  */
 class ChunkRetriever
 {
@@ -39,7 +45,28 @@ class ChunkRetriever
         'rozumiał', 'widział', 'tłumaczył', 'wyjaśniał', 'opisywał', 'nauczał', 'nauczanie', 'nauczania', 'myślał',
     ];
 
-    public function __construct(private Connection $db) {}
+    /** Ile czołowych fragmentów hybrydy ocenia reranker (koszt ~0,15 s na fragment). */
+    private int $rerankCandidates;
+
+    public function __construct(
+        private Connection $db,
+        private LoggerInterface $logger,
+        #[Autowire(env: 'default::RERANKER_URL')] private ?string $rerankerUrl = null,
+        #[Autowire(env: 'default::int:RERANKER_CANDIDATES')] ?int $rerankCandidates = null,
+    ) {
+        $this->rerankCandidates = $rerankCandidates ?? 20;
+    }
+
+    /** Do testów (app:rag-eval): 0 wyłącza reranker. */
+    public function setRerankCandidates(int $n): void
+    {
+        $this->rerankCandidates = $n;
+    }
+
+    private function rerankEnabled(): bool
+    {
+        return $this->rerankerUrl !== null && $this->rerankerUrl !== '' && $this->rerankCandidates > 0;
+    }
 
     /**
      * Pytanie → zapytanie pełnotekstowe „którekolwiek z istotnych słów”.
@@ -142,7 +169,7 @@ class ChunkRetriever
             JOIN documents d ON d.id = c.document_id
             JOIN volumes   v ON v.id = c.volume_id
             ORDER BY rrf.score DESC
-            LIMIT :k
+            LIMIT :pool
         ";
 
         $params = [
@@ -150,15 +177,53 @@ class ChunkRetriever
             'emb' => '[' . implode(',', $embedding) . ']',
             'rrfk' => self::RRF_K,
             'cand' => self::CANDIDATES,
-            'k' => $k,
+            'pool' => $this->rerankEnabled() ? max($k, $this->rerankCandidates) : $k,
         ];
-        $types = ['rrfk' => ParameterType::INTEGER, 'cand' => ParameterType::INTEGER, 'k' => ParameterType::INTEGER];
+        $types = ['rrfk' => ParameterType::INTEGER, 'cand' => ParameterType::INTEGER, 'pool' => ParameterType::INTEGER];
         if ($volumeId) {
             $params['vol'] = $volumeId;
             $types['vol'] = ParameterType::INTEGER;
         }
 
-        return $this->normalize($this->db->executeQuery($sql, $params, $types)->fetchAllAssociative());
+        $chunks = $this->normalize($this->db->executeQuery($sql, $params, $types)->fetchAllAssociative());
+        return array_slice($this->rerank($query, $chunks), 0, $k);
+    }
+
+    /**
+     * Nowa kolejność czołówki wg rerankera; każdy oceniony fragment dostaje
+     * 'rerank_score' (logit: >0 zwykle trafny, <-2 zwykle obok tematu).
+     * Fragmenty spoza czołówki zostają za nią w kolejności RRF.
+     */
+    private function rerank(string $query, array $chunks): array
+    {
+        if (!$this->rerankEnabled() || count($chunks) < 2) {
+            return $chunks;
+        }
+        $head = array_slice($chunks, 0, $this->rerankCandidates);
+        $ch = curl_init(rtrim($this->rerankerUrl, '/') . '/rerank');
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => json_encode(['query' => $query, 'documents' => array_column($head, 'content')]),
+            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CONNECTTIMEOUT => 2,
+            CURLOPT_TIMEOUT => 20,
+        ]);
+        $resp = curl_exec($ch);
+        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $err = curl_error($ch);
+        curl_close($ch);
+        $scores = $code === 200 ? (json_decode((string) $resp, true)['scores'] ?? null) : null;
+        if (!is_array($scores) || count($scores) !== count($head)) {
+            $this->logger->warning('Reranker niedostępny, kolejność z RRF: ' . ($err !== '' ? $err : 'HTTP ' . $code));
+            return $chunks;
+        }
+        foreach ($head as $i => &$c) {
+            $c['rerank_score'] = (float) $scores[$i];
+        }
+        unset($c);
+        usort($head, fn($a, $b) => $b['rerank_score'] <=> $a['rerank_score']);
+        return array_merge($head, array_slice($chunks, $this->rerankCandidates));
     }
 
     private function ftsOnly(string $query, int $k, ?int $volumeId): array
