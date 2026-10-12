@@ -6,17 +6,51 @@
     <title>{% block title %}poznajwyszynskiego.pl{% endblock %}</title>
     <link rel="icon" href="{{ asset('logo_PW_bez_obramowania.png') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Crimson+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Spectral:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Serif+Display:ital@0;1&family=Bitter:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700;800&family=Source+Sans+3:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700&family=Nunito:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Raleway:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Josefin+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Work+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Lato:ital,wght@0,300;0,400;0,700;1,400&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Rubik:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Fira+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Noto+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=PT+Sans:ital,wght@0,400;0,700;1,400&family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        /* ── Wspólna paleta serwisu ──
+           Jedno źródło kolorów dla wszystkich widoków. Widoki używają --pw-*
+           (starsze: --brand-*, które tu tylko aliasujemy), zamiast wpisywać własne odcienie. */
         :root {
             --font-heading: 'Cormorant Garamond', Georgia, serif;
             --font-body: 'Inter', -apple-system, sans-serif;
+
+            --pw-maroon: #722F37;
+            --pw-maroon-dark: #5C2630;
+            --pw-navy: #1A365D;
+            --pw-gold: #C9A227;
+            --pw-gold-soft: #c8b78d;     /* obwódki, ozdobniki */
+            --pw-cream: #FAF8F5;         /* tło stron */
+            --pw-paper: #fff;            /* karty */
+            --pw-ink: #1f1b18;           /* tytuły i tekst */
+            --pw-muted: #6b6259;         /* opisy */
+            --pw-faint: #9a917f;         /* podpisy, liczniki */
+            --pw-line: #e8e0d4;          /* obramowania */
+            --pw-radius: 14px;
+            --pw-radius-sm: 10px;
+            --pw-shadow: 0 1px 2px rgba(60,40,20,.04), 0 8px 24px rgba(60,40,20,.06);
+
+            --brand: var(--pw-maroon);
+            --brand-dark: var(--pw-maroon-dark);
+            --brand-navy: var(--pw-navy);
+            --brand-gold: var(--pw-gold);
+            --brand-cream: var(--pw-cream);
+            --tblr-primary: #722F37;
+            --tblr-primary-rgb: 114,47,55;
         }
         body {
             font-family: var(--font-body) !important;
+            background: var(--pw-cream);
+            color: var(--pw-ink);
         }
+        ::selection { background: rgba(114,47,55,.16); }
+        a { color: var(--pw-maroon); }
+        :focus-visible { outline: 2px solid rgba(114,47,55,.45); outline-offset: 2px; }
+        .btn-primary { --tblr-btn-bg: var(--pw-maroon); --tblr-btn-border-color: var(--pw-maroon);
+            --tblr-btn-hover-bg: var(--pw-maroon-dark); --tblr-btn-hover-border-color: var(--pw-maroon-dark); }
         h1, h2, h3, h4, h5, h6,
         .display-1, .display-2, .display-3, .display-4, .display-5, .display-6 {
             font-family: var(--font-heading) !important;

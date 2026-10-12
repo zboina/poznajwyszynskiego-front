@@ -3,18 +3,14 @@
 {% block title %}Moja historia — Asystent AI — Dzieła Zebrane Kardynała Wyszyńskiego{% endblock %}
 
 {% block stylesheets %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css">
 <style>
-    :root { --pw-maroon: #722F37; --pw-maroon-dark: #5C2630; --pw-gold: #c8b78d; --pw-cream: #f8f4ec; }
-    body.layout-v3, body.layout-v4 { --pw-maroon: #1A365D; --pw-maroon-dark: #12243f; }
-    body.layout-v5 { --pw-maroon: #5C2630; --pw-maroon-dark: #481d26; }
 
     .rag-page { background: radial-gradient(1200px 400px at 50% -120px, #faf6ee 0%, transparent 70%); }
     body.layout-v6 .rag-page { background: var(--pw-cream); }
     .rag-wrap { max-width: 860px; margin: 0 auto; padding: 2.5rem 1rem 4rem; }
 
     .rag-hist-hero { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.75rem; }
-    .rag-hist-hero h1 { font-family: var(--font-heading); color: var(--pw-maroon); font-weight: 700; font-size: 2rem; margin: 0; }
+    .rag-hist-hero h1 { font-family: var(--font-heading); color: var(--pw-ink); font-weight: 700; font-size: 2rem; margin: 0; }
     .rag-hist-hero p { color: #6b6256; margin: .35rem 0 0; font-size: .98rem; }
     .rag-hist-hero .back {
         display: inline-flex; align-items: center; gap: .4rem; text-decoration: none;
@@ -33,10 +29,10 @@
 
     .rag-hist-item { background: #fff; border: 1px solid #ece5d8; border-radius: 16px; padding: 1.1rem 1.3rem 1rem;
         margin-bottom: 1.1rem; box-shadow: 0 4px 22px rgba(60,50,30,.06); transition: box-shadow .15s, opacity .2s; }
-    .rag-hist-item.pinned { border-color: var(--pw-gold); box-shadow: 0 4px 22px rgba(160,120,40,.14); }
+    .rag-hist-item.pinned { border-color: var(--pw-gold-soft); box-shadow: 0 4px 22px rgba(160,120,40,.14); }
     .rag-hist-item.removing { opacity: 0; transform: translateY(-6px); }
     .rag-hist-head { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; margin-bottom: .7rem; font-size: .8rem; }
-    .rag-hist-head .scope { background: var(--pw-cream); border: 1px solid var(--pw-gold); color: #5a4a2e;
+    .rag-hist-head .scope { background: var(--pw-cream); border: 1px solid var(--pw-gold-soft); color: #5a4a2e;
         border-radius: 999px; padding: .1rem .6rem; font-weight: 600; }
     .rag-hist-head .date { color: #9a917f; }
     .rag-hist-head .pin-flag { color: #9a7b3c; font-weight: 700; display: inline-flex; align-items: center; gap: .25rem; }
@@ -46,7 +42,7 @@
         font-weight: 500; max-width: 85%; box-shadow: 0 2px 10px rgba(114,47,55,.18); }
     .rag-a { display: flex; gap: .8rem; align-items: flex-start; }
     .rag-a .avatar { flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%; background: var(--pw-cream);
-        border: 1px solid var(--pw-gold); color: var(--pw-maroon); display: flex; align-items: center; justify-content: center; margin-top: 2px; }
+        border: 1px solid var(--pw-gold-soft); color: var(--pw-maroon); display: flex; align-items: center; justify-content: center; margin-top: 2px; }
     .rag-a .panel { flex: 1 1 auto; min-width: 0; }
 
     .rag-answer { font-family: var(--font-body); line-height: 1.72; font-size: 1.02rem; color: #2b2620; }
@@ -54,7 +50,7 @@
     .rag-answer p { margin: 0 0 .8rem; }
     .rag-answer ul, .rag-answer ol { margin: 0 0 .85rem; padding-left: 1.4rem; }
     .rag-answer strong { color: #1c1813; }
-    .rag-answer blockquote { border-left: 3px solid var(--pw-gold); margin: .6rem 0; padding: .15rem 0 .15rem 1rem; color: #5a5246; font-style: italic; }
+    .rag-answer blockquote { border-left: 3px solid var(--pw-gold-soft); margin: .6rem 0; padding: .15rem 0 .15rem 1rem; color: #5a5246; font-style: italic; }
     .rag-answer a.rag-cite { font-size: .72em; vertical-align: super; color: var(--pw-maroon); font-weight: 700; text-decoration: none; padding: 0 1px; }
     .rag-answer a.rag-cite:hover { text-decoration: underline; }
 
@@ -62,17 +58,17 @@
     .rag-sources .ttl { color: #8a7d68; font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; margin-bottom: .5rem; }
     .rag-source { display: flex; gap: .55rem; padding: .25rem 0; font-size: .92rem; align-items: baseline; }
     .rag-source .num { flex: 0 0 auto; min-width: 1.5rem; height: 1.5rem; border-radius: 50%; background: var(--pw-cream);
-        border: 1px solid var(--pw-gold); color: var(--pw-maroon); font-weight: 700; font-size: .78rem; display: inline-flex; align-items: center; justify-content: center; }
+        border: 1px solid var(--pw-gold-soft); color: var(--pw-maroon); font-weight: 700; font-size: .78rem; display: inline-flex; align-items: center; justify-content: center; }
     .rag-source a { color: #2b2620; text-decoration: none; font-weight: 500; }
     .rag-source a:hover { color: var(--pw-maroon); text-decoration: underline; }
     .rag-source .lbl { color: #9a7b3c; white-space: nowrap; font-size: .86rem; }
 
     .rag-hist-toolbar { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: 1rem; }
     .rag-hist-toolbar .btn { font-size: .82rem; }
-    .rag-hist-toolbar .btn-pin.on { background: var(--pw-gold); border-color: var(--pw-gold); color: #4a3a14; }
+    .rag-hist-toolbar .btn-pin.on { background: var(--pw-gold-soft); border-color: var(--pw-gold-soft); color: #4a3a14; }
 
     .rag-empty { text-align: center; padding: 4rem 1rem; color: #6b6256; }
-    .rag-empty .ic { font-size: 3rem; color: var(--pw-gold); }
+    .rag-empty .ic { font-size: 3rem; color: var(--pw-gold-soft); }
     .rag-empty h2 { font-family: var(--font-heading); color: var(--pw-maroon); margin: .8rem 0 .3rem; }
     .rag-empty a { display: inline-flex; align-items: center; gap: .4rem; margin-top: 1.2rem; text-decoration: none;
         background: var(--pw-maroon); color: #fff; border-radius: 999px; padding: .6rem 1.3rem; font-weight: 600; }

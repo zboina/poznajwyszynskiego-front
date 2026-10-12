@@ -1,0 +1,54 @@
+{% extends 'base.html.twig' %}
+
+{# Strony błędów w trybie produkcyjnym (404, 403, 500…) — w wyglądzie serwisu, po polsku. #}
+{% set messages = {
+    404: ['Nie znaleziono strony', 'Ten adres nie istnieje albo tekst nie jest jeszcze opublikowany.'],
+    403: ['Brak dostępu', 'Ta strona wymaga innych uprawnień. Zaloguj się albo wróć do wyszukiwarki.'],
+    410: ['Strona usunięta', 'Ten materiał nie jest już dostępny.'],
+    429: ['Zbyt wiele zapytań', 'Odczekaj chwilę i spróbuj ponownie.'],
+    503: ['Prace serwisowe', 'Serwis jest chwilowo niedostępny. Zapraszamy za kilka minut.'],
+} %}
+{% set msg = messages[status_code] ?? ['Coś poszło nie tak', 'Wystąpił nieoczekiwany błąd. Spróbuj ponownie za chwilę — jeśli problem wróci, daj nam znać.'] %}
+
+{% block title %}{{ msg[0] }} — Dzieła Zebrane Kardynała Wyszyńskiego{% endblock %}
+
+{% block stylesheets %}
+<style>
+    .err-page { display: flex; align-items: center; justify-content: center; padding: 3rem 1rem; }
+    .err-card { max-width: 480px; width: 100%; text-align: center; background: var(--pw-paper);
+        border: 1px solid var(--pw-line); border-radius: var(--pw-radius); box-shadow: var(--pw-shadow);
+        padding: 2.5rem 2rem 2rem; }
+    .err-crest { width: 76px; height: 76px; border-radius: 50%; border: 2px solid var(--pw-line);
+        background: var(--pw-cream); display: inline-flex; align-items: center; justify-content: center;
+        margin-bottom: 1rem; overflow: hidden; }
+    .err-crest img { width: 64px; height: 64px; object-fit: contain; }
+    .err-code { font-size: .75rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+        color: var(--pw-maroon); opacity: .75; margin-bottom: .35rem; }
+    .err-card h1 { font-family: var(--font-heading); color: var(--pw-ink); font-weight: 700;
+        font-size: 1.7rem; margin: 0 0 .6rem; }
+    .err-card p { color: var(--pw-muted); margin: 0 0 1.6rem; line-height: 1.6; }
+    .err-actions { display: flex; gap: .6rem; justify-content: center; flex-wrap: wrap; }
+    .err-actions .btn { border-radius: 10px; padding: .55rem 1.1rem; font-weight: 600; }
+    .err-actions .btn-light { background: var(--pw-cream); border-color: var(--pw-line); color: var(--pw-ink); }
+</style>
+{% endblock %}
+
+{% block body %}
+{% include 'partials/_navbar.html.twig' %}
+<div class="page err-page">
+    <div class="err-card">
+        <div class="err-crest"><img src="{{ asset('logo_PW_bez_obramowania.png') }}" alt=""></div>
+        <div class="err-code">Błąd {{ status_code }}</div>
+        <h1>{{ msg[0] }}</h1>
+        <p>{{ msg[1] }}</p>
+        <div class="err-actions">
+            <a href="{{ path('app_search') }}" class="btn btn-primary"><i class="ti ti-search me-1"></i> Wyszukiwarka</a>
+            {% if status_code == 403 and not app.user %}
+                <a href="{{ path('app_login') }}" class="btn btn-light"><i class="ti ti-login me-1"></i> Zaloguj się</a>
+            {% else %}
+                <a href="{{ path('app_rag') }}" class="btn btn-light"><i class="ti ti-feather me-1"></i> Asystent AI</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
