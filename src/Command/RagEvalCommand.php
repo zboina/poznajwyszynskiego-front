@@ -182,7 +182,7 @@ class RagEvalCommand extends Command
              WHERE c.search_vector @@ (websearch_to_tsquery('polish', :q) || websearch_to_tsquery('polish_unaccent', :q)) AND $published
              ORDER BY ts_rank(c.search_vector, websearch_to_tsquery('polish', :q) || websearch_to_tsquery('polish_unaccent', :q)) DESC
              LIMIT " . self::DEEP,
-            ['q' => $q]
+            ['q' => $this->retriever->ftsQuery($q)]
         );
     }
 

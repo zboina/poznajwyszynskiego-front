@@ -20,7 +20,46 @@ class ChunkRetriever
     /** Ogranicza kandydatów do chunków z tomów opublikowanych (alias chunków: c). */
     private const PUBLISHED_FILTER = "AND c.volume_id IN (SELECT vp.id FROM volumes vp WHERE vp.status = 'opublikowany')";
 
+    /**
+     * Słowa pomijane w wyszukiwaniu pełnotekstowym: słowa pytające i łączniki
+     * (słownik polish_ispell ich nie odrzuca) oraz słowa obecne w całym korpusie
+     * („Prymas”, „mówił”) — nic nie mówią o tym, którego fragmentu szukamy.
+     */
+    private const FTS_STOPWORDS = [
+        'co', 'czy', 'jak', 'jaki', 'jaka', 'jakie', 'jakich', 'jakim', 'jakimi', 'jakiej', 'jakiego', 'jakiemu',
+        'dlaczego', 'czemu', 'kiedy', 'gdzie', 'skąd', 'dokąd', 'kto', 'kogo', 'komu', 'kim', 'czym', 'czego', 'ile',
+        'który', 'która', 'które', 'którzy', 'którego', 'której', 'którym', 'których', 'ktory', 'ktora', 'ktore',
+        'ten', 'ta', 'to', 'te', 'tego', 'tej', 'tym', 'tych', 'tę', 'tak', 'też', 'także', 'oraz', 'ale', 'albo', 'lub',
+        'się', 'nie', 'dla', 'przez', 'przy', 'pod', 'nad', 'bez', 'aby', 'żeby', 'jego', 'jej', 'ich', 'jest', 'są',
+        'był', 'była', 'było', 'były', 'byli', 'może', 'można', 'swój', 'swoje', 'swoich', 'swoim', 'według', 'zdaniem',
+        'sposób', 'temat', 'tematu', 'kontekście', 'czyli', 'jako', 'jeśli', 'gdy', 'tylko', 'bardzo', 'coś', 'cos',
+        'prymas', 'prymasa', 'prymasowi', 'prymasem', 'prymasie', 'kardynał', 'kardynała', 'kardynal', 'kardynala',
+        'wyszyński', 'wyszyńskiego', 'wyszyńskim', 'wyszynski', 'wyszynskiego', 'stefan', 'stefana', 'ksiądz', 'księdza',
+        'mówił', 'mówi', 'mowil', 'mówiło', 'powiedział', 'pisał', 'pisze', 'pisal', 'napisał', 'uważał', 'sądził',
+        'rozumiał', 'widział', 'tłumaczył', 'wyjaśniał', 'opisywał', 'nauczał', 'nauczanie', 'nauczania', 'myślał',
+    ];
+
     public function __construct(private Connection $db) {}
+
+    /**
+     * Pytanie → zapytanie pełnotekstowe „którekolwiek z istotnych słów”.
+     * Wcześniej całe pytanie szło do websearch_to_tsquery, które wymaga WSZYSTKICH
+     * słów (łącznie z „jak”, „Prymas”) — pasowało do ok. 1% pytań. Kolejność wyników
+     * ustala ts_rank: wyżej fragmenty z większą liczbą słów pytania.
+     */
+    public function ftsQuery(string $query): string
+    {
+        static $stop = null;
+        $stop ??= array_flip(self::FTS_STOPWORDS);
+        preg_match_all('/[\p{L}\p{N}]+/u', mb_strtolower($query), $m);
+        $words = [];
+        foreach ($m[0] as $w) {
+            if ((mb_strlen($w) > 2 || ctype_digit($w)) && !isset($stop[$w]) && $w !== 'or') {
+                $words[$w] = true;
+            }
+        }
+        return $words ? implode(' or ', array_keys($words)) : $query;
+    }
 
     /**
      * Volumes that currently have chunks (i.e. are answerable by the assistant),
@@ -75,10 +114,10 @@ class ChunkRetriever
         $sql = "
             WITH fts AS (
                 SELECT c.id, ROW_NUMBER() OVER (
-                           ORDER BY ts_rank(c.search_vector, websearch_to_tsquery('polish', :q) || websearch_to_tsquery('polish_unaccent', :q)) DESC
+                           ORDER BY ts_rank(c.search_vector, websearch_to_tsquery('polish', :fq) || websearch_to_tsquery('polish_unaccent', :fq)) DESC
                        ) AS rn
                 FROM document_chunks c
-                WHERE c.search_vector @@ (websearch_to_tsquery('polish', :q) || websearch_to_tsquery('polish_unaccent', :q))
+                WHERE c.search_vector @@ (websearch_to_tsquery('polish', :fq) || websearch_to_tsquery('polish_unaccent', :fq))
                       {$volFilter}
                 ORDER BY rn
                 LIMIT :cand
@@ -107,7 +146,7 @@ class ChunkRetriever
         ";
 
         $params = [
-            'q' => $query,
+            'fq' => $this->ftsQuery($query),
             'emb' => '[' . implode(',', $embedding) . ']',
             'rrfk' => self::RRF_K,
             'cand' => self::CANDIDATES,
@@ -131,15 +170,15 @@ class ChunkRetriever
         $sql = "
             SELECT c.id, c.document_id, c.content, c.page_start, c.page_end, c.chunk_index,
                    d.title, d.slug, v.number AS volume_number,
-                   ts_rank(c.search_vector, websearch_to_tsquery('polish', :q) || websearch_to_tsquery('polish_unaccent', :q)) AS score
+                   ts_rank(c.search_vector, websearch_to_tsquery('polish', :fq) || websearch_to_tsquery('polish_unaccent', :fq)) AS score
             FROM document_chunks c
             JOIN documents d ON d.id = c.document_id
             JOIN volumes   v ON v.id = c.volume_id
-            WHERE c.search_vector @@ (websearch_to_tsquery('polish', :q) || websearch_to_tsquery('polish_unaccent', :q)) {$volFilter}
+            WHERE c.search_vector @@ (websearch_to_tsquery('polish', :fq) || websearch_to_tsquery('polish_unaccent', :fq)) {$volFilter}
             ORDER BY score DESC
             LIMIT :k
         ";
-        $params = ['q' => $query, 'k' => $k];
+        $params = ['fq' => $this->ftsQuery($query), 'k' => $k];
         $types = ['k' => ParameterType::INTEGER];
         if ($volumeId) {
             $params['vol'] = $volumeId;
