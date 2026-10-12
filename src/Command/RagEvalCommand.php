@@ -175,10 +175,11 @@ class RagEvalCommand extends Command
             if ($emb === null) {
                 return [];
             }
+            $col = $this->retriever->embeddingColumn();
             return $this->db->fetchAllAssociative(
                 "SELECT c.content FROM document_chunks c
-                 WHERE c.embedding IS NOT NULL AND $published
-                 ORDER BY c.embedding <=> :emb::vector LIMIT " . self::DEEP,
+                 WHERE c.$col IS NOT NULL AND $published
+                 ORDER BY c.$col <=> :emb::vector LIMIT " . self::DEEP,
                 ['emb' => '[' . implode(',', $emb) . ']']
             );
         }

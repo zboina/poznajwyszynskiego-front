@@ -2,6 +2,7 @@
 
 namespace App\Command;
 
+use App\Service\Embedder;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -29,7 +30,7 @@ class BuildChunksCommand extends Command
     private const TARGET_CHARS = 1600;   // ~400 tokens of Polish
     private const PARALLEL = 4;          // concurrent Ollama requests
 
-    public function __construct(private Connection $db)
+    public function __construct(private Connection $db, private Embedder $embedder)
     {
         parent::__construct();
     }
@@ -140,6 +141,13 @@ class BuildChunksCommand extends Command
         $output->writeln('');
 
         $io->success(sprintf('Zapisano %d/%d chunków%s', $total - $errors, $total, $errors ? " (błędy: {$errors})" : ''));
+
+        // Drugi zestaw wektorów: PolDense (kontener pw-embed), kolumna embedding_pd.
+        try {
+            $io->writeln(sprintf('PolDense: uzupełniono %d fragmentów.', $this->embedder->fillPoldense($ids)));
+        } catch (\RuntimeException $e) {
+            $io->warning($e->getMessage() . ' Uzupełnij później: php bin/console app:embed-chunks');
+        }
 
         // Korpus się zmienił → unieważnij cache odpowiedzi asystenta (jeśli tabela istnieje).
         try {

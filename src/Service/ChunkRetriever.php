@@ -8,7 +8,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
- * Hybrid retrieval over document_chunks: semantic (bge-m3 cosine) + Polish
+ * Hybrid retrieval over document_chunks: semantic (Embedder: bge-m3 or PolDense) + Polish
  * full-text, merged with Reciprocal Rank Fusion. Returns chunks enriched with
  * citation metadata (document title, volume number, printed-page range).
  *
@@ -18,12 +18,14 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
  */
 class ChunkRetriever
 {
-    private const OLLAMA_URL = 'http://localhost:11434/api/embeddings';
-    private const MODEL = 'bge-m3';
     private const RRF_K = 60;
     private const CANDIDATES = 50; // per-arm candidate pool before fusion
 
     /** Ogranicza kandydatów do chunków z tomów opublikowanych (alias chunków: c). */
+    private const HNSW_EF_SEARCH = 200;
+
+    private bool $hnswTuned = false;
+
     private const PUBLISHED_FILTER = "AND c.volume_id IN (SELECT vp.id FROM volumes vp WHERE vp.status = 'opublikowany')";
 
     /**
@@ -51,6 +53,7 @@ class ChunkRetriever
     public function __construct(
         private Connection $db,
         private LoggerInterface $logger,
+        private Embedder $embedder,
         #[Autowire(env: 'default::RERANKER_URL')] private ?string $rerankerUrl = null,
         #[Autowire(env: 'default::int:RERANKER_CANDIDATES')] ?int $rerankCandidates = null,
     ) {
@@ -138,6 +141,7 @@ class ChunkRetriever
             $volFilter .= ' AND c.volume_id = :vol';
         }
 
+        $col = $this->embeddingColumn();
         $sql = "
             WITH fts AS (
                 SELECT c.id, ROW_NUMBER() OVER (
@@ -150,11 +154,11 @@ class ChunkRetriever
                 LIMIT :cand
             ),
             sem AS (
-                SELECT c.id, ROW_NUMBER() OVER (ORDER BY c.embedding <=> :emb::vector) AS rn
+                SELECT c.id, ROW_NUMBER() OVER (ORDER BY c.{$col} <=> :emb::vector) AS rn
                 FROM document_chunks c
-                WHERE c.embedding IS NOT NULL
+                WHERE c.{$col} IS NOT NULL
                       {$volFilter}
-                ORDER BY c.embedding <=> :emb::vector
+                ORDER BY c.{$col} <=> :emb::vector
                 LIMIT :cand
             ),
             rrf AS (
@@ -268,24 +272,23 @@ class ChunkRetriever
         ], $rows);
     }
 
-    /** @return float[]|null */
+    /** @return float[]|null wektor pytania w modelu, którym szuka asystent */
     public function embed(string $text): ?array
     {
-        $ch = curl_init(self::OLLAMA_URL);
-        curl_setopt_array($ch, [
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => json_encode(['model' => self::MODEL, 'prompt' => $text]),
-            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT => 30,
-        ]);
-        $resp = curl_exec($ch);
-        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-        if ($code !== 200 || !$resp) {
-            return null;
+        return $this->embedder->embedQuery($text);
+    }
+
+    /**
+     * Kolumna wektorów aktywnego modelu (embedding / embedding_pd).
+     * Przy pierwszym użyciu podnosi hnsw.ef_search w tym połączeniu: przy domyślnym
+     * 40 indeks HNSW oddaje najwyżej 40 wierszy, a gałąź semantyczna prosi o 50.
+     */
+    public function embeddingColumn(): string
+    {
+        if (!$this->hnswTuned) {
+            $this->db->executeStatement('SET hnsw.ef_search = ' . self::HNSW_EF_SEARCH);
+            $this->hnswTuned = true;
         }
-        $emb = json_decode($resp, true)['embedding'] ?? null;
-        return is_array($emb) ? $emb : null;
+        return $this->embedder->column();
     }
 }
