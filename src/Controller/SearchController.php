@@ -678,11 +678,7 @@ class SearchController extends AbstractController
             $words = preg_split('/[^\p{L}\p{N}]+/u', $phrase, -1, PREG_SPLIT_NO_EMPTY) ?: [];
             if ($words) {
                 $patterns[] = '(?<![\p{L}\p{N}])'
-                    . implode('[^\p{L}\p{N}<>]+', array_map(
-                        // Rdzeń bez dwóch ostatnich liter pokrywa polską odmianę w obrębie frazy.
-                        static fn (string $w): string => preg_quote(mb_substr($w, 0, max(3, mb_strlen($w) - 2)), '/') . '[\p{L}\p{N}]*',
-                        $words
-                    ))
+                    . implode('[^\p{L}\p{N}<>]+', array_map([$this, 'phraseWordPattern'], $words))
                     . '(?![\p{L}\p{N}])';
             }
         }
@@ -699,6 +695,20 @@ class SearchController extends AbstractController
         }
 
         return $patterns;
+    }
+
+    /**
+     * Słowo frazy z polską odmianą: rdzeń bez trzech ostatnich liter (min. 3) plus
+     * dowolna końcówka, „ó” = „o” (ojciec → ojców, Bóg → Boga, kościół → kościoła).
+     * Słowa 1–2-literowe („i”, „w”) muszą wystąpić dokładnie.
+     */
+    private function phraseWordPattern(string $word): string
+    {
+        if (mb_strlen($word) <= 2) {
+            return preg_quote($word, '/');
+        }
+        $stem = preg_quote(mb_substr($word, 0, max(3, mb_strlen($word) - 3)), '/');
+        return str_replace(['ó', 'Ó'], '[óo]', $stem) . '[\p{L}\p{N}]*';
     }
 
     /**
