@@ -48,31 +48,63 @@ class DocumentRepository extends ServiceEntityRepository
 
     /**
      * Buduje wyrażenie tsquery łączące trzy tryby dopasowania i ustawia parametry
-     * (:query oraz — gdy są tokeny — :prefixQuery) w przekazanej tablicy $params:
+     * (:query, a dla dopasowania po rdzeniu także :prefixQuery i ew. :phraseQuery)
+     * w przekazanej tablicy $params:
      *  - websearch 'polish'          — lematyzacja (jezuici/jezuitów → jezuita),
      *  - websearch 'polish_unaccent' — bez polskich znaków ("milosc" → miłość),
      *  - prefiks 'simple' (token:*)  — wyszukiwanie po rdzeniu ("jezui" → jezuici,
      *    jezuita, jezuicki). Działa na zapisanych leksemach, więc obejmuje też formy,
      *    których lematyzacja nie scala (przymiotnik "jezuicki" vs rzeczownik "jezuita").
+     *
+     * Składnia websearch obowiązuje we wszystkich trzech trybach: fraza w cudzysłowie
+     * (także „polskim”) musi wystąpić w tej postaci, "-słowo" wyklucza teksty z tym
+     * słowem, a przy "or" tryb po rdzeniu jest pomijany (zamieniłby OR na AND).
      */
     private function searchTsquerySql(string $query, array &$params): string
     {
+        // websearch_to_tsquery rozpoznaje tylko proste cudzysłowy.
+        $query = str_replace(["\u{201E}", "\u{201D}", "\u{201C}"], '"', $query);
         $params['query'] = $query;
 
         $expr = "websearch_to_tsquery('polish', :query) "
               . "|| websearch_to_tsquery('polish_unaccent', :query)";
 
-        // Tokeny do dopasowania prefiksowego: tylko litery/cyfry, min. 2 znaki
-        // (krótsze rdzenie pomijamy, by uniknąć dopasowania pół bazy).
-        $tokens = preg_split('/[^\p{L}\p{N}]+/u', mb_strtolower($query), -1, PREG_SPLIT_NO_EMPTY) ?: [];
-        $tokens = array_values(array_filter($tokens, static fn (string $t): bool => mb_strlen($t) >= 2));
-        if ($tokens) {
-            // Sanityzacja gwarantuje brak operatorów tsquery → bezpieczne dla to_tsquery.
-            $params['prefixQuery'] = implode(' & ', array_map(static fn (string $t): string => $t . ':*', $tokens));
-            $expr .= " || to_tsquery('simple', :prefixQuery)";
+        preg_match_all('/"([^"]+)"/u', $query, $m);
+        $phrases = array_values(array_filter(array_map('trim', $m[1])));
+        $rest = str_replace('"', ' ', preg_replace('/"[^"]*"/u', ' ', $query));
+        if (preg_match('/(^|\s)or(\s|$)/iu', $rest)) {
+            return $expr;
         }
 
-        return $expr;
+        // Słowa spoza cudzysłowu: tylko litery/cyfry, min. 2 znaki (krótsze rdzenie
+        // pomijamy, by uniknąć dopasowania pół bazy); "-słowo" → wykluczenie.
+        $parts = [];
+        $hasPositive = false;
+        foreach (preg_split('/\s+/u', trim($rest), -1, PREG_SPLIT_NO_EMPTY) ?: [] as $word) {
+            $negated = str_starts_with($word, '-');
+            $tokens = preg_split('/[^\p{L}\p{N}]+/u', mb_strtolower($word), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+            foreach ($tokens as $t) {
+                if (mb_strlen($t) >= 2) {
+                    $parts[] = ($negated ? '!' : '') . $t . ':*';
+                    $hasPositive = $hasPositive || !$negated;
+                }
+            }
+        }
+        if (!$hasPositive) {
+            return $expr;
+        }
+
+        // Sanityzacja gwarantuje brak operatorów tsquery → bezpieczne dla to_tsquery.
+        $params['prefixQuery'] = implode(' & ', $parts);
+        $prefix = "to_tsquery('simple', :prefixQuery)";
+        if ($phrases) {
+            // Frazy dokładnie, jak w pozostałych trybach — rdzeń dotyczy tylko reszty słów.
+            $params['phraseQuery'] = '"' . implode('" "', $phrases) . '"';
+            $prefix = "({$prefix} && (websearch_to_tsquery('polish', :phraseQuery) "
+                    . "|| websearch_to_tsquery('polish_unaccent', :phraseQuery)))";
+        }
+
+        return "{$expr} || {$prefix}";
     }
 
     public function search(
