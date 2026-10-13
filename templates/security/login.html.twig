@@ -125,6 +125,14 @@
         margin-top: .15rem;
     }
 
+    /* ── Nie wylogowuj ── */
+    .login-remember {
+        display: flex; align-items: center; gap: .5rem; cursor: pointer;
+        font-size: .85rem; color: #555; margin: -.25rem 0 0; user-select: none;
+    }
+    .login-remember input { width: 1rem; height: 1rem; margin: 0; accent-color: #722F37; cursor: pointer; }
+    .login-remember small { color: #999; font-size: .78rem; }
+
     /* ── Divider ── */
     .login-divider {
         height: 1px;
@@ -228,6 +236,10 @@
                            autocomplete="current-password"
                            required>
                 </div>
+                <label class="login-remember" for="inputRemember">
+                    <input type="checkbox" name="_remember_me" id="inputRemember">
+                    <span>Nie wylogowuj mnie <small>(przez 30 dni)</small></span>
+                </label>
                 <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
 
                 <div class="login-divider"></div>

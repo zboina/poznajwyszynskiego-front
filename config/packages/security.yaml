@@ -30,6 +30,15 @@ security:
                 check_path: app_login
                 default_target_path: app_search
                 enable_csrf: true
+            # „Nie wylogowuj mnie" na formularzu logowania (pole _remember_me).
+            # Podpisane ciasteczko na 30 dni; zmiana hasła unieważnia je od razu.
+            remember_me:
+                secret: '%kernel.secret%'
+                lifetime: 2592000
+                path: /
+                secure: auto
+                samesite: lax
+                signature_properties: ['password']
             logout:
                 path: app_logout
                 target: app_login
