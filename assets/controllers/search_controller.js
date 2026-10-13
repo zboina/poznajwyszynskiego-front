@@ -514,9 +514,11 @@ export default class extends Controller {
         } catch (e) { /* localStorage niedostępny */ }
     }
 
-    // Scroll the cited passage (server-rendered <mark class="rag-hl">) into view.
+    // Scroll the cited passage (server-rendered <mark class="rag-hl">) into view;
+    // otherwise the first search hit — it may sit far down, e.g. only in a footnote.
     _scrollToHighlight() {
-        const mark = this.documentContentTarget.querySelector('mark.rag-hl');
+        const mark = this.documentContentTarget.querySelector('mark.rag-hl')
+            || this.documentContentTarget.querySelector('mark.search-hl');
         if (!mark) return;
         requestAnimationFrame(() => {
             mark.scrollIntoView({ behavior: 'smooth', block: 'center' });
