@@ -203,6 +203,10 @@
            (scrollHeight) uwzględniał padding i nie „rósł" przy każdym wpisaniu. */
         padding: .62rem 0; box-sizing: border-box; }
     .rag-composer textarea::placeholder { color: #a99f8c; }
+    /* Licznik znaków — widoczny dopiero przy końcu limitu długości pytania. */
+    .rag-q-count { align-self: flex-end; padding: 0 .5rem .7rem; font-size: .75rem; color: #a99f8c; white-space: nowrap; }
+    .rag-q-count:empty { display: none; }
+    .rag-q-count.full { color: var(--pw-maroon, #722f37); font-weight: 600; }
     @media (max-width: 575.98px) {
         .rag-wrap { padding-top: 1.5rem; }
         .rag-composer textarea { font-size: 1rem; }
@@ -382,7 +386,8 @@
 
             <div class="box" id="rag-box">
                 <div class="box-input">
-                    <textarea id="rag-q" rows="1" placeholder="Zadaj pytanie o teksty Prymasa…"></textarea>
+                    <textarea id="rag-q" rows="1" maxlength="{{ constant('App\\Controller\\RagController::MAX_QUESTION_LENGTH') }}" placeholder="Zadaj pytanie o teksty Prymasa…"></textarea>
+                    <span id="rag-q-count" class="rag-q-count" aria-live="polite"></span>
                     <button id="rag-send" class="send" title="Wyślij"><i class="ti ti-send"></i></button>
                     <button id="rag-stop" class="send stop" title="Zatrzymaj" style="display:none;"><i class="ti ti-player-stop-filled"></i></button>
                 </div>
@@ -848,7 +853,14 @@
         ask(v);
         q.value = ''; autosize();
     }
-    function autosize() { q.style.height = 'auto'; q.style.height = Math.min(q.scrollHeight, 160) + 'px'; }
+    const qCount = document.getElementById('rag-q-count');
+    function autosize() {
+        q.style.height = 'auto'; q.style.height = Math.min(q.scrollHeight, 160) + 'px';
+        // Licznik pokazujemy dopiero od 150 znaków, żeby nie rozpraszał.
+        const len = q.value.length, max = q.maxLength;
+        qCount.textContent = len >= max - 50 ? len + '/' + max : '';
+        qCount.classList.toggle('full', len >= max);
+    }
 
     // Historia rozmów żyje teraz po stronie konta (route „Moja historia"),
     // nie w localStorage — patrz pasek nad wątkiem. Stary klucz sprzątamy.

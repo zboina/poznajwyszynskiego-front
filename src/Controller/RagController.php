@@ -11,6 +11,8 @@ use App\Service\RagCache;
 use App\Service\RagHistory;
 use App\Service\SettingsService;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Cache\CacheItemPoolInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -20,6 +22,13 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class RagController extends AbstractController
 {
+    /** Najdłuższe pytanie (znaki). Prawdziwe pytania mają do ~100 znaków. */
+    public const MAX_QUESTION_LENGTH = 200;
+
+    /** Tryb demo (bez kredytów): ile odpowiedzi modelu na jeden adres IP w oknie czasowym. */
+    private const DEMO_LIMIT = 20;
+    private const DEMO_WINDOW = 3600;
+
     public function __construct(
         private RagAnswerer $rag,
         private SettingsService $settings,
@@ -28,7 +37,43 @@ class RagController extends AbstractController
         private EntityManagerInterface $em,
         private RagCache $cache,
         private RagHistory $history,
+        #[Autowire(service: 'cache.app')] private CacheItemPoolInterface $limits,
     ) {}
+
+    /** Komunikat, gdy pytanie jest za długie; null = w porządku. */
+    private function lengthError(string $question): ?string
+    {
+        return mb_strlen($question) > self::MAX_QUESTION_LENGTH
+            ? sprintf('Pytanie jest za długie (%d znaków). Skróć je do %d znaków.', mb_strlen($question), self::MAX_QUESTION_LENGTH)
+            : null;
+    }
+
+    /**
+     * Limit dla sesji demo (pytają bez kredytów, więc bez tego nic ich nie ogranicza).
+     * Liczy tylko odpowiedzi modelu (cache jest darmowy). Admin bez limitu.
+     * Zwraca true, gdy wolno pytać — i wtedy od razu zalicza to pytanie.
+     */
+    private function demoAllowed(Request $request, bool $unlimited): bool
+    {
+        if (!$unlimited || $this->isGranted('ROLE_ADMIN')) {
+            return true;
+        }
+        $item = $this->limits->getItem('rag_demo_' . sha1((string) $request->getClientIp()));
+        $hit = $item->isHit() ? $item->get() : null;
+        $now = time();
+        if (!is_array($hit) || $hit['until'] <= $now) {
+            $hit = ['count' => 0, 'until' => $now + self::DEMO_WINDOW];
+        }
+        if ($hit['count'] >= self::DEMO_LIMIT) {
+            return false;
+        }
+        $hit['count']++;
+        $item->set($hit)->expiresAt(new \DateTimeImmutable('@' . $hit['until']));
+        $this->limits->save($item);
+        return true;
+    }
+
+    private const DEMO_LIMIT_MESSAGE = 'Osiągnięto limit pytań w wersji demonstracyjnej. Spróbuj ponownie za godzinę albo załóż konto.';
 
     /**
      * Loguje zapytanie i pobiera kredyt (konta z limitem). Konta bez limitu
@@ -104,6 +149,9 @@ class RagController extends AbstractController
         if ($question === '') {
             return new JsonResponse(['error' => 'Puste pytanie.'], 400);
         }
+        if ($err = $this->lengthError($question)) {
+            return new JsonResponse(['error' => $err], 400);
+        }
         $volumeId = isset($data['volume']) && $data['volume'] ? (int) $data['volume'] : null;
 
         /** @var User|null $user */
@@ -133,6 +181,10 @@ class RagController extends AbstractController
             ]);
         }
 
+        if (!$this->demoAllowed($request, $unlimited)) {
+            return new JsonResponse(['error' => self::DEMO_LIMIT_MESSAGE], 429);
+        }
+
         $result = $this->rag->answer($question, 8, $volumeId);
 
         if ($result['used'] ?? false) {
@@ -160,7 +212,7 @@ class RagController extends AbstractController
         /** @var User|null $user */
         $user = $this->getUser();
         $unlimited = $this->isUnlimited($request);
-        $response = new StreamedResponse(function () use ($user, $unlimited, $question, $volumeId) {
+        $response = new StreamedResponse(function () use ($request, $user, $unlimited, $question, $volumeId) {
             $emit = function (string $event, array $data) {
                 echo "event: {$event}\n";
                 echo 'data: ' . json_encode($data) . "\n\n";
@@ -170,6 +222,10 @@ class RagController extends AbstractController
 
             if ($question === '') {
                 $emit('error', ['message' => 'Puste pytanie.']);
+                return;
+            }
+            if ($err = $this->lengthError($question)) {
+                $emit('error', ['message' => $err]);
                 return;
             }
 
@@ -190,6 +246,11 @@ class RagController extends AbstractController
                 }
                 $emit('token', ['t' => $hit['answer']]);
                 $emit('done', ['cached' => true]);
+                return;
+            }
+
+            if (!$this->demoAllowed($request, $unlimited)) {
+                $emit('error', ['message' => self::DEMO_LIMIT_MESSAGE]);
                 return;
             }
 
@@ -225,6 +286,7 @@ class RagController extends AbstractController
                 return;
             }
             $emit('done', []);
+            $this->rag->logIfUncited($question, $full);
 
             // Uzupełnij wpis o realne zużycie (tokeny + koszt USD z OpenRouter).
             $this->recordUsage($rq, $usage);
