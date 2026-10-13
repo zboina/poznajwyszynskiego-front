@@ -107,6 +107,36 @@ class DocumentRepository extends ServiceEntityRepository
         return "{$expr} || {$prefix}";
     }
 
+    /**
+     * Cudzysłów = dokładnie ta forma słowa / frazy ("Kościół" nie znajdzie „Kościoła").
+     * Indeks pełnotekstowy zna tylko rdzenie, więc po nim zostaje sprawdzenie treści
+     * wyrażeniem regularnym (bez rozróżniania wielkości liter). Granicą słowa jest
+     * wszystko poza literą — także cyfra odsyłacza przypisu przyklejona do słowa.
+     * Nie dotyczy fraz z minusem ani zapytań z „or".
+     *
+     * @return string[] warunki WHERE
+     */
+    private function exactFormConditions(string $query, array &$params): array
+    {
+        $query = str_replace(["\u{201E}", "\u{201D}", "\u{201C}"], '"', $query);
+        $rest = str_replace('"', ' ', preg_replace('/"[^"]*"/u', ' ', $query));
+        if (preg_match('/(^|\s)or(\s|$)/iu', $rest)) {
+            return [];
+        }
+        preg_match_all('/(^|[^-])"([^"]+)"/u', $query, $m);
+        $conditions = [];
+        foreach ($m[2] as $i => $phrase) {
+            // Tylko litery i cyfry → w wyrażeniu nie ma znaków specjalnych.
+            $words = preg_split('/[^\p{L}\p{N}]+/u', $phrase, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+            if (!$words) {
+                continue;
+            }
+            $params["exact{$i}"] = '(^|[^[:alpha:]])' . implode('[^[:alpha:]]+', $words) . '([^[:alpha:]]|$)';
+            $conditions[] = "concat_ws(' ', d.title, d.subtitle, d.content, d.location) ~* :exact{$i}";
+        }
+        return $conditions;
+    }
+
     public function search(
         ?string $query = null,
         ?int $volumeId = null,
@@ -127,6 +157,7 @@ class DocumentRepository extends ServiceEntityRepository
         if ($query && trim($query) !== '') {
             $matchExpr = $this->searchTsquerySql(trim($query), $params);
             $where[] = "d.search_vector @@ ({$matchExpr})";
+            array_push($where, ...$this->exactFormConditions(trim($query), $params));
         }
 
         if ($volumeId) {

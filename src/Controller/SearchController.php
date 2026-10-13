@@ -673,13 +673,14 @@ class SearchController extends AbstractController
         $query = str_replace(["\u{201E}", "\u{201D}", "\u{201C}"], '"', $query);
         $patterns = [];
 
+        // Cudzysłów = dokładnie ta forma (jak w DocumentRepository::exactFormConditions).
         preg_match_all('/"([^"]+)"/u', $query, $m);
         foreach ($m[1] as $phrase) {
             $words = preg_split('/[^\p{L}\p{N}]+/u', $phrase, -1, PREG_SPLIT_NO_EMPTY) ?: [];
             if ($words) {
-                $patterns[] = '(?<![\p{L}\p{N}])'
-                    . implode('[^\p{L}\p{N}<>]+', array_map([$this, 'phraseWordPattern'], $words))
-                    . '(?![\p{L}\p{N}])';
+                $patterns[] = '(?<!\p{L})'
+                    . implode('[^\p{L}<>]+', array_map(fn ($w) => preg_quote($w, '/'), $words))
+                    . '(?!\p{L})';
             }
         }
 
@@ -695,20 +696,6 @@ class SearchController extends AbstractController
         }
 
         return $patterns;
-    }
-
-    /**
-     * Słowo frazy z polską odmianą: rdzeń bez trzech ostatnich liter (min. 3) plus
-     * dowolna końcówka, „ó” = „o” (ojciec → ojców, Bóg → Boga, kościół → kościoła).
-     * Słowa 1–2-literowe („i”, „w”) muszą wystąpić dokładnie.
-     */
-    private function phraseWordPattern(string $word): string
-    {
-        if (mb_strlen($word) <= 2) {
-            return preg_quote($word, '/');
-        }
-        $stem = preg_quote(mb_substr($word, 0, max(3, mb_strlen($word) - 3)), '/');
-        return str_replace(['ó', 'Ó'], '[óo]', $stem) . '[\p{L}\p{N}]*';
     }
 
     /**
