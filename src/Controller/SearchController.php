@@ -660,17 +660,45 @@ class SearchController extends AbstractController
     }
 
     /**
-     * Extract plain search words from a websearch query (strips quotes, OR, -).
+     * Wzorce regex (bez ograniczników, flagi iu) do podświetlenia trafień, zgodne
+     * ze składnią wyszukiwarki: fraza w cudzysłowie (prostym lub „polskim”) jest
+     * podświetlana tylko w całości — słowa obok siebie, z dowolną końcówką
+     * („Matka Kościoła” → „Matki Kościoła”); "-słowo" i "or" nie są podświetlane.
+     * Frazy są pierwsze, żeby w alternatywie wygrywały z pojedynczymi słowami.
+     *
+     * @return string[]
      */
-    private function extractSearchWords(string $query): array
+    private function highlightPatterns(string $query): array
     {
-        // Remove quotes and websearch operators
-        $clean = str_replace(['"', "\u{201e}", "\u{201d}"], ' ', $query);
-        $clean = preg_replace('/\bor\b/i', ' ', $clean);
-        $clean = preg_replace('/(?:^|\s)-/', ' ', $clean);
+        $query = str_replace(["\u{201E}", "\u{201D}", "\u{201C}"], '"', $query);
+        $patterns = [];
 
-        $words = preg_split('/\s+/', trim($clean));
-        return array_values(array_filter($words, fn(string $w) => mb_strlen($w) >= 2));
+        preg_match_all('/"([^"]+)"/u', $query, $m);
+        foreach ($m[1] as $phrase) {
+            $words = preg_split('/[^\p{L}\p{N}]+/u', $phrase, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+            if ($words) {
+                $patterns[] = '(?<![\p{L}\p{N}])'
+                    . implode('[^\p{L}\p{N}<>]+', array_map(
+                        // Rdzeń bez dwóch ostatnich liter pokrywa polską odmianę w obrębie frazy.
+                        static fn (string $w): string => preg_quote(mb_substr($w, 0, max(3, mb_strlen($w) - 2)), '/') . '[\p{L}\p{N}]*',
+                        $words
+                    ))
+                    . '(?![\p{L}\p{N}])';
+            }
+        }
+
+        $rest = str_replace('"', ' ', preg_replace('/"[^"]*"/u', ' ', $query));
+        foreach (preg_split('/\s+/u', trim($rest), -1, PREG_SPLIT_NO_EMPTY) ?: [] as $word) {
+            if (str_starts_with($word, '-') || mb_strtolower($word) === 'or') {
+                continue;
+            }
+            $word = preg_replace('/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/u', '', $word);
+            if (mb_strlen($word) >= 2) {
+                $patterns[] = preg_quote($word, '/');
+            }
+        }
+
+        return $patterns;
     }
 
     /**
@@ -678,12 +706,12 @@ class SearchController extends AbstractController
      */
     private function highlightTerms(string $html, string $query): string
     {
-        $words = $this->extractSearchWords($query);
-        if (!$words) {
+        $patterns = $this->highlightPatterns($query);
+        if (!$patterns) {
             return $html;
         }
 
-        $pattern = implode('|', array_map(fn(string $w) => preg_quote($w, '/'), $words));
+        $pattern = implode('|', $patterns);
 
         // Split HTML into tags and text segments, highlight only text
         return preg_replace_callback(
@@ -709,13 +737,13 @@ class SearchController extends AbstractController
      */
     private function highlightSnippet(string $text, string $query): string
     {
-        $words = $this->extractSearchWords($query);
-        if (!$words) {
+        $patterns = $this->highlightPatterns($query);
+        if (!$patterns) {
             return htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         }
 
         $escaped = htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-        $pattern = implode('|', array_map(fn(string $w) => preg_quote($w, '/'), $words));
+        $pattern = implode('|', $patterns);
 
         return preg_replace(
             '/(' . $pattern . ')/iu',
